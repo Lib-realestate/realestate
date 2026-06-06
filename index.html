@@ -36,6 +36,8 @@ tr:last-child td{border-bottom:none}
 .bz{background:#f3f4f6;color:#4b5563}.bp{background:#ede9fe;color:#5b21b6}
 .btn{padding:5px 12px;border:0.5px solid #d0d0c8;border-radius:6px;background:none;cursor:pointer;font-size:11px;color:#333;font-family:'Noto Sans JP',sans-serif}
 .btn:hover{background:#f5f5f0}
+.btn-primary{background:#2563eb;color:#fff;border-color:#2563eb;padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-primary:hover{background:#1d4ed8}
 .btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
 .g{color:#16a34a}.r{color:#dc2626}
 .flex{display:flex;align-items:center}.flex-b{display:flex;align-items:center;justify-content:space-between}
@@ -52,51 +54,379 @@ tr:last-child td{border-bottom:none}
 .prc-fill{height:5px;border-radius:3px;background:#16a34a}
 .sec-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 16px}
 .sec-body{overflow:hidden;transition:max-height .25s ease}
+/* Auth */
+#authScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f0;padding:24px}
+.auth-card{background:#fff;border:0.5px solid #e0e0d8;border-radius:16px;padding:40px 36px;max-width:400px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.auth-icon{width:56px;height:56px;background:#2563eb;border-radius:14px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center}
+.auth-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.auth-sub{color:#666;font-size:13px;line-height:1.7;margin-bottom:28px}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 20px;border-radius:8px;background:#fff;color:#333;font-size:14px;font-weight:500;border:0.5px solid #d0d0c8;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.btn-google:hover{box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.drive-bar{background:#fff;border-bottom:0.5px solid #e0e0d8;padding:6px 16px;font-size:11px;color:#888;display:flex;align-items:center;gap:6px}
+.drive-dot{width:6px;height:6px;border-radius:50%;background:#d0d0c8}
+.drive-dot.on{background:#16a34a}
+/* Upload */
+.upload-zone{border:2px dashed #d0d0c8;border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fafaf8;margin-bottom:12px}
+.upload-zone:hover{border-color:#2563eb;background:#eff6ff}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+/* Processing */
+.proc-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:0.5px solid #e0e0d8;border-radius:8px;margin-bottom:6px}
+.proc-info{flex:1;min-width:0}
+.proc-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proc-path{font-size:10px;color:#888;margin-top:2px}
+.pbar{height:3px;background:#e8e8e0;border-radius:2px;margin-top:4px;overflow:hidden}
+.pfill{height:3px;border-radius:2px;transition:width .4s}
+.pfill.analyzing{background:#f59e0b;width:40%;animation:pulse 1.5s infinite}
+.pfill.uploading{background:#2563eb;width:70%}
+.pfill.done{background:#16a34a;width:100%}
+.pfill.error{background:#dc2626;width:100%}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.spinner{width:14px;height:14px;border:2px solid #e0e0d8;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Files */
+.file-cat-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.fct{padding:4px 12px;border:0.5px solid #d0d0c8;border-radius:20px;font-size:11px;cursor:pointer;background:#fff;color:#666;font-family:'Noto Sans JP',sans-serif}
+.fct.active{background:#2563eb;color:#fff;border-color:#2563eb}
+/* Toast */
+#toastArea{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:200}
+.toast{background:#fff;border:0.5px solid #e0e0d8;border-radius:8px;padding:10px 14px;font-size:12px;min-width:220px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);animation:slideIn .3s ease}
+.toast.success{border-left:3px solid #16a34a}.toast.error{border-left:3px solid #dc2626}.toast.info{border-left:3px solid #2563eb}
+@keyframes slideIn{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:600px){.grid2{grid-template-columns:1fr}.topbar-controls{gap:4px}select{font-size:11px;padding:4px 6px}}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <div class="topbar-title">不動産収支管理</div>
-  <div class="topbar-controls">
-    <select id="propSel" onchange="switchProp()">
-      <option value="all">全物件</option>
-      <option value="0">グリーンハイツ（1棟）</option>
-      <option value="1">サンシャイン101（区分）</option>
-      <option value="2">リバーサイド一戸建て</option>
-    </select>
-    <select id="yearSel" onchange="renderCurrent()">
-      <option>2025年</option><option>2024年</option><option>2023年</option>
-    </select>
-    <select id="monthSel" onchange="renderCurrent()">
-      <option value="6">6月</option><option value="5">5月</option><option value="4">4月</option>
-      <option value="3">3月</option><option value="2">2月</option><option value="1">1月</option>
-      <option value="12">12月</option><option value="11">11月</option><option value="10">10月</option>
-      <option value="9">9月</option><option value="8">8月</option><option value="7">7月</option>
-    </select>
+
+<!-- 認証画面 -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <div class="auth-title">不動産収支管理</div>
+    <div class="auth-sub">Google アカウントでログインして<br>Google Drive と連携します</div>
+    <button class="btn-google" onclick="handleAuth()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google でログイン
+    </button>
   </div>
 </div>
-<div class="nav" id="mainNav"></div>
-<div class="content" id="pages"></div>
+
+<!-- アプリ本体 -->
+<div id="appScreen" style="display:none">
+  <div class="topbar">
+    <div class="topbar-title">不動産収支管理</div>
+    <div class="topbar-controls">
+      <select id="propSel" onchange="switchProp()">
+        <option value="all">全物件</option>
+      </select>
+      <select id="yearSel" onchange="renderCurrent()">
+        <option>2025年</option><option>2024年</option><option>2023年</option>
+      </select>
+      <select id="monthSel" onchange="renderCurrent()">
+        <option value="6">6月</option><option value="5">5月</option><option value="4">4月</option>
+        <option value="3">3月</option><option value="2">2月</option><option value="1">1月</option>
+        <option value="12">12月</option><option value="11">11月</option><option value="10">10月</option>
+        <option value="9">9月</option><option value="8">8月</option><option value="7">7月</option>
+      </select>
+    </div>
+  </div>
+  <div class="drive-bar">
+    <div class="drive-dot" id="driveDot"></div>
+    <span id="driveStatus">未接続</span>
+    <span id="userEmail" style="margin-left:auto"></span>
+  </div>
+  <div class="nav" id="mainNav"></div>
+  <div class="content" id="pages"></div>
+</div>
+
+<div id="toastArea"></div>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const PROPS=[
-  {name:'グリーンハイツ',type:'1棟',addr:'東京都渋谷区',built:2006,structure:'RC',area:1240,units:8,price:95000000,selfFund:15000000,loan:80000000,
-   rooms:[
-    {no:'101',status:'occupied',since:'2023-04-01',items:[{label:'家賃',amt:62000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
-    {no:'102',status:'occupied',since:'2022-11-15',items:[{label:'家賃',amt:65000},{label:'管理費',amt:5000}]},
-    {no:'103',status:'vacant',since:null,items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
-    {no:'201',status:'occupied',since:'2024-01-20',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
-    {no:'202',status:'occupied',since:'2021-08-01',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
-    {no:'203',status:'vacant',since:null,items:[{label:'家賃',amt:70000},{label:'管理費',amt:5000}]},
-    {no:'301',status:'occupied',since:'2023-09-10',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
-    {no:'302',status:'occupied',since:'2024-03-05',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000}]},
-   ]},
-  {name:'サンシャイン101',type:'区分',addr:'東京都新宿区',built:2010,structure:'RC',area:42,units:1,price:18000000,selfFund:5000000,loan:13000000,
-   rooms:[{no:'101',status:'occupied',since:'2022-06-01',items:[{label:'家賃',amt:80000},{label:'管理費',amt:5000}]}]},
-  {name:'リバーサイド一戸建て',type:'戸建',addr:'埼玉県さいたま市',built:1998,structure:'木造',area:105,units:1,price:12000000,selfFund:3000000,loan:9000000,
-   rooms:[{no:'全室',status:'occupied',since:'2023-02-01',items:[{label:'家賃',amt:115000},{label:'駐車場',amt:5000}]}]},
-];
+/* ══════════════════════════════
+   設定
+══════════════════════════════ */
+const CLIENT_ID = '467615685674-njvnd3fgio14jcqb4qobbif4jtiabogb.apps.googleusercontent.com';
+const API_KEY   = 'AIzaSyA0xQ__9nR829v-HDJeH0gd6fSsg_9DDHk';
+const DRIVE_FOLDER_ID = '1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
+const SCOPES = 'https://www.googleapis.com/auth/drive';
+
+// サブフォルダ定義（設定から変更可能）
+const SUB_FOLDERS = ['収入','支出','税金','契約書','その他'];
+
+/* ══════════════════════════════
+   状態
+══════════════════════════════ */
+let tokenClient, gapiInited=false, gisInited=false, accessToken=null;
+let properties = JSON.parse(localStorage.getItem('re_props')||'[]');
+let driveFiles = [];
+let currentProp='all', charts={}, currentTabId='dashboard';
+let currentFileFilter='all';
+
+const fmt = n=>'¥'+Math.round(n).toLocaleString();
+const pct = (a,b)=>Math.round(a/b*100);
+const dc  = id=>{if(charts[id]){charts[id].destroy();delete charts[id];}};
+const da  = ()=>Object.keys(charts).forEach(dc);
+
+/* ══════════════════════════════
+   Google API 初期化
+══════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  gapi.load('client',async()=>{
+    await gapi.client.init({apiKey:API_KEY,discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']});
+    gapiInited=true;
+  });
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID, scope:SCOPES,
+    callback:(resp)=>{
+      if(resp.error){showToast('認証エラー: '+resp.error,'error');return;}
+      accessToken=resp.access_token;
+      onSignIn();
+    }
+  });
+  gisInited=true;
+  setupDragDrop();
+});
+
+function handleAuth(){
+  if(!gapiInited||!gisInited){showToast('初期化中です。少々お待ちください','info');return;}
+  tokenClient.requestAccessToken({prompt:'consent'});
+}
+
+async function onSignIn(){
+  try{
+    const r=await gapi.client.drive.about.get({fields:'user'});
+    const u=r.result.user;
+    document.getElementById('userEmail').textContent=u.emailAddress;
+    document.getElementById('driveDot').classList.add('on');
+    document.getElementById('driveStatus').textContent='Drive 接続済';
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('appScreen').style.display='block';
+    if(properties.length===0) loadDefaultProperties();
+    buildPropSelector();
+    buildNav();
+    showTab('dashboard');
+    loadDriveFiles();
+    showToast('Google Drive に接続しました','success');
+  }catch(e){showToast('接続エラー: '+e.message,'error');}
+}
+
+/* ══════════════════════════════
+   デフォルト物件
+══════════════════════════════ */
+function loadDefaultProperties(){
+  properties=[
+    {id:'p1',name:'グリーンハイツ',type:'1棟',addr:'東京都渋谷区',built:2006,structure:'RC',area:1240,units:8,price:95000000,selfFund:15000000,loan:80000000,folderId:null,subFolders:{},
+     rooms:[
+      {no:'101',status:'occupied',since:'2023-04-01',items:[{label:'家賃',amt:62000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
+      {no:'102',status:'occupied',since:'2022-11-15',items:[{label:'家賃',amt:65000},{label:'管理費',amt:5000}]},
+      {no:'103',status:'vacant',since:null,items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
+      {no:'201',status:'occupied',since:'2024-01-20',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
+      {no:'202',status:'occupied',since:'2021-08-01',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
+      {no:'203',status:'vacant',since:null,items:[{label:'家賃',amt:70000},{label:'管理費',amt:5000}]},
+      {no:'301',status:'occupied',since:'2023-09-10',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
+      {no:'302',status:'occupied',since:'2024-03-05',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000}]},
+     ]},
+    {id:'p2',name:'サンシャイン101',type:'区分',addr:'東京都新宿区',built:2010,structure:'RC',area:42,units:1,price:18000000,selfFund:5000000,loan:13000000,folderId:null,subFolders:{},
+     rooms:[{no:'101',status:'occupied',since:'2022-06-01',items:[{label:'家賃',amt:80000},{label:'管理費',amt:5000}]}]},
+    {id:'p3',name:'リバーサイド一戸建て',type:'戸建',addr:'埼玉県さいたま市',built:1998,structure:'木造',area:105,units:1,price:12000000,selfFund:3000000,loan:9000000,folderId:null,subFolders:{},
+     rooms:[{no:'全室',status:'occupied',since:'2023-02-01',items:[{label:'家賃',amt:115000},{label:'駐車場',amt:5000}]}]},
+  ];
+  saveProps();
+}
+function saveProps(){localStorage.setItem('re_props',JSON.stringify(properties));}
+
+function buildPropSelector(){
+  const sel=document.getElementById('propSel');
+  sel.innerHTML='<option value="all">全物件</option>'+
+    properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+}
+
+/* ══════════════════════════════
+   Google Drive 操作
+══════════════════════════════ */
+async function findOrCreateFolder(name,parentId){
+  const q=`name='${name}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const r=await gapi.client.drive.files.list({q,fields:'files(id,name)',spaces:'drive'});
+  if(r.result.files.length>0) return r.result.files[0].id;
+  const cr=await gapi.client.drive.files.create({resource:{name,mimeType:'application/vnd.google-apps.folder',parents:[parentId]},fields:'id'});
+  return cr.result.id;
+}
+
+async function ensurePropFolders(prop){
+  const pfid=await findOrCreateFolder(prop.name,DRIVE_FOLDER_ID);
+  prop.folderId=pfid;
+  prop.subFolders={};
+  for(const sub of SUB_FOLDERS){
+    const sfid = sub==='契約書'&&prop.type==='1棟'
+      ? await findOrCreateFolder(sub,pfid)  // 契約書は後でさらに部屋ごと
+      : await findOrCreateFolder(sub,pfid);
+    prop.subFolders[sub]=sfid;
+  }
+  // 契約書フォルダに部屋ごとのサブフォルダを作成（1棟のみ）
+  if(prop.type==='1棟'&&prop.subFolders['契約書']){
+    prop.roomFolders={};
+    for(const r of prop.rooms){
+      const rfid=await findOrCreateFolder(r.no+'号室',prop.subFolders['契約書']);
+      prop.roomFolders[r.no]=rfid;
+    }
+  }
+  saveProps();
+  return prop;
+}
+
+async function uploadToDrive(file,folderId,fileName){
+  const form=new FormData();
+  form.append('metadata',new Blob([JSON.stringify({name:fileName,parents:[folderId]})],{type:'application/json'}));
+  form.append('file',file);
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{
+    method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
+  });
+  return await r.json();
+}
+
+async function moveFileToDrive(fileId,newFolderId){
+  // 現在の親フォルダを取得してから移動
+  const r=await gapi.client.drive.files.get({fileId,fields:'parents'});
+  const oldParents=r.result.parents.join(',');
+  await gapi.client.drive.files.update({fileId,addParents:newFolderId,removeParents:oldParents,fields:'id,parents'});
+}
+
+async function loadDriveFiles(){
+  if(!accessToken)return;
+  try{
+    driveFiles=[];
+    for(const prop of properties){
+      if(!prop.folderId) continue;
+      for(const [folderName,folderId] of Object.entries(prop.subFolders||{})){
+        if(!folderId) continue;
+        const q=`'${folderId}' in parents and trashed=false`;
+        const r=await gapi.client.drive.files.list({q,fields:'files(id,name,createdTime,webViewLink,mimeType)',orderBy:'createdTime desc',pageSize:100});
+        for(const f of r.result.files){
+          driveFiles.push({...f,propId:prop.id,propName:prop.name,folderName,folderId});
+        }
+      }
+    }
+    driveFiles.sort((a,b)=>new Date(b.createdTime)-new Date(a.createdTime));
+    showToast('ファイル一覧を更新しました','info');
+  }catch(e){console.error(e);}
+}
+
+/* ══════════════════════════════
+   ファイルアップロード処理
+══════════════════════════════ */
+function setupDragDrop(){
+  const zone=document.getElementById('dropZone');
+  if(!zone)return;
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.borderColor='#2563eb';});
+  zone.addEventListener('dragleave',()=>{zone.style.borderColor='#d0d0c8';});
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.style.borderColor='#d0d0c8';handleFiles(e.dataTransfer.files);});
+}
+
+async function handleFiles(files){
+  if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}
+  for(const file of files) processFile(file);
+}
+
+async function processFile(file){
+  const id='f_'+Date.now()+Math.random().toString(36).slice(2);
+  addProcItem(id,file.name);
+  try{
+    updateProcItem(id,'analyzing','AIが解析中…');
+    const ai=guessFromFilename(file.name);
+
+    const prop=properties.find(p=>p.name.includes(ai.propHint||''))||properties[0];
+    if(!prop){updateProcItem(id,'error','物件が見つかりません');return;}
+
+    updateProcItem(id,'uploading','フォルダを確認中…');
+    const up=await ensurePropFolders(prop);
+    const targetId=up.subFolders[ai.category]||up.subFolders['その他'];
+    const dateStr=new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const newName=`${dateStr}_${file.name}`;
+
+    updateProcItem(id,'uploading',`${prop.name} / ${ai.category} へアップロード中…`);
+    const result=await uploadToDrive(file,targetId,newName);
+    updateProcItem(id,'done',`✓ ${prop.name} / ${ai.category}`,result.webViewLink);
+    showToast(`${file.name} を振り分けました`,'success');
+    await loadDriveFiles();
+  }catch(e){
+    updateProcItem(id,'error','エラー: '+e.message);
+    showToast(file.name+' の処理に失敗しました','error');
+  }
+}
+
+function guessFromFilename(name){
+  const l=name.toLowerCase();
+  let category='その他';
+  if(/家賃|賃料|収入|rent|income|送金/.test(l)) category='収入';
+  else if(/固定資産税|税金|tax/.test(l)) category='税金';
+  else if(/修繕|管理費|支出|expense|費|ローン|保険/.test(l)) category='支出';
+  else if(/契約|contract|lease|重要/.test(l)) category='契約書';
+  return{category,propHint:null};
+}
+
+function addProcItem(id,name){
+  const el=document.createElement('div');
+  el.className='proc-item';el.id=id;
+  el.innerHTML=`<div class="proc-info"><div class="proc-name">${name}</div><div class="proc-path" id="${id}_p">待機中…</div><div class="pbar"><div class="pfill analyzing" id="${id}_b" style="width:10%"></div></div></div><div class="spinner" id="${id}_s"></div><span class="badge bz" id="${id}_badge">待機</span>`;
+  const list=document.getElementById('procList');
+  if(list)list.prepend(el);
+}
+
+function updateProcItem(id,status,path,link){
+  const el=document.getElementById(id);if(!el)return;
+  const labels={analyzing:'解析中',uploading:'転送中',done:'完了',error:'エラー'};
+  const colors={analyzing:'ba',uploading:'bb',done:'bg',error:'br'};
+  document.getElementById(id+'_p').textContent=path||'';
+  const badge=document.getElementById(id+'_badge');
+  badge.className='badge '+colors[status];badge.textContent=labels[status]||status;
+  const bar=document.getElementById(id+'_b');
+  bar.className='pfill '+status;
+  const spin=document.getElementById(id+'_s');
+  if(spin)spin.style.display=(status==='done'||status==='error')?'none':'';
+  if(status==='done'&&link){
+    const a=document.createElement('a');a.href=link;a.target='_blank';a.textContent='開く';
+    a.style.cssText='font-size:11px;color:#2563eb;margin-left:8px';
+    el.appendChild(a);
+  }
+}
+
+/* ══════════════════════════════
+   ナビゲーション
+══════════════════════════════ */
+function switchProp(){currentProp=document.getElementById('propSel').value;buildNav();showTab('dashboard');}
+function renderCurrent(){showTab(currentTabId);}
+
+function buildNav(){
+  const isAll=currentProp==='all';
+  const tabs=isAll
+    ?['dashboard:ダッシュボード','upload:ファイル','files:ファイル一覧','settings:設定']
+    :['dashboard:ダッシュボード','overview:物件概要','upload:ファイル','files:ファイル一覧','cashflow:収支','analysis:分析','exit:出口戦略','settings:設定'];
+  document.getElementById('mainNav').innerHTML=tabs.map(t=>{
+    const[id,label]=t.split(':');
+    return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;
+  }).join('');
+  document.getElementById('mainNav').firstChild.classList.add('active');
+}
+
+function showTab(id,el){
+  currentTabId=id;
+  if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+  else{const L={dashboard:'ダッシュボード',overview:'物件概要',upload:'ファイル',files:'ファイル一覧',cashflow:'収支',analysis:'分析',exit:'出口戦略',settings:'設定'};
+    document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
+  da();
+  ({dashboard:renderDashboard,overview:renderOverview,upload:renderUpload,files:renderFiles,cashflow:renderCashflow,analysis:renderAnalysis,exit:renderExit,settings:renderSettings}[id]||renderDashboard)();
+  if(id==='upload')setTimeout(setupDragDrop,100);
+}
+
+/* ══════════════════════════════
+   ダッシュボード
+══════════════════════════════ */
 const MONTHLY=[
   {m:'4月',i:[440000,85000,120000],e:[88000,28000,24000]},
   {m:'5月',i:[440000,85000,120000],e:[44000,14000,12000]},
@@ -111,66 +441,46 @@ const MONTHLY=[
   {m:'2月',i:[440000,85000,120000],e:[44000,14000,12000]},
   {m:'3月',i:[440000,85000,120000],e:[244000,14000,62000]},
 ];
-const CF_DETAIL=[
-  {date:'06/05',pi:0,note:'6月家賃（管理会社送金）',type:'income',amount:440000,folder:'収入'},
-  {date:'06/05',pi:1,note:'6月家賃',type:'income',amount:85000,folder:'収入'},
-  {date:'06/05',pi:2,note:'6月家賃',type:'income',amount:120000,folder:'収入'},
-  {date:'06/10',pi:0,note:'管理委託費',type:'expense',amount:56000,folder:'支出'},
-  {date:'06/12',pi:0,note:'固定資産税（第1期）',type:'tax',amount:120000,folder:'税金'},
-  {date:'06/15',pi:0,note:'エアコン修繕（203号）',type:'expense',amount:85000,folder:'支出'},
-  {date:'06/20',pi:1,note:'ローン返済',type:'expense',amount:48000,folder:'支出'},
-  {date:'06/20',pi:2,note:'ローン返済',type:'expense',amount:12000,folder:'支出'},
-  {date:'06/28',pi:1,note:'固定資産税（第2期）',type:'tax',amount:54000,folder:'税金'},
-];
-let currentProp='all',charts={},currentTabId='dashboard';
-const fmt=n=>'¥'+Math.round(n).toLocaleString();
-const pct=(a,b)=>Math.round(a/b*100);
-const dc=id=>{if(charts[id]){charts[id].destroy();delete charts[id];}};
-const da=()=>Object.keys(charts).forEach(dc);
-function switchProp(){currentProp=document.getElementById('propSel').value;buildNav();showTab('dashboard');}
-function renderCurrent(){showTab(currentTabId);}
-function buildNav(){
-  const tabs=currentProp==='all'?['dashboard:ダッシュボード','cashflow:収支','settings:設定']:['dashboard:ダッシュボード','overview:物件概要','cashflow:収支','analysis:分析','exit:出口戦略','settings:設定'];
-  document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
-  document.getElementById('mainNav').firstChild.classList.add('active');
-}
-function showTab(id,el){
-  currentTabId=id;
-  if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
-  else{const L={dashboard:'ダッシュボード',overview:'物件概要',cashflow:'収支',analysis:'分析',exit:'出口戦略',settings:'設定'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
-  da();
-  ({dashboard:renderDashboard,overview:renderOverview,cashflow:renderCashflow,analysis:renderAnalysis,exit:renderExit,settings:renderSettings}[id]||renderDashboard)();
-}
+
 function renderDashboard(){
-  const isAll=currentProp==='all';const pi=isAll?null:parseInt(currentProp);
+  const isAll=currentProp==='all';
+  const pi=isAll?null:parseInt(currentProp);
   const totalI=isAll?MONTHLY[5].i.reduce((s,v)=>s+v,0):MONTHLY[5].i[pi];
   const totalE=isAll?MONTHLY[5].e.reduce((s,v)=>s+v,0):MONTHLY[5].e[pi];
   const net=totalI-totalE;
   let html=`<div class="metrics"><div class="metric"><div class="ml">今月 収入</div><div class="mv g">${fmt(totalI)}</div></div><div class="metric"><div class="ml">今月 支出</div><div class="mv r">${fmt(totalE)}</div></div><div class="metric"><div class="ml">今月 純利益</div><div class="mv ${net>=0?'g':'r'}">${fmt(net)}</div></div>`;
   if(isAll){
-    const occ=PROPS.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0),tot=PROPS.reduce((s,p)=>s+p.rooms.length,0);
+    const occ=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
+    const tot=properties.reduce((s,p)=>s+p.rooms.length,0);
     html+=`<div class="metric"><div class="ml">稼働室数</div><div class="mv b">${occ}/${tot}室 ${pct(occ,tot)}%</div></div></div>`;
     html+=`<div class="grid2"><div class="card"><div class="ct">物件別 今月収益</div>`;
-    PROPS.forEach((p,i)=>{const inc=MONTHLY[5].i[i],exp=MONTHLY[5].e[i],n=inc-exp;
+    properties.forEach((p,i)=>{
+      if(i>=MONTHLY[5].i.length)return;
+      const inc=MONTHLY[5].i[i],exp=MONTHLY[5].e[i],n=inc-exp;
       html+=`<div style="margin-bottom:10px"><div class="flex-b" style="margin-bottom:3px"><span style="font-size:12px">${p.name} <span class="bz badge">${p.type}</span></span><span class="${n>=0?'g':'r'}" style="font-size:12px;font-weight:700">${fmt(n)}</span></div>
       <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:1px"><div style="width:${pct(inc,850000)}%;background:#86efac"></div><div style="width:${pct(exp,850000)}%;background:#fca5a5"></div></div>
       <div class="flex gap8" style="margin-top:3px;font-size:10px"><span class="g">収入 ${fmt(inc)}</span><span class="r">支出 ${fmt(exp)}</span></div></div>`;
     });
     html+=`</div><div class="card"><div class="ct">物件別 入居率</div>`;
-    PROPS.forEach(p=>{const occ=p.rooms.filter(r=>r.status==='occupied').length,tot=p.rooms.length,r=pct(occ,tot);
+    properties.forEach(p=>{
+      const occ=p.rooms.filter(r=>r.status==='occupied').length,tot=p.rooms.length,r=pct(occ,tot);
       html+=`<div class="prop-rate-card"><div class="flex-b"><span style="font-size:12px;font-weight:500">${p.name}</span><span style="font-size:13px;font-weight:700;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div>
       <div class="prc-bar"><div class="prc-fill" style="width:${r}%"></div></div><div style="font-size:10px;color:#888">${occ}/${tot}室</div></div>`;
     });
-    html+=`</div></div><div class="card"><div class="ct">月次収支推移（直近12ヶ月）</div><div class="chart-wrap" style="height:200px"><canvas id="dashChart" role="img" aria-label="月次収支推移"></canvas></div></div>`;
+    html+=`</div></div>`;
+    html+=`<div class="card"><div class="ct">月次収支推移（直近12ヶ月）</div><div class="chart-wrap" style="height:200px"><canvas id="dashChart"></canvas></div></div>`;
   } else {
-    const p=PROPS[pi];const occ=p.rooms.filter(r=>r.status==='occupied').length,tot=p.rooms.length;
+    const p=properties[pi];
+    if(!p){document.getElementById('pages').innerHTML='<div class="card">物件データがありません</div>';return;}
+    const occ=p.rooms.filter(r=>r.status==='occupied').length,tot=p.rooms.length;
     html+=`<div class="metric"><div class="ml">稼働室数</div><div class="mv b">${occ}/${tot}室 ${pct(occ,tot)}%</div></div></div>`;
     html+=`<div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">部屋別 収入内訳</span><span style="font-size:10px;color:#888">▼タップで内訳</span></div>`;
     const totalRent=p.rooms.filter(r=>r.status==='occupied').reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
-    p.rooms.forEach((r,ri)=>{const roomTotal=r.items.reduce((s,it)=>s+it.amt,0),isOcc=r.status==='occupied';
+    p.rooms.forEach((r,ri)=>{
+      const roomTotal=r.items.reduce((s,it)=>s+it.amt,0),isOcc=r.status==='occupied';
       html+=`<div class="room-block"><div class="room-header" onclick="toggleRoom('rm${pi}_${ri}',this)">
         <div style="width:8px;height:8px;border-radius:50%;background:${isOcc?'#16a34a':'#dc2626'};flex-shrink:0"></div>
-        <span style="font-weight:500;width:40px">${r.no}${p.type==='1棟'?'号':''}</span>
+        <span style="font-weight:500;width:44px">${r.no}${p.type==='1棟'?'号':''}</span>
         <span class="badge ${isOcc?'bg':'br'}">${isOcc?'入居中':'空室'}</span>
         ${isOcc?`<span style="font-size:11px;color:#888">入居日 ${r.since}</span>`:''}
         <span style="margin-left:auto;font-weight:700;font-size:13px;color:${isOcc?'#16a34a':'#aaa'}">${isOcc?fmt(roomTotal):'—'}</span>
@@ -181,8 +491,18 @@ function renderDashboard(){
       </div></div></div>`;
     });
     html+=`<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#f0fdf4;border-radius:8px;margin-top:6px;font-weight:700"><span>稼働合計</span><span class="g">${fmt(totalRent)}/月</span></div></div>
-    <div class="card"><div class="ct">月次収支（直近12ヶ月）</div><div class="chart-wrap" style="height:180px"><canvas id="dashChart" role="img" aria-label="月次収支"></canvas></div></div>`;
+    <div class="card"><div class="ct">月次収支（直近12ヶ月）</div><div class="chart-wrap" style="height:180px"><canvas id="dashChart"></canvas></div></div>`;
   }
+  // Drive連携状況
+  html+=`<div class="card"><div class="flex-b"><span class="ct" style="margin:0">Drive 最近のファイル</span><button class="btn" onclick="loadDriveFiles().then(()=>showTab('dashboard'))">更新</button></div>`;
+  if(driveFiles.length===0){html+=`<div style="color:#888;font-size:12px;padding:12px 0">まだファイルがありません。「ファイル」タブからアップロードしてください。</div>`;}
+  else{
+    const recent=driveFiles.slice(0,5);
+    html+=`<table><thead><tr><th>ファイル名</th><th>物件</th><th>カテゴリ</th></tr></thead><tbody>`;
+    recent.forEach(f=>{html+=`<tr><td><a href="${f.webViewLink}" target="_blank" style="color:#2563eb;text-decoration:none;font-size:12px">${f.name.slice(0,24)}</a></td><td style="font-size:11px;color:#888">${f.propName.slice(0,10)}</td><td><span class="badge bz" style="font-size:10px">${f.folderName}</span></td></tr>`;});
+    html+=`</tbody></table>`;
+  }
+  html+=`</div>`;
   document.getElementById('pages').innerHTML=html;
   const months=MONTHLY.map(m=>m.m);
   const mkC=(id,inc,exp)=>{const el=document.getElementById(id);if(!el)return;
@@ -193,12 +513,18 @@ function renderDashboard(){
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:8}}},
       scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000)+'万',font:{size:10}}}}}});};
   if(isAll)mkC('dashChart',MONTHLY.map(m=>m.i.reduce((s,v)=>s+v,0)),MONTHLY.map(m=>m.e.reduce((s,v)=>s+v,0)));
-  else mkC('dashChart',MONTHLY.map(m=>m.i[parseInt(currentProp)]),MONTHLY.map(m=>m.e[parseInt(currentProp)]));
+  else mkC('dashChart',MONTHLY.map(m=>m.i[pi]||0),MONTHLY.map(m=>m.e[pi]||0));
 }
+
 function toggleRoom(id,h){const el=document.getElementById(id),ic=document.getElementById(id+'_icon'),op=el.style.maxHeight&&el.style.maxHeight!=='0px';el.style.maxHeight=op?'0':'200px';if(ic)ic.textContent=op?'▼':'▲';}
+
+/* ══════════════════════════════
+   物件概要
+══════════════════════════════ */
 function renderOverview(){
-  if(currentProp==='all')return;const p=PROPS[parseInt(currentProp)];const age=2025-p.built;
-  const durMap={RC:47,'鉄骨造':34,'木造':22};const dur=durMap[p.structure]||47;
+  if(currentProp==='all')return;
+  const p=properties[parseInt(currentProp)];if(!p)return;
+  const age=2025-p.built;const durMap={RC:47,'鉄骨造':34,'木造':22};const dur=durMap[p.structure]||47;
   document.getElementById('pages').innerHTML=`
   <div class="card"><div class="ct">基本情報</div><table><tbody>
     <tr><td style="color:#888;width:130px">物件種別</td><td><span class="badge bb">${p.type}</span></td></tr>
@@ -214,29 +540,134 @@ function renderOverview(){
     <tr><td style="color:#888">借入額</td><td>${fmt(p.loan)}</td></tr>
     <tr><td style="color:#888">自己資金比率</td><td>${pct(p.selfFund,p.price)}%</td></tr>
   </tbody></table></div>
+  <div class="card"><div class="ct">Drive フォルダ</div>
+    <div style="margin-bottom:10px;font-size:12px;color:#888">${p.folderId?'フォルダ作成済み':'未作成'}</div>
+    <button class="btn btn-b" onclick="createFolders('${p.id}')">フォルダを作成／確認</button>
+  </div>
   <div class="card"><div class="ct">耐用年数・減価償却</div><table><tbody>
     <tr><td style="color:#888;width:130px">法定耐用年数</td><td>${dur}年（${p.structure}）</td></tr>
     <tr><td style="color:#888">残存耐用年数</td><td>${Math.max(0,dur-age)}年</td></tr>
     <tr><td style="color:#888">年間減価償却費</td><td class="r">約${fmt(Math.round(p.price*.7/dur))}/年</td></tr>
   </tbody></table></div>`;
 }
+
+async function createFolders(propId){
+  const prop=properties.find(p=>p.id===propId);if(!prop)return;
+  showToast('フォルダを作成中…','info');
+  try{
+    await ensurePropFolders(prop);
+    showToast('フォルダの作成が完了しました','success');
+    renderOverview();
+  }catch(e){showToast('エラー: '+e.message,'error');}
+}
+
+/* ══════════════════════════════
+   ファイルアップロード
+══════════════════════════════ */
+function renderUpload(){
+  document.getElementById('pages').innerHTML=`
+  <div class="card">
+    <div class="ct">ファイルをアップロード</div>
+    <div class="upload-zone" id="dropZone">
+      <input type="file" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
+      <div style="font-size:32px;margin-bottom:12px">📂</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:6px">ファイルをドロップ、またはタップして選択</div>
+      <div style="font-size:12px;color:#888;margin-bottom:10px">AI が内容を解析して自動的にフォルダへ振り分けます</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+        ${['PDF','Excel','CSV','Word','画像'].map(t=>`<span style="padding:3px 10px;border:0.5px solid #d0d0c8;border-radius:20px;font-size:11px;color:#666">${t}</span>`).join('')}
+      </div>
+    </div>
+    <div id="procList"></div>
+  </div>`;
+  setTimeout(setupDragDrop,50);
+}
+
+/* ══════════════════════════════
+   ファイル一覧
+══════════════════════════════ */
+function renderFiles(){
+  const catLabels={'収入':'収入','支出':'支出','税金':'税金','契約書':'契約書','その他':'その他'};
+  const filtered=currentFileFilter==='all'?driveFiles:driveFiles.filter(f=>f.folderName===currentFileFilter);
+  document.getElementById('pages').innerHTML=`
+  <div class="flex-b" style="margin-bottom:10px">
+    <div class="file-cat-tabs">
+      ${['all',...SUB_FOLDERS].map(c=>`<button class="fct ${currentFileFilter===c?'active':''}" onclick="filterFiles('${c}',this)">${c==='all'?'すべて':c}</button>`).join('')}
+    </div>
+    <button class="btn" onclick="loadDriveFiles().then(renderFiles)">更新</button>
+  </div>
+  <div class="card" style="padding:0">
+    <div style="overflow-x:auto"><table style="min-width:440px">
+      <thead><tr><th>ファイル名</th><th>物件</th><th>カテゴリ</th><th>日付</th><th>操作</th></tr></thead>
+      <tbody>${filtered.length===0?'<tr><td colspan="5" style="text-align:center;padding:24px;color:#888">ファイルがありません</td></tr>':
+        filtered.map(f=>{
+          const date=f.createdTime?new Date(f.createdTime).toLocaleDateString('ja-JP'):'—';
+          return`<tr>
+            <td><a href="${f.webViewLink}" target="_blank" style="color:#2563eb;text-decoration:none;font-size:12px">${f.name.slice(0,22)}</a></td>
+            <td style="font-size:11px;color:#888">${f.propName.slice(0,10)}</td>
+            <td><span class="badge bz">${f.folderName}</span></td>
+            <td style="font-size:11px;color:#888">${date}</td>
+            <td><button class="btn" style="font-size:10px;padding:3px 8px" onclick="showMoveDialog('${f.id}','${f.propId}','${f.folderName}')">変更</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+
+function filterFiles(cat,el){
+  currentFileFilter=cat;
+  document.querySelectorAll('.fct').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderFiles();
+}
+
+async function showMoveDialog(fileId,propId,currentFolder){
+  const prop=properties.find(p=>p.id===propId);if(!prop)return;
+  const newFolder=prompt(`振り分け先を選択してください。\n現在: ${currentFolder}\n\n選択肢:\n${SUB_FOLDERS.join('\n')}`);
+  if(!newFolder||!SUB_FOLDERS.includes(newFolder)||newFolder===currentFolder)return;
+  const newFolderId=prop.subFolders[newFolder];
+  if(!newFolderId){showToast('フォルダが見つかりません。先にフォルダを作成してください','error');return;}
+  try{
+    showToast('移動中…','info');
+    await moveFileToDrive(fileId,newFolderId);
+    showToast(`${newFolder} に移動しました`,'success');
+    await loadDriveFiles();
+    renderFiles();
+  }catch(e){showToast('移動エラー: '+e.message,'error');}
+}
+
+/* ══════════════════════════════
+   収支
+══════════════════════════════ */
+const CF_DETAIL=[
+  {date:'06/05',pi:0,note:'6月家賃（管理会社送金）',type:'income',amount:440000,folder:'収入'},
+  {date:'06/05',pi:1,note:'6月家賃',type:'income',amount:85000,folder:'収入'},
+  {date:'06/05',pi:2,note:'6月家賃',type:'income',amount:120000,folder:'収入'},
+  {date:'06/10',pi:0,note:'管理委託費',type:'expense',amount:56000,folder:'支出'},
+  {date:'06/12',pi:0,note:'固定資産税（第1期）',type:'tax',amount:120000,folder:'税金'},
+  {date:'06/15',pi:0,note:'エアコン修繕（203号）',type:'expense',amount:85000,folder:'支出'},
+  {date:'06/20',pi:1,note:'ローン返済',type:'expense',amount:48000,folder:'支出'},
+  {date:'06/20',pi:2,note:'ローン返済',type:'expense',amount:12000,folder:'支出'},
+  {date:'06/28',pi:1,note:'固定資産税（第2期）',type:'tax',amount:54000,folder:'税金'},
+];
+
 function renderCashflow(){
   const isAll=currentProp==='all';const pi=isAll?null:parseInt(currentProp);
-  const getI=m=>isAll?MONTHLY[m].i.reduce((s,v)=>s+v,0):MONTHLY[m].i[pi];
-  const getE=m=>isAll?MONTHLY[m].e.reduce((s,v)=>s+v,0):MONTHLY[m].e[pi];
-  const selfFund=isAll?PROPS.reduce((s,p)=>s+p.selfFund,0):PROPS[pi].selfFund;
+  const getI=m=>isAll?MONTHLY[m].i.reduce((s,v)=>s+v,0):(MONTHLY[m].i[pi]||0);
+  const getE=m=>isAll?MONTHLY[m].e.reduce((s,v)=>s+v,0):(MONTHLY[m].e[pi]||0);
+  const selfFund=isAll?properties.reduce((s,p)=>s+p.selfFund,0):(properties[pi]?.selfFund||0);
   const yr=document.getElementById('yearSel').value,mo=document.getElementById('monthSel').value;
   const totalI6=getI(5),totalE6=getE(5);let cumNet=0,html='';
   html+=`<div class="metrics"><div class="metric"><div class="ml">${yr} ${mo}月 収入</div><div class="mv g">${fmt(totalI6)}</div></div><div class="metric"><div class="ml">${yr} ${mo}月 支出</div><div class="mv r">${fmt(totalE6)}</div></div><div class="metric"><div class="ml">${yr} ${mo}月 純利益</div><div class="mv ${totalI6-totalE6>=0?'g':'r'}">${fmt(totalI6-totalE6)}</div></div><div class="metric"><div class="ml">自己資金</div><div class="mv">${fmt(selfFund)}</div></div></div>`;
   const cC={income:'bg',expense:'br',tax:'bp'},cL={income:'収入',expense:'支出',tax:'税金'};
-  html+=`<div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">${yr}年${mo}月 収支明細</span><select style="font-size:11px"><option>全カテゴリ</option><option>収入</option><option>支出</option><option>税金</option></select></div>
+  html+=`<div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">${yr}年${mo}月 収支明細</span></div>
   <div style="overflow-x:auto"><table style="min-width:480px"><thead><tr><th>日付</th><th>物件</th><th>種別</th><th>摘要</th><th style="text-align:right">金額</th><th>フォルダ</th><th></th></tr></thead><tbody>`;
   CF_DETAIL.filter(t=>isAll||t.pi===pi).forEach(t=>{
-    html+=`<tr><td>${t.date}</td><td style="color:#888">${PROPS[t.pi].name.slice(0,8)}</td><td><span class="badge ${cC[t.type]||'bz'}">${cL[t.type]||t.type}</span></td><td>${t.note}</td><td style="text-align:right;font-weight:500" class="${t.type==='income'?'g':'r'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td><td><span class="badge bz">${t.folder}</span></td><td><button class="btn" style="font-size:10px;padding:2px 8px">変更</button></td></tr>`;
+    html+=`<tr><td>${t.date}</td><td style="color:#888">${properties[t.pi]?.name.slice(0,8)||'—'}</td><td><span class="badge ${cC[t.type]||'bz'}">${cL[t.type]||t.type}</span></td><td>${t.note}</td><td style="text-align:right;font-weight:500" class="${t.type==='income'?'g':'r'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td><td><span class="badge bz">${t.folder}</span></td><td><button class="btn" style="font-size:10px;padding:2px 8px">変更</button></td></tr>`;
   });
   html+=`</tbody></table></div></div>
   <div class="card"><div class="ct">年次収支（2024年4月〜2025年3月）</div>
-  <div class="chart-wrap" style="height:180px;margin-bottom:12px"><canvas id="annualChart" role="img" aria-label="年次収支グラフ"></canvas></div>
+  <div class="chart-wrap" style="height:180px;margin-bottom:12px"><canvas id="annualChart"></canvas></div>
   <div style="overflow-x:auto"><table style="min-width:500px"><thead><tr><th>月</th><th style="text-align:right">収入</th><th style="text-align:right">支出</th><th style="text-align:right">純利益</th><th style="text-align:right">累計</th><th style="text-align:right">回収率</th></tr></thead><tbody>`;
   MONTHLY.forEach((m,i)=>{const inc=getI(i),exp=getE(i),net=inc-exp;cumNet+=net;const rec=Math.round(cumNet/selfFund*100);
     html+=`<tr><td>${m.m}</td><td style="text-align:right" class="g">${fmt(inc)}</td><td style="text-align:right" class="r">−${fmt(exp)}</td><td style="text-align:right;font-weight:500" class="${net>=0?'g':'r'}">${fmt(net)}</td><td style="text-align:right;color:#888">${fmt(cumNet)}</td><td style="text-align:right;font-weight:700" class="${rec>=50?'g':'b'}">${rec}%</td></tr>`;
@@ -251,13 +682,19 @@ function renderCashflow(){
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:8}}},
     scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000)+'万',font:{size:10}}}}}});
 }
+
+/* ══════════════════════════════
+   分析
+══════════════════════════════ */
 function renderAnalysis(){
-  if(currentProp==='all')return;const p=PROPS[parseInt(currentProp)];const pi=parseInt(currentProp);
-  const annI=MONTHLY.reduce((s,m)=>s+m.i[pi],0),annE=MONTHLY.reduce((s,m)=>s+m.e[pi],0);
-  const gY=((MONTHLY[0].i[pi]*12)/p.price*100).toFixed(2),nY=((annI-annE)/p.price*100).toFixed(2),eY=((annI-annE)/p.selfFund*100).toFixed(2);
+  if(currentProp==='all')return;
+  const p=properties[parseInt(currentProp)];if(!p)return;
+  const pi=parseInt(currentProp);
+  const annI=MONTHLY.reduce((s,m)=>s+(m.i[pi]||0),0),annE=MONTHLY.reduce((s,m)=>s+(m.e[pi]||0),0);
+  const gY=((( MONTHLY[0].i[pi]||0)*12)/p.price*100).toFixed(2),nY=((annI-annE)/p.price*100).toFixed(2),eY=((annI-annE)/p.selfFund*100).toFixed(2);
   const dur={RC:47,'鉄骨造':34,'木造':22}[p.structure]||47;const age=2025-p.built;
   const secs=[
-    {l:'利回り',o:true,c:`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div class="metric"><div class="ml">表面利回り</div><div class="mv">${gY}%</div></div><div class="metric"><div class="ml">実質利回り</div><div class="mv g">${nY}%</div></div><div class="metric"><div class="ml">自己資金利回り</div><div class="mv b">${eY}%</div></div><div class="metric"><div class="ml">リフォーム含む</div><div class="mv">${(parseFloat(nY)-.3).toFixed(2)}%</div></div></div><div class="chart-wrap" style="height:140px"><canvas id="yieldChart" role="img" aria-label="利回り比較"></canvas></div>`},
+    {l:'利回り',o:true,c:`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div class="metric"><div class="ml">表面利回り</div><div class="mv">${gY}%</div></div><div class="metric"><div class="ml">実質利回り</div><div class="mv g">${nY}%</div></div><div class="metric"><div class="ml">自己資金利回り</div><div class="mv b">${eY}%</div></div><div class="metric"><div class="ml">リフォーム含む</div><div class="mv">${(parseFloat(nY)-.3).toFixed(2)}%</div></div></div><div class="chart-wrap" style="height:140px"><canvas id="yieldChart"></canvas></div>`},
     {l:'初期費用',o:false,c:`<table><thead><tr><th>項目</th><th style="text-align:right">金額</th><th style="text-align:right">物件価格比</th></tr></thead><tbody><tr><td>仲介手数料</td><td style="text-align:right">${fmt(Math.round((p.price*.03+60000)*1.1))}</td><td style="text-align:right">${(Math.round((p.price*.03+60000)*1.1)/p.price*100).toFixed(1)}%</td></tr><tr><td>登記費用</td><td style="text-align:right">${fmt(Math.round(p.price*.01))}</td><td style="text-align:right">1.0%</td></tr><tr><td>不動産取得税</td><td style="text-align:right">${fmt(Math.round(p.price*.015))}</td><td style="text-align:right">1.5%</td></tr><tr><td>司法書士費用</td><td style="text-align:right">¥120,000</td><td style="text-align:right">—</td></tr><tr><td style="font-weight:500">合計</td><td style="text-align:right;font-weight:500">${fmt(Math.round(p.price*.055+192000))}</td><td style="text-align:right;font-weight:500">${(Math.round(p.price*.055+192000)/p.price*100).toFixed(1)}%</td></tr></tbody></table>`},
     {l:'耐用年数・減価償却',o:false,c:`<table><tbody><tr><td style="color:#888;width:140px">建物構造</td><td>${p.structure}</td></tr><tr><td style="color:#888">法定耐用年数</td><td>${dur}年</td></tr><tr><td style="color:#888">築年数</td><td>${age}年</td></tr><tr><td style="color:#888">残存耐用年数</td><td>${Math.max(0,dur-age)}年</td></tr><tr><td style="color:#888">年間減価償却費</td><td class="r">約${fmt(Math.round(p.price*.7/dur))}/年</td></tr></tbody></table>`},
   ];
@@ -265,8 +702,13 @@ function renderAnalysis(){
   charts.yieldChart=new Chart(document.getElementById('yieldChart'),{type:'bar',data:{labels:['表面利回り','実質利回り','自己資金利回り','リフォーム含む'],datasets:[{data:[parseFloat(gY),parseFloat(nY),parseFloat(eY),parseFloat(nY)-.3],backgroundColor:['rgba(37,99,235,.3)','rgba(22,163,74,.3)','rgba(37,99,235,.3)','rgba(180,83,9,.3)'],borderColor:['#2563eb','#16a34a','#2563eb','#b45309'],borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
 }
 function toggleSec(i){const b=document.getElementById('sb'+i),ic=document.getElementById('si'+i),op=b.style.maxHeight!=='0px'&&b.style.maxHeight!=='0';b.style.maxHeight=op?'0':'600px';if(ic)ic.textContent=op?'▼':'▲';}
+
+/* ══════════════════════════════
+   出口戦略
+══════════════════════════════ */
 function renderExit(){
-  if(currentProp==='all')return;const p=PROPS[parseInt(currentProp)];
+  if(currentProp==='all')return;
+  const p=properties[parseInt(currentProp)];if(!p)return;
   document.getElementById('pages').innerHTML=`<div class="card"><div class="ct">売却シミュレーション — ${p.name}</div>
   <div class="grid2" style="margin-bottom:12px">
     <div><div style="font-size:11px;color:#888;margin-bottom:3px">売却想定価格（円）</div><input type="number" id="exitPrice" value="${Math.round(p.price*1.2)}" style="width:100%;font-size:14px" oninput="calcExit()"></div>
@@ -276,11 +718,11 @@ function renderExit(){
     <div><div style="font-size:11px;font-weight:500;color:#888;margin-bottom:8px">費用内訳</div><div style="font-size:12px" id="exitBreakdown"></div></div>
     <div><div class="metric" style="margin-bottom:8px"><div class="ml">手取り利益</div><div class="mv g" id="exitNet">—</div></div><div class="metric"><div class="ml">自己資金回収率</div><div class="mv b" id="exitRecovery">—</div></div></div>
   </div>
-  <div style="margin-top:12px"><div class="ct">売却価格別 手取り試算</div><div class="chart-wrap" style="height:150px"><canvas id="exitChart" role="img" aria-label="売却価格別手取り"></canvas></div></div></div>`;
+  <div style="margin-top:12px"><div class="ct">売却価格別 手取り試算</div><div class="chart-wrap" style="height:150px"><canvas id="exitChart"></canvas></div></div></div>`;
   calcExit();
 }
 function calcExit(){
-  const pi=parseInt(currentProp),p=PROPS[pi];
+  const pi=parseInt(currentProp),p=properties[pi];if(!p)return;
   const price=parseInt(document.getElementById('exitPrice').value)||0;
   const taxType=document.getElementById('taxType').value;
   const agentFee=Math.round((price*.03+60000)*1.1),taxAdj=35000,debt=Math.round(p.loan*.75);
@@ -294,25 +736,41 @@ function calcExit(){
   const nets=prices.map(pr=>{const f=Math.round((pr*.03+60000)*1.1),g=pr-p.price,t=g>0?Math.round(g*rates[taxType]):0;return pr-f-taxAdj-debt-t;});
   charts.exitChart=new Chart(document.getElementById('exitChart'),{type:'bar',data:{labels:prices.map(pr=>'¥'+(pr/10000000).toFixed(1)+'千万'),datasets:[{data:nets,backgroundColor:nets.map(v=>v>=0?'rgba(134,239,172,.6)':'rgba(252,165,165,.6)'),borderColor:nets.map(v=>v>=0?'#16a34a':'#dc2626'),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'¥'+(v/10000)+'万',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
 }
+
+/* ══════════════════════════════
+   設定
+══════════════════════════════ */
 function renderSettings(){
   document.getElementById('pages').innerHTML=`
-  <div class="card"><div class="ct">全般設定</div><table><tbody><tr><td style="color:#888;width:140px">決算月</td><td><select><option>3月（4月〜翌3月）</option><option>12月（1月〜12月）</option></select></td></tr><tr><td style="color:#888">Google Drive</td><td><span class="badge bg">接続済</span></td></tr></tbody></table></div>
+  <div class="card"><div class="ct">全般設定</div><table><tbody>
+    <tr><td style="color:#888;width:140px">決算月</td><td><select><option>3月（4月〜翌3月）</option><option>12月（1月〜12月）</option></select></td></tr>
+    <tr><td style="color:#888">Google Drive</td><td><span class="badge ${accessToken?'bg':'br'}">${accessToken?'接続済':'未接続'}</span></td></tr>
+  </tbody></table></div>
   <div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">フォルダカテゴリ</span><button class="btn btn-b">+ 追加</button></div>
   <table><thead><tr><th>カテゴリ名</th><th>1棟：部屋別</th><th>区分/戸建</th><th></th></tr></thead><tbody>
     <tr><td>収入</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td></td></tr>
     <tr><td>支出</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td></td></tr>
-    <tr><td>税金</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
-    <tr><td>契約書</td><td><span class="badge bb">部屋ごと</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
-    <tr><td>その他</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+    <tr><td>税金</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn">編集</button></td></tr>
+    <tr><td>契約書</td><td><span class="badge bb">部屋ごと</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn">編集</button></td></tr>
+    <tr><td>その他</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn">編集</button></td></tr>
   </tbody></table></div>
   <div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">物件一覧</span><button class="btn btn-b">+ 物件追加</button></div>
-  <table><thead><tr><th>物件名</th><th>種別</th><th>部屋数</th><th>課税</th><th></th></tr></thead><tbody>
-    <tr><td>グリーンハイツ</td><td><span class="badge bb">1棟</span></td><td>8室</td><td>法人</td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
-    <tr><td>サンシャイン101</td><td><span class="badge bz">区分</span></td><td>1室</td><td>個人</td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
-    <tr><td>リバーサイド一戸建て</td><td><span class="badge bz">戸建</span></td><td>1室</td><td>個人</td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+  <table><thead><tr><th>物件名</th><th>種別</th><th>部屋数</th><th>課税</th><th>Drive</th></tr></thead><tbody>
+    ${properties.map(p=>`<tr><td>${p.name}</td><td><span class="badge bb">${p.type}</span></td><td>${p.rooms.length}室</td><td>個人</td><td><span class="badge ${p.folderId?'bg':'br'}">${p.folderId?'作成済':'未作成'}</span></td></tr>`).join('')}
   </tbody></table></div>`;
 }
-buildNav();showTab('dashboard');
+
+/* ══════════════════════════════
+   Toast
+══════════════════════════════ */
+function showToast(msg,type='info'){
+  const icons={success:'✓',error:'✕',info:'ℹ'};
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toastArea').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
 </script>
 </body>
 </html>
