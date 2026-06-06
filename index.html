@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>不動産収支管理</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="不動産管理">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;font-size:14px;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
+.topbar{background:#fff;border-bottom:0.5px solid #e0e0d8;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:15px;font-weight:700}
+.topbar-controls{display:flex;align-items:center;gap:6px}
+select,input[type=number],input[type=text]{border:0.5px solid #d0d0c8;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif}
+.nav{display:flex;gap:2px;background:#fff;border-bottom:0.5px solid #e0e0d8;padding:0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nb{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:12px;color:#666;margin-bottom:-1px;font-family:'Noto Sans JP',sans-serif;white-space:nowrap}
+.nb.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:500}
+.content{padding:14px;max-width:900px;margin:0 auto}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.metric{background:#fff;border:0.5px solid #e0e0d8;border-radius:8px;padding:12px 14px}
+.ml{font-size:11px;color:#888;margin-bottom:3px}
+.mv{font-size:18px;font-weight:700}
+.mv.g{color:#16a34a}.mv.r{color:#dc2626}.mv.b{color:#2563eb}
+.card{background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.ct{font-size:11px;font-weight:500;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:7px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e8e8e0;font-weight:500;white-space:nowrap}
+td{padding:7px 8px;border-bottom:0.5px solid #f0f0e8;color:#1a1a1a;vertical-align:top}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500}
+.bg{background:#dcfce7;color:#166534}.br{background:#fee2e2;color:#991b1b}
+.bb{background:#dbeafe;color:#1e40af}.ba{background:#fef9c3;color:#854d0e}
+.bz{background:#f3f4f6;color:#4b5563}.bp{background:#ede9fe;color:#5b21b6}
+.btn{padding:5px 12px;border:0.5px solid #d0d0c8;border-radius:6px;background:none;cursor:pointer;font-size:11px;color:#333;font-family:'Noto Sans JP',sans-serif}
+.btn:hover{background:#f5f5f0}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.g{color:#16a34a}.r{color:#dc2626}
+.flex{display:flex;align-items:center}.flex-b{display:flex;align-items:center;justify-content:space-between}
+.gap6{gap:6px}.gap8{gap:8px}
+.chart-wrap{position:relative;width:100%}
+.room-block{border:0.5px solid #e0e0d8;border-radius:8px;margin-bottom:6px;overflow:hidden}
+.room-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fafaf8;cursor:pointer}
+.room-detail{overflow:hidden;transition:max-height .2s ease;max-height:0}
+.room-detail-inner{padding:6px 12px}
+.income-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0e8;font-size:12px}
+.income-row:last-child{border-bottom:none}
+.prop-rate-card{border:0.5px solid #e0e0d8;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.prc-bar{height:5px;background:#e8e8e0;border-radius:3px;margin:4px 0}
+.prc-fill{height:5px;border-radius:3px;background:#16a34a}
+.sec-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 16px}
+.sec-body{overflow:hidden;transition:max-height .25s ease}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}.topbar-controls{gap:4px}select{font-size:11px;padding:4px 6px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">不動産収支管理</div>
+  <div class="topbar-controls">
+    <select id="propSel" onchange="switchProp()">
+      <option value="all">全物件</option>
+      <option value="0">グリーンハイツ（1棟）</option>
+      <option value="1">サンシャイン101（区分）</option>
+      <option value="2">リバーサイド一戸建て</option>
+    </select>
+    <select id="yearSel" onchange="renderCurrent()">
+      <option>2025年</option><option>2024年</option><option>2023年</option>
+    </select>
+    <select id="monthSel" onchange="renderCurrent()">
+      <option value="6">6月</option><option value="5">5月</option><option value="4">4月</option>
+      <option value="3">3月</option><option value="2">2月</option><option value="1">1月</option>
+      <option value="12">12月</option><option value="11">11月</option><option value="10">10月</option>
+      <option value="9">9月</option><option value="8">8月</option><option value="7">7月</option>
+    </select>
+  </div>
+</div>
+<div class="nav" id="mainNav"></div>
+<div class="content" id="pages"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const PROPS=[
+  {name:'グリーンハイツ',type:'1棟',addr:'東京都渋谷区',built:2006,structure:'RC',area:1240,units:8,price:95000000,selfFund:15000000,loan:80000000,
+   rooms:[
+    {no:'101',status:'occupied',since:'2023-04-01',items:[{label:'家賃',amt:62000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
+    {no:'102',status:'occupied',since:'2022-11-15',items:[{label:'家賃',amt:65000},{label:'管理費',amt:5000}]},
+    {no:'103',status:'vacant',since:null,items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
+    {no:'201',status:'occupied',since:'2024-01-20',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
+    {no:'202',status:'occupied',since:'2021-08-01',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
+    {no:'203',status:'vacant',since:null,items:[{label:'家賃',amt:70000},{label:'管理費',amt:5000}]},
+    {no:'301',status:'occupied',since:'2023-09-10',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
+    {no:'302',status:'occupied',since:'2024-03-05',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000}]},
+   ]},
+  {name:'サンシャイン101',type:'区分',addr:'東京都新宿区',built:2010,structure:'RC',area:42,units:1,price:18000000,selfFund:5000000,loan:13000000,
+   rooms:[{no:'101',status:'occupied',since:'2022-06-01',items:[{label:'家賃',amt:80000},{label:'管理費',amt:5000}]}]},
+  {name:'リバーサイド一戸建て',type:'戸建',addr:'埼玉県さいたま市',built:1998,structure:'木造',area:105,units:1,price:12000000,selfFund:3000000,loan:9000000,
+   rooms:[{no:'全室',status:'occupied',since:'2023-02-01',items:[{label:'家賃',amt:115000},{label:'駐車場',amt:5000}]}]},
+];
+const MONTHLY=[
+  {m:'4月',i:[440000,85000,120000],e:[88000,28000,24000]},
+  {m:'5月',i:[440000,85000,120000],e:[44000,14000,12000]},
+  {m:'6月',i:[440000,85000,120000],e:[141000,48000,12000]},
+  {m:'7月',i:[440000,85000,120000],e:[44000,14000,12000]},
+  {m:'8月',i:[352000,85000,120000],e:[164000,14000,12000]},
+  {m:'9月',i:[352000,85000,120000],e:[44000,14000,12000]},
+  {m:'10月',i:[440000,85000,120000],e:[44000,14000,12000]},
+  {m:'11月',i:[440000,85000,120000],e:[244000,14000,12000]},
+  {m:'12月',i:[440000,85000,120000],e:[44000,14000,12000]},
+  {m:'1月',i:[440000,85000,120000],e:[44000,14000,12000]},
+  {m:'2月',i:[440000,85000,120000],e:[44000,14000,12000]},
+  {m:'3月',i:[440000,85000,120000],e:[244000,14000,62000]},
+];
+const CF_DETAIL=[
+  {date:'06/05',pi:0,note:'6月家賃（管理会社送金）',type:'income',amount:440000,folder:'収入'},
+  {date:'06/05',pi:1,note:'6月家賃',type:'income',amount:85000,folder:'収入'},
+  {date:'06/05',pi:2,note:'6月家賃',type:'income',amount:120000,folder:'収入'},
+  {date:'06/10',pi:0,note:'管理委託費',type:'expense',amount:56000,folder:'支出'},
+  {date:'06/12',pi:0,note:'固定資産税（第1期）',type:'tax',amount:120000,folder:'税金'},
+  {date:'06/15',pi:0,note:'エアコン修繕（203号）',type:'expense',amount:85000,folder:'支出'},
+  {date:'06/20',pi:1,note:'ローン返済',type:'expense',amount:48000,folder:'支出'},
+  {date:'06/20',pi:2,note:'ローン返済',type:'expense',amount:12000,folder:'支出'},
+  {date:'06/28',pi:1,note:'固定資産税（第2期）',type:'tax',amount:54000,folder:'税金'},
+];
+let currentProp='all',charts={},currentTabId='dashboard';
+const fmt=n=>'¥'+Math.round(n).toLocaleString();
+const pct=(a,b)=>Math.round(a/b*100);
+const dc=id=>{if(charts[id]){charts[id].destroy();delete charts[id];}};
+const da=()=>Object.keys(charts).forEach(dc);
+function switchProp(){currentProp=document.getElementById('propSel').value;buildNav();showTab('dashboard');}
+function renderCurrent(){showTab(currentTabId);}
+function buildNav(){
+  const tabs=currentProp==='all'?['dashboard:ダッシュボード','cashflow:収支','settings:設定']:['dashboard:ダッシュボード','overview:物件概要','cashflow:収支','analysis:分析','exit:出口戦略','settings:設定'];
+  document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
+  document.getElementById('mainNav').firstChild.classList.add('active');
+}
+function showTab(id,el){
+  currentTabId=id;
+  if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+  else{const L={dashboard:'ダッシュボード',overview:'物件概要',cashflow:'収支',analysis:'分析',exit:'出口戦略',settings:'設定'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
+  da();
+  ({dashboard:renderDashboard,overview:renderOverview,cashflow:renderCashflow,analysis:renderAnalysis,exit:renderExit,settings:renderSettings}[id]||renderDashboard)();
+}
+function renderDashboard(){
+  const isAll=currentProp==='all';const pi=isAll?null:parseInt(currentProp);
+  const totalI=isAll?MONTHLY[5].i.reduce((s,v)=>s+v,0):MONTHLY[5].i[pi];
+  const totalE=isAll?MONTHLY[5].e.reduce((s,v)=>s+v,0):MONTHLY[5].e[pi];
+  const net=totalI-totalE;
+  let html=`<div class="metrics"><div class="metric"><div class="ml">今月 収入</div><div class="mv g">${fmt(totalI)}</div></div><div class="metric"><div class="ml">今月 支出</div><div class="mv r">${fmt(totalE)}</div></div><div class="metric"><div class="ml">今月 純利益</div><div class="mv ${net>=0?'g':'r'}">${fmt(net)}</div></div>`;
+  if(isAll){
+    const occ=PROPS.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0),tot=PROPS.reduce((s,p)=>s+p.rooms.length,0);
+    html+=`<div class="metric"><div class="ml">稼働室数</div><div class="mv b">${occ}/${tot}室 ${pct(occ,tot)}%</div></div></div>`;
+    html+=`<div class="grid2"><div class="card"><div class="ct">物件別 今月収益</div>`;
+    PROPS.forEach((p,i)=>{const inc=MONTHLY[5].i[i],exp=MONTHLY[5].e[i],n=inc-exp;
+      html+=`<div style="margin-bottom:10px"><div class="flex-b" style="margin-bottom:3px"><span style="font-size:12px">${p.name} <span class="bz badge">${p.type}</span></span><span class="${n>=0?'g':'r'}" style="font-size:12px;font-weight:700">${fmt(n)}</span></div>
+      <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:1px"><div style="width:${pct(inc,850000)}%;background:#86efac"></div><div style="width:${pct(exp,850000)}%;background:#fca5a5"></div></div>
+      <div class="flex gap8" style="margin-top:3px;font-size:10px"><span class="g">収入 ${fmt(inc)}</span><span class="r">支出 ${fmt(exp)}</span></div></div>`;
+    });
+    html+=`</div><div class="card"><div class="ct">物件別 入居率</div>`;
+    PROPS.forEach(p=>{const occ=p.rooms.filter(r=>r.status==='occupied').length,tot=p.rooms.length,r=pct(occ,tot);
+      html+=`<div class="prop-rate-card"><div class="flex-b"><span style="font-size:12px;font-weight:500">${p.name}</span><span style="font-size:13px;font-weight:700;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div>
+      <div class="prc-bar"><div class="prc-fill" style="width:${r}%"></div></div><div style="font-size:10px;color:#888">${occ}/${tot}室</div></div>`;
+    });
+    html+=`</div></div><div class="card"><div class="ct">月次収支推移（直近12ヶ月）</div><div class="chart-wrap" style="height:200px"><canvas id="dashChart" role="img" aria-label="月次収支推移"></canvas></div></div>`;
+  } else {
+    const p=PROPS[pi];const occ=p.rooms.filter(r=>r.status==='occupied').length,tot=p.rooms.length;
+    html+=`<div class="metric"><div class="ml">稼働室数</div><div class="mv b">${occ}/${tot}室 ${pct(occ,tot)}%</div></div></div>`;
+    html+=`<div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">部屋別 収入内訳</span><span style="font-size:10px;color:#888">▼タップで内訳</span></div>`;
+    const totalRent=p.rooms.filter(r=>r.status==='occupied').reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+    p.rooms.forEach((r,ri)=>{const roomTotal=r.items.reduce((s,it)=>s+it.amt,0),isOcc=r.status==='occupied';
+      html+=`<div class="room-block"><div class="room-header" onclick="toggleRoom('rm${pi}_${ri}',this)">
+        <div style="width:8px;height:8px;border-radius:50%;background:${isOcc?'#16a34a':'#dc2626'};flex-shrink:0"></div>
+        <span style="font-weight:500;width:40px">${r.no}${p.type==='1棟'?'号':''}</span>
+        <span class="badge ${isOcc?'bg':'br'}">${isOcc?'入居中':'空室'}</span>
+        ${isOcc?`<span style="font-size:11px;color:#888">入居日 ${r.since}</span>`:''}
+        <span style="margin-left:auto;font-weight:700;font-size:13px;color:${isOcc?'#16a34a':'#aaa'}">${isOcc?fmt(roomTotal):'—'}</span>
+        <span style="font-size:12px;color:#aaa;margin-left:4px" id="rm${pi}_${ri}_icon">▼</span>
+      </div>
+      <div class="room-detail" id="rm${pi}_${ri}"><div class="room-detail-inner">
+        ${r.items.map(it=>`<div class="income-row"><span style="color:#666">${it.label}</span><span>${isOcc?fmt(it.amt):'('+fmt(it.amt)+')'}</span></div>`).join('')}
+      </div></div></div>`;
+    });
+    html+=`<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#f0fdf4;border-radius:8px;margin-top:6px;font-weight:700"><span>稼働合計</span><span class="g">${fmt(totalRent)}/月</span></div></div>
+    <div class="card"><div class="ct">月次収支（直近12ヶ月）</div><div class="chart-wrap" style="height:180px"><canvas id="dashChart" role="img" aria-label="月次収支"></canvas></div></div>`;
+  }
+  document.getElementById('pages').innerHTML=html;
+  const months=MONTHLY.map(m=>m.m);
+  const mkC=(id,inc,exp)=>{const el=document.getElementById(id);if(!el)return;
+    charts[id]=new Chart(el,{type:'bar',data:{labels:months,datasets:[
+      {label:'収入',data:inc,backgroundColor:'rgba(134,239,172,.6)',borderColor:'#16a34a',borderWidth:1},
+      {label:'支出',data:exp,backgroundColor:'rgba(252,165,165,.6)',borderColor:'#dc2626',borderWidth:1},
+      {type:'line',label:'純利益',data:inc.map((v,i)=>v-exp[i]),borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.3},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:8}}},
+      scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000)+'万',font:{size:10}}}}}});};
+  if(isAll)mkC('dashChart',MONTHLY.map(m=>m.i.reduce((s,v)=>s+v,0)),MONTHLY.map(m=>m.e.reduce((s,v)=>s+v,0)));
+  else mkC('dashChart',MONTHLY.map(m=>m.i[parseInt(currentProp)]),MONTHLY.map(m=>m.e[parseInt(currentProp)]));
+}
+function toggleRoom(id,h){const el=document.getElementById(id),ic=document.getElementById(id+'_icon'),op=el.style.maxHeight&&el.style.maxHeight!=='0px';el.style.maxHeight=op?'0':'200px';if(ic)ic.textContent=op?'▼':'▲';}
+function renderOverview(){
+  if(currentProp==='all')return;const p=PROPS[parseInt(currentProp)];const age=2025-p.built;
+  const durMap={RC:47,'鉄骨造':34,'木造':22};const dur=durMap[p.structure]||47;
+  document.getElementById('pages').innerHTML=`
+  <div class="card"><div class="ct">基本情報</div><table><tbody>
+    <tr><td style="color:#888;width:130px">物件種別</td><td><span class="badge bb">${p.type}</span></td></tr>
+    <tr><td style="color:#888">所在地</td><td>${p.addr}</td></tr>
+    <tr><td style="color:#888">建築年</td><td>${p.built}年（築${age}年）</td></tr>
+    <tr><td style="color:#888">建物構造</td><td>${p.structure}</td></tr>
+    <tr><td style="color:#888">延床面積</td><td>${p.area}㎡</td></tr>
+    <tr><td style="color:#888">戸数</td><td>${p.units}戸</td></tr>
+  </tbody></table></div>
+  <div class="card"><div class="ct">取得・資金情報</div><table><tbody>
+    <tr><td style="color:#888;width:130px">取得価格</td><td>${fmt(p.price)}</td></tr>
+    <tr><td style="color:#888">自己資金</td><td>${fmt(p.selfFund)}</td></tr>
+    <tr><td style="color:#888">借入額</td><td>${fmt(p.loan)}</td></tr>
+    <tr><td style="color:#888">自己資金比率</td><td>${pct(p.selfFund,p.price)}%</td></tr>
+  </tbody></table></div>
+  <div class="card"><div class="ct">耐用年数・減価償却</div><table><tbody>
+    <tr><td style="color:#888;width:130px">法定耐用年数</td><td>${dur}年（${p.structure}）</td></tr>
+    <tr><td style="color:#888">残存耐用年数</td><td>${Math.max(0,dur-age)}年</td></tr>
+    <tr><td style="color:#888">年間減価償却費</td><td class="r">約${fmt(Math.round(p.price*.7/dur))}/年</td></tr>
+  </tbody></table></div>`;
+}
+function renderCashflow(){
+  const isAll=currentProp==='all';const pi=isAll?null:parseInt(currentProp);
+  const getI=m=>isAll?MONTHLY[m].i.reduce((s,v)=>s+v,0):MONTHLY[m].i[pi];
+  const getE=m=>isAll?MONTHLY[m].e.reduce((s,v)=>s+v,0):MONTHLY[m].e[pi];
+  const selfFund=isAll?PROPS.reduce((s,p)=>s+p.selfFund,0):PROPS[pi].selfFund;
+  const yr=document.getElementById('yearSel').value,mo=document.getElementById('monthSel').value;
+  const totalI6=getI(5),totalE6=getE(5);let cumNet=0,html='';
+  html+=`<div class="metrics"><div class="metric"><div class="ml">${yr} ${mo}月 収入</div><div class="mv g">${fmt(totalI6)}</div></div><div class="metric"><div class="ml">${yr} ${mo}月 支出</div><div class="mv r">${fmt(totalE6)}</div></div><div class="metric"><div class="ml">${yr} ${mo}月 純利益</div><div class="mv ${totalI6-totalE6>=0?'g':'r'}">${fmt(totalI6-totalE6)}</div></div><div class="metric"><div class="ml">自己資金</div><div class="mv">${fmt(selfFund)}</div></div></div>`;
+  const cC={income:'bg',expense:'br',tax:'bp'},cL={income:'収入',expense:'支出',tax:'税金'};
+  html+=`<div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">${yr}年${mo}月 収支明細</span><select style="font-size:11px"><option>全カテゴリ</option><option>収入</option><option>支出</option><option>税金</option></select></div>
+  <div style="overflow-x:auto"><table style="min-width:480px"><thead><tr><th>日付</th><th>物件</th><th>種別</th><th>摘要</th><th style="text-align:right">金額</th><th>フォルダ</th><th></th></tr></thead><tbody>`;
+  CF_DETAIL.filter(t=>isAll||t.pi===pi).forEach(t=>{
+    html+=`<tr><td>${t.date}</td><td style="color:#888">${PROPS[t.pi].name.slice(0,8)}</td><td><span class="badge ${cC[t.type]||'bz'}">${cL[t.type]||t.type}</span></td><td>${t.note}</td><td style="text-align:right;font-weight:500" class="${t.type==='income'?'g':'r'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td><td><span class="badge bz">${t.folder}</span></td><td><button class="btn" style="font-size:10px;padding:2px 8px">変更</button></td></tr>`;
+  });
+  html+=`</tbody></table></div></div>
+  <div class="card"><div class="ct">年次収支（2024年4月〜2025年3月）</div>
+  <div class="chart-wrap" style="height:180px;margin-bottom:12px"><canvas id="annualChart" role="img" aria-label="年次収支グラフ"></canvas></div>
+  <div style="overflow-x:auto"><table style="min-width:500px"><thead><tr><th>月</th><th style="text-align:right">収入</th><th style="text-align:right">支出</th><th style="text-align:right">純利益</th><th style="text-align:right">累計</th><th style="text-align:right">回収率</th></tr></thead><tbody>`;
+  MONTHLY.forEach((m,i)=>{const inc=getI(i),exp=getE(i),net=inc-exp;cumNet+=net;const rec=Math.round(cumNet/selfFund*100);
+    html+=`<tr><td>${m.m}</td><td style="text-align:right" class="g">${fmt(inc)}</td><td style="text-align:right" class="r">−${fmt(exp)}</td><td style="text-align:right;font-weight:500" class="${net>=0?'g':'r'}">${fmt(net)}</td><td style="text-align:right;color:#888">${fmt(cumNet)}</td><td style="text-align:right;font-weight:700" class="${rec>=50?'g':'b'}">${rec}%</td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  document.getElementById('pages').innerHTML=html;
+  const months=MONTHLY.map(m=>m.m),allI=MONTHLY.map((_,i)=>getI(i)),allE=MONTHLY.map((_,i)=>getE(i));
+  charts.annualChart=new Chart(document.getElementById('annualChart'),{type:'bar',data:{labels:months,datasets:[
+    {label:'収入',data:allI,backgroundColor:'rgba(134,239,172,.6)',borderColor:'#16a34a',borderWidth:1},
+    {label:'支出',data:allE,backgroundColor:'rgba(252,165,165,.6)',borderColor:'#dc2626',borderWidth:1},
+    {type:'line',label:'純利益',data:allI.map((v,i)=>v-allE[i]),borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:8}}},
+    scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000)+'万',font:{size:10}}}}}});
+}
+function renderAnalysis(){
+  if(currentProp==='all')return;const p=PROPS[parseInt(currentProp)];const pi=parseInt(currentProp);
+  const annI=MONTHLY.reduce((s,m)=>s+m.i[pi],0),annE=MONTHLY.reduce((s,m)=>s+m.e[pi],0);
+  const gY=((MONTHLY[0].i[pi]*12)/p.price*100).toFixed(2),nY=((annI-annE)/p.price*100).toFixed(2),eY=((annI-annE)/p.selfFund*100).toFixed(2);
+  const dur={RC:47,'鉄骨造':34,'木造':22}[p.structure]||47;const age=2025-p.built;
+  const secs=[
+    {l:'利回り',o:true,c:`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div class="metric"><div class="ml">表面利回り</div><div class="mv">${gY}%</div></div><div class="metric"><div class="ml">実質利回り</div><div class="mv g">${nY}%</div></div><div class="metric"><div class="ml">自己資金利回り</div><div class="mv b">${eY}%</div></div><div class="metric"><div class="ml">リフォーム含む</div><div class="mv">${(parseFloat(nY)-.3).toFixed(2)}%</div></div></div><div class="chart-wrap" style="height:140px"><canvas id="yieldChart" role="img" aria-label="利回り比較"></canvas></div>`},
+    {l:'初期費用',o:false,c:`<table><thead><tr><th>項目</th><th style="text-align:right">金額</th><th style="text-align:right">物件価格比</th></tr></thead><tbody><tr><td>仲介手数料</td><td style="text-align:right">${fmt(Math.round((p.price*.03+60000)*1.1))}</td><td style="text-align:right">${(Math.round((p.price*.03+60000)*1.1)/p.price*100).toFixed(1)}%</td></tr><tr><td>登記費用</td><td style="text-align:right">${fmt(Math.round(p.price*.01))}</td><td style="text-align:right">1.0%</td></tr><tr><td>不動産取得税</td><td style="text-align:right">${fmt(Math.round(p.price*.015))}</td><td style="text-align:right">1.5%</td></tr><tr><td>司法書士費用</td><td style="text-align:right">¥120,000</td><td style="text-align:right">—</td></tr><tr><td style="font-weight:500">合計</td><td style="text-align:right;font-weight:500">${fmt(Math.round(p.price*.055+192000))}</td><td style="text-align:right;font-weight:500">${(Math.round(p.price*.055+192000)/p.price*100).toFixed(1)}%</td></tr></tbody></table>`},
+    {l:'耐用年数・減価償却',o:false,c:`<table><tbody><tr><td style="color:#888;width:140px">建物構造</td><td>${p.structure}</td></tr><tr><td style="color:#888">法定耐用年数</td><td>${dur}年</td></tr><tr><td style="color:#888">築年数</td><td>${age}年</td></tr><tr><td style="color:#888">残存耐用年数</td><td>${Math.max(0,dur-age)}年</td></tr><tr><td style="color:#888">年間減価償却費</td><td class="r">約${fmt(Math.round(p.price*.7/dur))}/年</td></tr></tbody></table>`},
+  ];
+  document.getElementById('pages').innerHTML=secs.map((s,i)=>`<div class="card" style="padding:0"><div class="sec-toggle" onclick="toggleSec(${i})"><span style="font-size:13px;font-weight:500">${s.l}</span><span id="si${i}">${s.o?'▲':'▼'}</span></div><div class="sec-body" id="sb${i}" style="max-height:${s.o?'600px':'0'}"><div style="padding:4px 16px 16px">${s.c}</div></div></div>`).join('');
+  charts.yieldChart=new Chart(document.getElementById('yieldChart'),{type:'bar',data:{labels:['表面利回り','実質利回り','自己資金利回り','リフォーム含む'],datasets:[{data:[parseFloat(gY),parseFloat(nY),parseFloat(eY),parseFloat(nY)-.3],backgroundColor:['rgba(37,99,235,.3)','rgba(22,163,74,.3)','rgba(37,99,235,.3)','rgba(180,83,9,.3)'],borderColor:['#2563eb','#16a34a','#2563eb','#b45309'],borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
+}
+function toggleSec(i){const b=document.getElementById('sb'+i),ic=document.getElementById('si'+i),op=b.style.maxHeight!=='0px'&&b.style.maxHeight!=='0';b.style.maxHeight=op?'0':'600px';if(ic)ic.textContent=op?'▼':'▲';}
+function renderExit(){
+  if(currentProp==='all')return;const p=PROPS[parseInt(currentProp)];
+  document.getElementById('pages').innerHTML=`<div class="card"><div class="ct">売却シミュレーション — ${p.name}</div>
+  <div class="grid2" style="margin-bottom:12px">
+    <div><div style="font-size:11px;color:#888;margin-bottom:3px">売却想定価格（円）</div><input type="number" id="exitPrice" value="${Math.round(p.price*1.2)}" style="width:100%;font-size:14px" oninput="calcExit()"></div>
+    <div><div style="font-size:11px;color:#888;margin-bottom:3px">課税区分</div><select id="taxType" style="width:100%" onchange="calcExit()"><option value="longPersonal">個人 長期（20.315%）</option><option value="shortPersonal">個人 短期（39.63%）</option><option value="corporate">法人（実効税率34%）</option></select></div>
+  </div>
+  <div class="grid2">
+    <div><div style="font-size:11px;font-weight:500;color:#888;margin-bottom:8px">費用内訳</div><div style="font-size:12px" id="exitBreakdown"></div></div>
+    <div><div class="metric" style="margin-bottom:8px"><div class="ml">手取り利益</div><div class="mv g" id="exitNet">—</div></div><div class="metric"><div class="ml">自己資金回収率</div><div class="mv b" id="exitRecovery">—</div></div></div>
+  </div>
+  <div style="margin-top:12px"><div class="ct">売却価格別 手取り試算</div><div class="chart-wrap" style="height:150px"><canvas id="exitChart" role="img" aria-label="売却価格別手取り"></canvas></div></div></div>`;
+  calcExit();
+}
+function calcExit(){
+  const pi=parseInt(currentProp),p=PROPS[pi];
+  const price=parseInt(document.getElementById('exitPrice').value)||0;
+  const taxType=document.getElementById('taxType').value;
+  const agentFee=Math.round((price*.03+60000)*1.1),taxAdj=35000,debt=Math.round(p.loan*.75);
+  const gain=price-p.price,rates={longPersonal:.20315,shortPersonal:.3963,corporate:.34};
+  const cgTax=gain>0?Math.round(gain*rates[taxType]):0,net=price-agentFee-taxAdj-debt-cgTax;
+  document.getElementById('exitBreakdown').innerHTML=[['売却価格',fmt(price),''],['仲介手数料',fmt(agentFee),'r'],['固都税精算',fmt(taxAdj),'r'],['残債',fmt(debt),'r'],['譲渡所得税',fmt(cgTax),'r']].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0e8"><span style="color:#888">${k}</span><span class="${c}" style="font-weight:500">${c==='r'?'−':''}${v}</span></div>`).join('')+`<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:13px;border-top:0.5px solid #d0d0c8;margin-top:4px"><span>手取り</span><span class="${net>=0?'g':'r'}">${fmt(net)}</span></div>`;
+  document.getElementById('exitNet').textContent=fmt(net);
+  document.getElementById('exitRecovery').textContent=Math.round(net/p.selfFund*100)+'%';
+  dc('exitChart');
+  const prices=[.8,.9,1,1.1,1.2].map(r=>Math.round(price*r));
+  const nets=prices.map(pr=>{const f=Math.round((pr*.03+60000)*1.1),g=pr-p.price,t=g>0?Math.round(g*rates[taxType]):0;return pr-f-taxAdj-debt-t;});
+  charts.exitChart=new Chart(document.getElementById('exitChart'),{type:'bar',data:{labels:prices.map(pr=>'¥'+(pr/10000000).toFixed(1)+'千万'),datasets:[{data:nets,backgroundColor:nets.map(v=>v>=0?'rgba(134,239,172,.6)':'rgba(252,165,165,.6)'),borderColor:nets.map(v=>v>=0?'#16a34a':'#dc2626'),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'¥'+(v/10000)+'万',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
+}
+function renderSettings(){
+  document.getElementById('pages').innerHTML=`
+  <div class="card"><div class="ct">全般設定</div><table><tbody><tr><td style="color:#888;width:140px">決算月</td><td><select><option>3月（4月〜翌3月）</option><option>12月（1月〜12月）</option></select></td></tr><tr><td style="color:#888">Google Drive</td><td><span class="badge bg">接続済</span></td></tr></tbody></table></div>
+  <div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">フォルダカテゴリ</span><button class="btn btn-b">+ 追加</button></div>
+  <table><thead><tr><th>カテゴリ名</th><th>1棟：部屋別</th><th>区分/戸建</th><th></th></tr></thead><tbody>
+    <tr><td>収入</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td></td></tr>
+    <tr><td>支出</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td></td></tr>
+    <tr><td>税金</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+    <tr><td>契約書</td><td><span class="badge bb">部屋ごと</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+    <tr><td>その他</td><td><span class="badge bz">棟まとめ</span></td><td><span class="badge bz">物件直下</span></td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+  </tbody></table></div>
+  <div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct" style="margin:0">物件一覧</span><button class="btn btn-b">+ 物件追加</button></div>
+  <table><thead><tr><th>物件名</th><th>種別</th><th>部屋数</th><th>課税</th><th></th></tr></thead><tbody>
+    <tr><td>グリーンハイツ</td><td><span class="badge bb">1棟</span></td><td>8室</td><td>法人</td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+    <tr><td>サンシャイン101</td><td><span class="badge bz">区分</span></td><td>1室</td><td>個人</td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+    <tr><td>リバーサイド一戸建て</td><td><span class="badge bz">戸建</span></td><td>1室</td><td>個人</td><td><button class="btn" style="font-size:10px">編集</button></td></tr>
+  </tbody></table></div>`;
+}
+buildNav();showTab('dashboard');
+</script>
+</body>
+</html>
