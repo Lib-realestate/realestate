@@ -268,7 +268,7 @@ const CLIENT_ID='467615685674-njvnd3fgio14jcqb4qobbif4jtiabogb.apps.googleuserco
 const API_KEY='AIzaSyA0xQ__9nR829v-HDJeH0gd6fSsg_9DDHk';
 const DRIVE_FOLDER_ID='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
 const SCOPES='https://www.googleapis.com/auth/drive';
-const SUB_FOLDERS=['収入','支出','税金','契約書','その他'];
+const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_その他'];
 const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
 
 let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
@@ -425,7 +425,7 @@ function renderCurrent(){if(iconPageActive)showIconPage(iconPageActive);else sho
 
 function buildNav(){
   const isAll=currentProp==='all';
-  const tabs=isAll?['cashflow:収支','occupancy:入居状況','analysis:分析']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略'];
+  const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略'];
   document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
   document.getElementById('mainNav').firstChild.classList.add('active');
 }
@@ -481,7 +481,7 @@ function renderCashflow(){
     const totOcc=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
     const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
     const occR=pct(totOcc,totRooms);
-    let colOcc=`<div class="col-header"><span class="ct">入居率</span></div>
+    let colOcc=`<div class="col-header"><span class="ct">入居率 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
       <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500;color:${occR>=75?'#16a34a':'#dc2626'}">${occR}%</span></div>
       <div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
       <div style="font-size:11px;color:#888;margin-top:2px">${totOcc}/${totRooms}室 稼働中</div></div><div class="col-sep"></div>`;
@@ -548,9 +548,72 @@ function renderCashflow(){
     <td class="g" style="font-weight:700">${selfFund>0?pct(cumNet,selfFund)+'%':'—'}</td>
   </tr>`;
 
-  const thExtra=isAll?'<th>法人税等▾</th><th>共通経費</th>':'';
   const incData=indices.map(i=>getMonthI(i,pi));
   const expData=indices.map(i=>getMonthE(i,pi)+(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0));
+
+  // 列定義：全物件=収入計|支出計|法人税等|共通経費|純利益|年間累計|取得累計|回収率
+  //         個別  =収入計|支出計|純利益|年間累計|取得累計|回収率
+  // 取得からの累計累計計算
+  let cumFromAcq=0;
+  const pi2=isAll?null:parseInt(currentProp);
+  if(!isAll&&pi2!==null){
+    const p=properties[pi2];
+    const acq=p.acquireDate?p.acquireDate.slice(0,7):nowYM();
+    const elapM=Math.max(0,mdiff(acq,nowYM()));
+    const aI=getAnnualI(pi2),aE=getAnnualE(pi2);
+    cumFromAcq=(aI-aE)/12*elapM; // 取得からの累計（簡易）
+  }
+
+  // 行を再生成（累計2種追加）
+  let cumAnn=0;
+  let cumAcq=isAll?0:cumFromAcq-(()=>{let s=0;indices.forEach(i=>{s+=getMonthI(i,pi)-getMonthE(i,pi)-(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0);});return s;})();
+
+  const rows2=indices.map((idx,pos)=>{
+    const income=getMonthI(idx,pi);
+    const exp=getMonthE(idx,pi);
+    const common=isAll?COMMON_MONTHLY[idx]:0;
+    const corpTax=isAll?TAX_MONTHLY[idx]:0;
+    const totalExp=exp+common+corpTax;
+    const net=income-totalExp;
+    cumAnn+=net;
+    cumAcq+=net;
+    const isFuture=pos>1;
+    const extraCols=isAll?`<td class="r">${corpTax>0?'▲'+fmt(corpTax):'—'}</td><td class="r">${common>0?'▲'+fmt(common):'—'}</td>`:'';
+    return`<tr class="${isFuture?'future':''}">
+      <td class="left" style="white-space:nowrap">${labels[pos]}${isFuture?' <span style="font-size:9px;opacity:.5">予測</span>':''}</td>
+      <td class="g" style="border-right:1px solid #d0d0c8">${fmt(income)}</td>
+      <td class="r">${fmt(exp)}</td>
+      ${extraCols}
+      <td style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;font-weight:500" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>
+      <td style="color:#888;font-size:10px">${cumAnn<0?'▲':''}${fmt(cumAnn)}</td>
+      <td style="color:#888;font-size:10px">${cumAcq<0?'▲':''}${fmt(cumAcq)}</td>
+      <td class="${pct(cumAcq,selfFund)>=50?'g':'b'}" style="font-weight:500">${selfFund>0?pct(cumAcq,selfFund)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const totI2=indices.reduce((s,i)=>s+getMonthI(i,pi),0);
+  const totE2=indices.reduce((s,i)=>s+getMonthE(i,pi),0);
+  const totCommon2=isAll?COMMON_MONTHLY.reduce((s,v)=>s+v,0):0;
+  const totTax2=isAll?TAX_MONTHLY.reduce((s,v)=>s+v,0):0;
+  const totNet2=totI2-totE2-totCommon2-totTax2;
+  const sumExtra=isAll?`<td class="r">▲${fmt(totTax2)}</td><td class="r">▲${fmt(totCommon2)}</td>`:'';
+  const sumRow=`<tr class="sum-total">
+    <td class="left">合計</td>
+    <td class="g" style="border-right:1px solid #d0d0c8">▲${fmt(totI2)}</td>
+    <td class="r">${fmt(totE2)}</td>
+    ${sumExtra}
+    <td style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;font-weight:700" class="${totNet2>=0?'g':'r'}">${totNet2<0?'▲':''}${fmt(totNet2)}</td>
+    <td style="color:#888;font-size:10px">${cumAnn<0?'▲':''}${fmt(cumAnn)}</td>
+    <td style="color:#888;font-size:10px">${cumAcq<0?'▲':''}${fmt(cumAcq)}</td>
+    <td class="g" style="font-weight:700">${selfFund>0?pct(cumAcq,selfFund)+'%':'—'}</td>
+  </tr>`;
+
+  // ヘッダー：列数を正確に合わせる
+  // 全物件: 月|収入計|支出計|法人税等|共通経費|純利益|年間累計|取得累計|回収率 = 9列
+  // 個別:   月|収入計|支出計|純利益|年間累計|取得累計|回収率 = 7列
+  const extraTh=isAll?'<th style="color:#dc2626">法人税等▾</th><th style="color:#dc2626">共通経費</th>':'';
+  const incColspan=1; // 収入は1列のみ
+  const expColspan=isAll?3:1; // 支出計+法人税等+共通経費 or 支出計のみ
 
   document.getElementById('pages').innerHTML=`
   ${summaryHTML}
@@ -568,19 +631,26 @@ function renderCashflow(){
   <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
       <span class="ct">月次収支明細</span>
-      <span style="font-size:10px;color:#888">▲=マイナス / ▾=内訳展開 / 斜体=予測 / 回収率は取得からの累計</span>
+      <span style="font-size:10px;color:#888">▲=マイナス / 斜体=予測</span>
     </div>
     <div class="cf-wrap"><table class="cftable">
       <thead>
         <tr>
-          <th class="left" rowspan="2" style="vertical-align:middle">月</th>
-          <th colspan="2" style="text-align:center;color:#16a34a">収入</th>
-          <th colspan="${isAll?4:2}" style="text-align:center;color:#dc2626">支出</th>
-          <th rowspan="2">純利益</th><th rowspan="2">累計</th><th rowspan="2">回収率</th>
+          <th class="left" rowspan="2" style="vertical-align:middle;min-width:52px">月</th>
+          <th colspan="${incColspan}" style="text-align:center;color:#16a34a;border-right:1px solid #d0d0c8">収入</th>
+          <th colspan="${expColspan}" style="text-align:center;color:#dc2626">支出</th>
+          <th rowspan="2" style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;min-width:72px">純利益</th>
+          <th rowspan="2" style="min-width:72px;font-size:9px">年間累計</th>
+          <th rowspan="2" style="min-width:72px;font-size:9px">取得来累計</th>
+          <th rowspan="2" style="min-width:52px">回収率</th>
         </tr>
-        <tr><th>収入計</th><th>支出計</th>${thExtra}</tr>
+        <tr>
+          <th style="color:#16a34a;border-right:1px solid #d0d0c8;min-width:80px">収入計</th>
+          <th style="color:#dc2626;min-width:80px">支出計</th>
+          ${extraTh}
+        </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${rows2}${sumRow}</tbody>
     </table></div>
   </div>`;
 
@@ -682,9 +752,9 @@ function renderOccProp(){
     const uid=`r${pi}_${ri}`;
     return`<tr><td colspan="7" style="padding:0">
       <div class="rmain" onclick="togRoom('${uid}')">
-        <span style="width:52px;font-weight:500;font-size:12px">${r.no}${p.type==='1棟'?'号':''}</span>
+        <span style="width:48px;font-weight:500;font-size:12px">${r.no}${p.type==='1棟'?'号':''}</span>
         <span style="width:52px;font-size:12px;color:#888">${r.layout||'—'}</span>
-        <span style="width:44px;text-align:right;font-size:12px;color:#888;padding-right:8px">${r.area||'—'}㎡</span>
+        <span style="width:48px;text-align:right;font-size:12px;color:#888;padding-right:8px">${r.area||'—'}㎡</span>
         <span style="flex:1;text-align:right;font-weight:500;font-size:13px;padding-right:6px" class="${isOcc?'g':''}">
           ${isOcc?fmt(total):'—'}<span class="eicon" id="${uid}i">▼</span>
         </span>
@@ -720,18 +790,18 @@ function renderOccProp(){
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
     <table class="rtable">
       <thead><tr>
-        <th style="width:52px">部屋</th><th style="width:52px">間取り</th>
-        <th style="width:44px;text-align:right">面積</th>
-        <th style="text-align:right">月額合計 <span style="font-weight:400;opacity:.6;font-size:9px">▼で内訳</span></th>
-        <th style="width:64px">入居状況</th><th style="width:90px">入居日</th><th>備考</th>
+        <th style="width:48px">部屋</th><th style="width:52px">間取り</th>
+        <th style="width:48px;text-align:right">面積</th>
+        <th style="text-align:right;min-width:100px">月額合計 <span style="font-weight:400;opacity:.6;font-size:9px">▼で内訳</span></th>
+        <th style="width:60px;text-align:center">入居状況</th><th style="width:88px">入居日</th><th style="min-width:80px">備考</th>
       </tr></thead>
       <tbody>${rows}
         <tr class="srow"><td colspan="7" style="padding:0">
           <div style="display:flex;align-items:center;padding:7px 8px">
             <span style="width:148px"></span>
             <span style="flex:1;text-align:right;font-weight:500;font-size:13px;padding-right:6px" class="g">${fmt(occTotal)}/月</span>
-            <span style="width:64px"></span>
-            <span style="width:90px;font-size:11px;color:#888">現況 ${occCount}室</span>
+            <span style="width:60px"></span>
+            <span style="width:88px;font-size:11px;color:#888">現況 ${occCount}室</span>
             <span style="flex:1"></span>
           </div>
         </td></tr>
@@ -739,8 +809,8 @@ function renderOccProp(){
           <div style="display:flex;align-items:center;padding:7px 8px">
             <span style="width:148px"></span>
             <span style="flex:1;text-align:right;font-weight:500;font-size:13px;padding-right:6px;color:#888">${fmt(fullTotal)}/月</span>
-            <span style="width:64px"></span>
-            <span style="width:90px;font-size:11px;color:#888">満室 全${p.rooms.length}室</span>
+            <span style="width:60px"></span>
+            <span style="width:88px;font-size:11px;color:#888">満室 全${p.rooms.length}室</span>
             <span style="flex:1;font-size:11px">機会損失 <span class="r">▲${fmt(fullTotal-occTotal)}/月</span></span>
           </div>
         </td></tr>
@@ -901,13 +971,13 @@ function renderAnalysis(){
       </table>
       <div style="height:1px;background:#e0e0d8;margin:10px 0"></div>
       <div class="ct" style="margin-bottom:10px">CCR（Cash on Cash Return）</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="display:grid;grid-template-columns:minmax(240px,1fr) minmax(240px,1fr);gap:16px;overflow:hidden">
         <div>
           <div class="col-head">購入時想定</div>
           <div class="info-rows">
-            <div class="ir"><div class="ic lbl" style="width:180px">設定家賃（満室）<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.origRent||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value))"><span class="nunit">/月</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;white-space:normal;line-height:1.3">設定家賃（満室）<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.origRent||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value))"><span class="nunit">/月</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:180px">年間収入（満室）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt((p.origRent||0)*12)}</span><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:180px">想定年間純利益<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.origNet||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'origNet',pa(this.value))"><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;white-space:normal;line-height:1.3">想定年間純利益<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.origNet||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'origNet',pa(this.value))"><span class="nunit">/年</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:180px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g">${ccrOrig}</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:180px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${p.origNet&&sf?(sf/p.origNet).toFixed(1)+'年':'—'}</span></div></div>
           </div>
@@ -915,9 +985,9 @@ function renderAnalysis(){
         <div>
           <div class="col-head">現時点（実績平均）</div>
           <div class="info-rows">
-            <div class="ir"><div class="ic lbl" style="width:180px">現在家賃（満室想定）<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><span class="nbox auto">${fmt(p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0))}</span><span class="nunit">/月</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;white-space:normal;line-height:1.3">現在家賃（満室想定）<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><span class="nbox auto">${fmt(p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0))}</span><span class="nunit">/月</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:180px">年間収入（満室）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0)*12)}</span><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:180px">年間純利益（実績平均）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(avgAnnualNet)}</span><span class="nunit">/年</span><span class="nnote">累計${fmt(cumNet)}÷${elapsed}ヶ月×12</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;white-space:normal;line-height:1.3">年間純利益（実績平均）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(avgAnnualNet)}</span><span class="nunit">/年</span><span class="nnote">累計${fmt(cumNet)}÷${elapsed}ヶ月×12</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:180px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g">${ccrCurr}</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:180px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${avgAnnualNet&&sf?(sf/avgAnnualNet).toFixed(1)+'年':'—'}</span></div></div>
           </div>
@@ -1082,7 +1152,7 @@ function updateProc(id,status,path,link){
 async function extractText(file){return new Promise(resolve=>{const reader=new FileReader();reader.onload=e=>{try{resolve(e.target.result.replace(/[^\u3000-\u9FFF\uFF00-\uFFEF\u0020-\u007E]/g,' ').slice(0,2000));}catch{resolve('');}};reader.onerror=()=>resolve('');file.type.includes('text')||file.name.endsWith('.csv')?reader.readAsText(file,'UTF-8'):reader.readAsBinaryString(file);});}
 
 function detectProperty(name,text){const combined=(name+' '+(text||'')).toLowerCase();return[...properties].sort((a,b)=>b.name.length-a.name.length).find(p=>[p.name,p.name.replace(/[　 ]/g,'')].some(v=>combined.includes(v.toLowerCase())))||null;}
-function detectCategory(name,text){const c=(name+' '+(text||'')).toLowerCase();if(/家賃|賃料|収入|rent|income|送金|振込|入金/.test(c))return'収入';if(/固定資産税|税金|tax/.test(c))return'税金';if(/契約|重要事項|lease|contract/.test(c))return'契約書';if(/修繕|管理費|支出|費|ローン|保険/.test(c))return'支出';return'その他';}
+function detectCategory(name,text){const c=(name+' '+(text||'')).toLowerCase();if(/家賃|賃料|収入|rent|income|送金|振込|入金/.test(c))return'02_収入';if(/固定資産税|税金|tax/.test(c))return'04_税金';if(/契約|重要事項|lease|contract/.test(c))return'01_契約書';if(/修繕|管理費|支出|費|ローン|保険/.test(c))return'03_支出';return'05_その他';}
 function extractDate(name,text){const c=name+' '+(text||'');const pats=[/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/,/令和(\d+)年(\d{1,2})月(\d{1,2})日/,/(\d{4})(\d{2})(\d{2})/];for(const pat of pats){const m=c.match(pat);if(m){try{if(pat.source.includes('令和'))return`${2018+parseInt(m[1])}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;if(parseInt(m[1])>1900)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;}catch{}}}return null;}
 
 function renderUpload(){
