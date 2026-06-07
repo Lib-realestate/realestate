@@ -1530,7 +1530,7 @@ function showClassifyModal(file,result,detectedPropIdx){
     ${result.summary?`<div style="padding:8px 10px;background:#f0f9ff;border-radius:6px;font-size:11px;color:#0369a1;margin-bottom:12px">📄 ${result.summary}</div>`:''}
     <div class="form-group">
       <label class="form-label">リネーム後のファイル名 <span style="font-size:10px;color:#888">（変更可）</span></label>
-      <input type="text" id="classifyRename" value="${result.rename||file.name}" style="width:100%;font-size:11px">
+      <input type="text" id="classifyRename" value="${(()=>{const ext=file.name.includes('.')?file.name.slice(file.name.lastIndexOf('.')):'';const base=file.name.replace(ext,'');const d=(result.date||'').replace(/-/g,'');const issuer=(result.description||'').replace(/[\/\\:*?"<>|]/g,'').slice(0,20);return [d,issuer,base].filter(Boolean).join('_')+ext;})()}" style="width:100%;font-size:11px">
     </div>
     <div class="grid2">
       <div class="form-group">
