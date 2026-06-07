@@ -209,7 +209,7 @@ tr:last-child td{border-bottom:none}
   <div class="topbar">
     <div class="topbar-left">
       <select id="propSel" onchange="switchProp()" style="min-width:140px"></select>
-      <select id="yearSel" onchange="renderCurrent()" style="min-width:74px"><option>2025年</option><option>2024年</option><option>2023年</option></select>
+      <select id="yearSel" onchange="renderCurrent()" style="min-width:74px"></select>
       <select id="monthSel" onchange="renderCurrent()" style="min-width:60px">
         <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6" selected>6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
       </select>
@@ -329,7 +329,7 @@ async function tryAutoLogin(){
       document.getElementById('authScreen').style.display='none';
       document.getElementById('appScreen').style.display='block';
       if(properties.length===0)loadDefaultProperties();
-      buildPropSelector();buildNav();showTab('cashflow');
+      buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
       await loadDriveFiles();
       return;
     }catch(e){}
@@ -363,30 +363,40 @@ async function onSignIn(){
 
 /* ── デフォルト物件 ── */
 function loadDefaultProperties(){
-  properties=[
-    {id:'p1',name:'グリーンハイツ',type:'1棟',addr:'東京都渋谷区',builtYear:2006,builtMonth:3,floors:3,structure:'RC',area:1240,units:8,acquireDate:'2022-03-15',price:95000000,reform:3000000,miscCost:5225000,loan:80000000,debt:68400000,loanSegs:[{id:0,startYM:'2022-03',rate:1.5,years:35,loan:80000000}],folderId:null,subFolders:{},origRent:520000,origNet:3200000,
-     rooms:[
-      {no:'101',layout:'1LDK',area:38,status:'occupied',since:'2023-04-01',note:'',items:[{label:'家賃',amt:62000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
-      {no:'102',layout:'1LDK',area:38,status:'occupied',since:'2022-11-15',note:'',items:[{label:'家賃',amt:65000},{label:'管理費',amt:5000}]},
-      {no:'103',layout:'1LDK',area:38,status:'vacant',since:null,note:'',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
-      {no:'201',layout:'2LDK',area:52,status:'occupied',since:'2024-01-20',note:'',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
-      {no:'202',layout:'2LDK',area:52,status:'occupied',since:'2021-08-01',note:'',items:[{label:'家賃',amt:68000},{label:'管理費',amt:5000}]},
-      {no:'203',layout:'2LDK',area:52,status:'vacant',since:null,note:'',items:[{label:'家賃',amt:70000},{label:'管理費',amt:5000}]},
-      {no:'301',layout:'2LDK',area:52,status:'occupied',since:'2023-09-10',note:'滞納注意',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000},{label:'駐車場',amt:8000}]},
-      {no:'302',layout:'2LDK',area:52,status:'occupied',since:'2024-03-05',note:'',items:[{label:'家賃',amt:72000},{label:'管理費',amt:5000}]},
-     ]},
-    {id:'p2',name:'サンシャイン101',type:'区分',addr:'東京都新宿区',builtYear:2010,builtMonth:6,floors:10,structure:'RC',area:42,units:1,acquireDate:'2021-06-01',price:18000000,reform:500000,miscCost:990000,loan:13000000,debt:10200000,loanSegs:[{id:0,startYM:'2021-06',rate:1.2,years:30,loan:13000000}],folderId:null,subFolders:{},origRent:80000,origNet:480000,
-     rooms:[{no:'101',layout:'1LDK',area:42,status:'occupied',since:'2022-06-01',note:'',items:[{label:'家賃',amt:80000},{label:'管理費',amt:5000}]}]},
-    {id:'p3',name:'リバーサイド一戸建て',type:'戸建',addr:'埼玉県さいたま市',builtYear:1998,builtMonth:4,floors:2,structure:'木造',area:105,units:1,acquireDate:'2020-09-01',price:12000000,reform:1500000,miscCost:660000,loan:9000000,debt:6500000,loanSegs:[{id:0,startYM:'2020-09',rate:1.8,years:25,loan:9000000}],folderId:null,subFolders:{},origRent:115000,origNet:800000,
-     rooms:[{no:'全室',layout:'3LDK',area:105,status:'occupied',since:'2023-02-01',note:'',items:[{label:'家賃',amt:115000},{label:'駐車場',amt:5000}]}]},
-  ];
+  // 初期状態は空（サンプルデータなし）
+  properties=[];
   saveProps();
 }
 function saveProps(){localStorage.setItem('re_props',JSON.stringify(properties));}
+
+function buildYearSel(){
+  const sel=document.getElementById('yearSel');
+  if(!sel)return;
+  const thisYear=new Date().getFullYear();
+  // 最初の物件取得年を探す
+  let minYear=thisYear;
+  properties.forEach(p=>{
+    if(p.acquireDate){
+      const y=parseInt(p.acquireDate.slice(0,4));
+      if(y>2000&&y<minYear) minYear=y;
+    }
+  });
+  const current=sel.value?parseInt(sel.value):thisYear;
+  sel.innerHTML='';
+  for(let y=thisYear;y>=minYear;y--){
+    const opt=document.createElement('option');
+    opt.value=y;opt.textContent=y+'年';
+    if(y===current)opt.selected=true;
+    sel.appendChild(opt);
+  }
+  // 現在の選択値が範囲外なら今年を選択
+  if(!sel.value) sel.value=thisYear;
+}
 function buildPropSelector(){
   const sel=document.getElementById('propSel');
   sel.innerHTML='<option value="all">全物件</option>'+properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
   sel.value=currentProp;
+  buildYearSel();
 }
 
 /* ── 月次データ ── */
@@ -1658,7 +1668,7 @@ async function addNewProperty(){
   const loan=parseInt(document.getElementById('newPropLoan').value)||0;
   const rooms=Array.from({length:units},(_,i)=>({no:units===1?'全室':String(101+i),layout:'',area:null,status:'occupied',since:today(),note:'',items:[{label:'家賃',amt:0}]}));
   const newProp={id:'p'+Date.now(),name,type,addr:document.getElementById('newPropAddr').value,builtYear:parseInt(document.getElementById('newPropBuilt').value)||null,builtMonth:null,floors:null,structure:document.getElementById('newPropStruct').value,area:null,units,acquireDate:today(),price,reform:0,miscCost:0,loan,debt:loan,loanSegs:[{id:0,startYM:nowYM(),rate:1.5,years:35,loan}],folderId:null,subFolders:{},origRent:0,origNet:0,rooms};
-  properties.push(newProp);saveProps();buildPropSelector();closeModal('addPropModal');
+  properties.push(newProp);saveProps();buildPropSelector();buildYearSel();closeModal('addPropModal');
   showToast(`${name} を追加しました。フォルダを作成中…`,'info');
   try{await ensurePropFolders(newProp);showToast(`${name} のフォルダをDriveに作成しました`,'success');}catch(e){showToast('フォルダ作成エラー: '+e.message,'error');}
   showIconPage('settings');
