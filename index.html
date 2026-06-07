@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>不動産収支管理</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="不動産管理">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-title" content="不動産管理">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans JP',sans-serif;font-size:14px;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
@@ -1742,6 +1742,36 @@ function closeModal(id){document.getElementById(id).classList.remove('open');pen
 
 function showToast(msg,type='info'){
   const icons={success:'✓',error:'✕',info:'ℹ'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;document.getElementById('toastArea').appendChild(el);setTimeout(()=>el.remove(),4000);
+}
+// ═══ AI解析（Cloudflare Worker経由）═══
+const WORKER_URL = 'https://realestate-ai.elle-71-boc.workers.dev';
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function analyzeWithAI(file) {
+  showToast('AIが解析中...', 'info');
+  const base64 = await fileToBase64(file);
+  const response = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileBase64: base64,
+      mimeType: file.type,
+      fileName: file.name,
+      properties: properties
+    })
+  });
+  if (!response.ok) throw new Error('Worker応答エラー');
+  const result = await response.json();
+  showToast(`解析完了: ${result.description || result.category}`, 'success');
+  return result;
 }
 </script>
 </body>
