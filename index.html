@@ -1345,48 +1345,221 @@ async function loadDriveFiles(){
 }
 
 /* ── ファイル操作 ── */
-function setupDragDrop(){const zone=document.getElementById('dropZone');if(!zone)return;zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.borderColor='#2563eb';});zone.addEventListener('dragleave',()=>{zone.style.borderColor='';});zone.addEventListener('drop',e=>{e.preventDefault();zone.style.borderColor='';handleFiles(e.dataTransfer.files);});}
+function setupDragDrop(){
+  const zone=document.getElementById('dropZone');
+  if(!zone)return;
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.borderColor='#2563eb';});
+  zone.addEventListener('dragleave',()=>{zone.style.borderColor='';});
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.style.borderColor='';handleFiles(e.dataTransfer.files);});
+}
 
-async function handleFiles(files){if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}for(const file of files)await analyzeAndConfirm(file);}
+async function handleFiles(files){
+  if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}
+  for(const file of files) await analyzeAndConfirm(file);
+}
+
+// ── AI解析（Anthropic API経由） ──
+async function analyzeWithAI(file){
+  // ファイルをbase64に変換
+  const toBase64=f=>new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(f);
+  });
+
+  const propNames=properties.map(p=>p.name).join('、');
+  const isImage=file.type.startsWith('image/');
+  const isPDF=file.type==='application/pdf';
+  const isText=file.type.includes('text')||file.name.endsWith('.csv');
+
+  let content=[];
+
+  if(isImage||isPDF){
+    const b64=await toBase64(file);
+    const mediaType=isPDF?'application/pdf':file.type;
+    content=[
+      {type:isPDF?'document':'image',source:{type:'base64',media_type:mediaType,data:b64}},
+      {type:'text',text:`このファイルを解析してください。物件名リスト：${propNames}\n\n以下をJSON形式のみで返してください（説明不要）：\n{"date":"YYYY-MM-DD","issuer":"発行会社または個人名","category":"02_収入|03_支出|04_税金|01_契約書|05_その他","property":"物件名（リストにあれば）またはnull","summary":"内容の要約（50文字以内）","rename":"YYYYMMDD_発行者名_${file.name}"}`}
+    ];
+  } else {
+    // テキスト系：直接読み込み
+    const text=await new Promise(res=>{
+      const r=new FileReader();
+      r.onload=e=>res((e.target.result||'').slice(0,3000));
+      r.onerror=()=>res('');
+      isText?r.readAsText(file,'UTF-8'):r.readAsBinaryString(file);
+    });
+    content=[{type:'text',text:`以下のファイル内容を解析してください。\nファイル名：${file.name}\n物件名リスト：${propNames}\n\n内容：\n${text}\n\n以下をJSON形式のみで返してください（説明不要）：\n{"date":"YYYY-MM-DD","issuer":"発行会社または個人名","category":"02_収入|03_支出|04_税金|01_契約書|05_その他","property":"物件名（リストにあれば）またはnull","summary":"内容の要約（50文字以内）","rename":"YYYYMMDD_発行者名_${file.name}"}`}];
+  }
+
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content}]
+    })
+  });
+
+  if(!resp.ok) throw new Error('API error: '+resp.status);
+  const data=await resp.json();
+  const text2=data.content.map(b=>b.text||'').join('');
+  // JSONを抽出
+  const match=text2.match(/\{[\s\S]*\}/);
+  if(!match) throw new Error('JSON not found');
+  return JSON.parse(match[0]);
+}
 
 async function analyzeAndConfirm(file){
   const id='f_'+Date.now()+Math.random().toString(36).slice(2);
   const list=document.getElementById('procList');
-  if(list){const el=document.createElement('div');el.className='proc-item';el.id=id;el.innerHTML=`<div class="proc-info"><div class="proc-name">${file.name}</div><div class="proc-path" id="${id}_p">解析中…</div><div class="pbar"><div class="pfill analyzing" id="${id}_b"></div></div></div><div class="spinner" id="${id}_s"></div><span class="badge bz" id="${id}_badge">解析中</span>`;list.prepend(el);}
-  try{const text=await extractText(file);const detectedProp=detectProperty(file.name,text);const detectedCat=detectCategory(file.name,text);const detectedDate=extractDate(file.name,text)||today();pendingUpload={file,id,detectedProp,detectedCat,detectedDate};showClassifyModal(file.name,detectedProp,detectedCat,detectedDate);}
-  catch(e){updateProc(id,'error','解析エラー');}
+  if(list){
+    const el=document.createElement('div');el.className='proc-item';el.id=id;
+    el.innerHTML=`<div class="proc-info"><div class="proc-name">${file.name}</div><div class="proc-path" id="${id}_p">AIが解析中…</div><div class="pbar"><div class="pfill analyzing" id="${id}_b"></div></div></div><div class="spinner" id="${id}_s"></div><span class="badge bz" id="${id}_badge">解析中</span>`;
+    list.prepend(el);
+  }
+  try{
+    updateProc(id,'analyzing','AIが内容を解析中…');
+    let result;
+    try{
+      result=await analyzeWithAI(file);
+    }catch(aiErr){
+      // AI解析失敗時はルールベースにフォールバック
+      console.warn('AI解析失敗、ルールベースで処理:',aiErr.message);
+      const text=await extractTextFallback(file);
+      result={
+        date:extractDate(file.name,text)||today(),
+        issuer:'',
+        category:detectCategory(file.name,text),
+        property:detectProperty(file.name,text)?.name||null,
+        summary:'',
+        rename:`${(extractDate(file.name,text)||today()).replace(/-/g,'')}_${file.name}`
+      };
+    }
+    // 物件を名前で照合
+    const detectedPropIdx=result.property?properties.findIndex(p=>p.name===result.property||(result.property&&p.name.includes(result.property))):-1;
+    pendingUpload={file,id,result,detectedPropIdx};
+    showClassifyModal(file,result,detectedPropIdx);
+  }catch(e){
+    updateProc(id,'error','解析エラー: '+e.message);
+  }
 }
 
-function showClassifyModal(filename,prop,cat,date){
-  const propOptions=properties.map((p,i)=>`<option value="${i}" ${prop&&prop.id===p.id?'selected':''}>${p.name}</option>`).join('');
-  const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===cat?'selected':''}>${s}</option>`).join('');
-  document.getElementById('classifyContent').innerHTML=`<div style="font-size:12px;color:#888;margin-bottom:12px">ファイル名: <strong>${filename}</strong></div>
-    <div class="form-group"><label class="form-label">物件</label><select id="classifyProp" style="width:100%"><option value="">— 未分類 —</option>${propOptions}</select></div>
-    <div class="form-group"><label class="form-label">カテゴリ</label><select id="classifyCat" style="width:100%">${catOptions}</select></div>
-    <div class="form-group"><label class="form-label">日付（発行日・入金日・請求日）</label><input type="date" id="classifyDate" value="${date}" style="width:100%"></div>
-    <div style="font-size:11px;color:#888;margin-top:4px">内容を解析して自動判定しました。必要に応じて修正してください。</div>`;
+function showClassifyModal(file,result,detectedPropIdx){
+  const propOptions=properties.map((p,i)=>`<option value="${i}" ${i===detectedPropIdx?'selected':''}>${p.name}</option>`).join('');
+  const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===result.category?'selected':''}>${s}</option>`).join('');
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:#888;margin-bottom:2px">元のファイル名</div>
+      <div style="font-size:12px;font-weight:500">${file.name}</div>
+    </div>
+    ${result.summary?`<div style="padding:8px 10px;background:#f0f9ff;border-radius:6px;font-size:11px;color:#0369a1;margin-bottom:12px">📄 ${result.summary}</div>`:''}
+    <div class="form-group">
+      <label class="form-label">リネーム後のファイル名 <span style="font-size:10px;color:#888">（変更可）</span></label>
+      <input type="text" id="classifyRename" value="${result.rename||file.name}" style="width:100%;font-size:11px">
+    </div>
+    <div class="grid2">
+      <div class="form-group">
+        <label class="form-label">物件</label>
+        <select id="classifyProp" style="width:100%"><option value="">— 未分類 —</option>${propOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">カテゴリ</label>
+        <select id="classifyCat" style="width:100%">${catOptions}</select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">日付</label>
+      <input type="date" id="classifyDate" value="${result.date||today()}" style="width:100%">
+    </div>
+    <div style="font-size:10px;color:#2563eb;margin-top:4px">✨ AIが内容を解析して自動判定しました。内容を確認・修正してからアップロードしてください。</div>`;
   document.getElementById('classifyModal').classList.add('open');
 }
 
 async function confirmUpload(){
-  closeModal('classifyModal');if(!pendingUpload)return;
-  const{file,id}=pendingUpload;const propIdx=document.getElementById('classifyProp').value;const cat=document.getElementById('classifyCat').value;const date=document.getElementById('classifyDate').value;
-  if(propIdx===''){updateProc(id,'error','物件未選択 → 未分類トレイへ');unclassifiedItems.push({file,name:file.name,cat,date,id});showToast('未分類トレイに追加しました','info');pendingUpload=null;return;}
-  const prop=properties[parseInt(propIdx)];updateProc(id,'uploading',`${prop.name} / ${cat} へアップロード中…`);
-  try{const up=await ensurePropFolders(prop);const targetId=up.subFolders[cat]||up.subFolders['その他'];const result=await uploadToDrive(file,targetId,`${date.replace(/-/g,'')}_${file.name}`);updateProc(id,'done',`✓ ${prop.name} / ${cat}`,result.webViewLink);showToast(`${file.name} を振り分けました`,'success');await loadDriveFiles();}
-  catch(e){updateProc(id,'error','エラー: '+e.message);showToast('アップロードに失敗しました','error');}
+  closeModal('classifyModal');
+  if(!pendingUpload)return;
+  const{file,id}=pendingUpload;
+  const propIdx=document.getElementById('classifyProp').value;
+  const cat=document.getElementById('classifyCat').value;
+  const date=document.getElementById('classifyDate').value;
+  const rename=document.getElementById('classifyRename').value||file.name;
+
+  if(propIdx===''){
+    updateProc(id,'error','物件未選択 → 未分類トレイへ');
+    unclassifiedItems.push({file,name:rename,cat,date,id,result:pendingUpload.result});
+    showToast('未分類トレイに追加しました','info');
+    pendingUpload=null;return;
+  }
+  const prop=properties[parseInt(propIdx)];
+  updateProc(id,'uploading',`${prop.name} / ${cat} へアップロード中…`);
+  try{
+    const up=await ensurePropFolders(prop);
+    const targetId=up.subFolders[cat]||up.subFolders['05_その他'];
+    // リネームして格納
+    const finalName=rename.startsWith(date.replace(/-/g,''))?rename:`${date.replace(/-/g,'')}_${rename}`;
+    const driveResult=await uploadToDrive(file,targetId,finalName);
+    updateProc(id,'done',`✓ ${prop.name} / ${cat} → ${finalName}`,driveResult.webViewLink);
+    showToast(`${finalName} を格納しました`,'success');
+
+    // ── アプリデータへの反映 ──
+    applyFileDataToApp(parseInt(propIdx),cat,pendingUpload.result,date);
+    await loadDriveFiles();
+  }catch(e){
+    updateProc(id,'error','エラー: '+e.message);
+    showToast('アップロードに失敗しました','error');
+  }
   pendingUpload=null;
 }
 
+// ── ファイル内容をアプリデータに反映 ──
+function applyFileDataToApp(propIdx,cat,result,date){
+  if(propIdx<0||propIdx>=properties.length)return;
+  const p=properties[propIdx];
+  const summary=result?.summary||'';
+
+  if(cat==='02_収入'){
+    // 送金明細・入金確認 → 収支データに記録（将来の詳細実装用にログだけ保存）
+    if(!p.incomeLog) p.incomeLog=[];
+    p.incomeLog.push({date,summary,createdAt:today()});
+    showToast('収入データを記録しました','info');
+  }
+  else if(cat==='01_契約書'){
+    // 契約書 → 入居情報のヒント表示（手動確認を促す）
+    showToast(`契約書を格納しました。入居状況タブで入居日・家賃を確認してください。`,'info');
+  }
+  else if(cat==='03_支出'){
+    if(!p.expenseLog) p.expenseLog=[];
+    p.expenseLog.push({date,summary,createdAt:today()});
+  }
+  saveProps();
+}
+
 async function classifyItem(idx){
-  const item=unclassifiedItems[idx];if(!item)return;const propIdx=document.getElementById(`ucProp${idx}`).value;const cat=document.getElementById(`ucCat${idx}`).value;const date=document.getElementById(`ucDate${idx}`).value;
-  if(propIdx===''){showToast('物件を選択してください','error');return;}const prop=properties[parseInt(propIdx)];
-  try{showToast('アップロード中…','info');const up=await ensurePropFolders(prop);const targetId=up.subFolders[cat]||up.subFolders['その他'];await uploadToDrive(item.file,targetId,`${(date||today()).replace(/-/g,'')}_${item.name}`);unclassifiedItems.splice(idx,1);showToast(`${item.name} を振り分けました`,'success');await loadDriveFiles();renderUpload();}
-  catch(e){showToast('エラー: '+e.message,'error');}
+  const item=unclassifiedItems[idx];if(!item)return;
+  const propIdx=document.getElementById(`ucProp${idx}`).value;
+  const cat=document.getElementById(`ucCat${idx}`).value;
+  const date=document.getElementById(`ucDate${idx}`).value;
+  if(propIdx===''){showToast('物件を選択してください','error');return;}
+  const prop=properties[parseInt(propIdx)];
+  try{
+    showToast('アップロード中…','info');
+    const up=await ensurePropFolders(prop);
+    const targetId=up.subFolders[cat]||up.subFolders['05_その他'];
+    const finalName=item.name;
+    await uploadToDrive(item.file,targetId,finalName);
+    applyFileDataToApp(parseInt(propIdx),cat,item.result,date);
+    unclassifiedItems.splice(idx,1);
+    showToast(`${finalName} を振り分けました`,'success');
+    await loadDriveFiles();renderUpload();
+  }catch(e){showToast('エラー: '+e.message,'error');}
 }
 
 function updateProc(id,status,path,link){
-  const labels={analyzing:'解析中',uploading:'転送中',done:'完了',error:'エラー'};const colors={analyzing:'ba',uploading:'bb',done:'bg',error:'br-b'};
+  const labels={analyzing:'解析中',uploading:'転送中',done:'完了',error:'エラー'};
+  const colors={analyzing:'bz',uploading:'bb',done:'bg',error:'br-b'};
   const p=document.getElementById(id+'_p');if(p)p.textContent=path||'';
   const badge=document.getElementById(id+'_badge');if(badge){badge.className='badge '+colors[status];badge.textContent=labels[status]||status;}
   const bar=document.getElementById(id+'_b');if(bar)bar.className='pfill '+status;
@@ -1394,27 +1567,56 @@ function updateProc(id,status,path,link){
   if(status==='done'&&link){const a=document.createElement('a');a.href=link;a.target='_blank';a.textContent='開く';a.style.cssText='font-size:11px;color:#2563eb;margin-left:8px';document.getElementById(id)?.appendChild(a);}
 }
 
-async function extractText(file){return new Promise(resolve=>{const reader=new FileReader();reader.onload=e=>{try{resolve(e.target.result.replace(/[^\u3000-\u9FFF\uFF00-\uFFEF\u0020-\u007E]/g,' ').slice(0,2000));}catch{resolve('');}};reader.onerror=()=>resolve('');file.type.includes('text')||file.name.endsWith('.csv')?reader.readAsText(file,'UTF-8'):reader.readAsBinaryString(file);});}
+async function extractTextFallback(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.onload=e=>{try{resolve((e.target.result||'').replace(/[^\u3000-\u9FFF\uFF00-\uFFEF\u0020-\u007E]/g,' ').slice(0,2000));}catch{resolve('');}};
+    reader.onerror=()=>resolve('');
+    file.type.includes('text')||file.name.endsWith('.csv')?reader.readAsText(file,'UTF-8'):reader.readAsBinaryString(file);
+  });
+}
 
 function detectProperty(name,text){const combined=(name+' '+(text||'')).toLowerCase();return[...properties].sort((a,b)=>b.name.length-a.name.length).find(p=>[p.name,p.name.replace(/[　 ]/g,'')].some(v=>combined.includes(v.toLowerCase())))||null;}
 function detectCategory(name,text){const c=(name+' '+(text||'')).toLowerCase();if(/家賃|賃料|収入|rent|income|送金|振込|入金/.test(c))return'02_収入';if(/固定資産税|税金|tax/.test(c))return'04_税金';if(/契約|重要事項|lease|contract/.test(c))return'01_契約書';if(/修繕|管理費|支出|費|ローン|保険/.test(c))return'03_支出';return'05_その他';}
 function extractDate(name,text){const c=name+' '+(text||'');const pats=[/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/,/令和(\d+)年(\d{1,2})月(\d{1,2})日/,/(\d{4})(\d{2})(\d{2})/];for(const pat of pats){const m=c.match(pat);if(m){try{if(pat.source.includes('令和'))return`${2018+parseInt(m[1])}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;if(parseInt(m[1])>1900)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;}catch{}}}return null;}
 
 function renderUpload(){
-  let html=`<div class="card"><div class="ct" style="margin-bottom:10px">ファイルをアップロード</div>
-  <div class="upload-zone" id="dropZone"><input type="file" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
-    <div style="font-size:28px;margin-bottom:10px">📂</div>
-    <div style="font-size:13px;font-weight:500;margin-bottom:4px">ファイルをドロップ、またはタップして選択</div>
-    <div style="font-size:11px;color:#888;margin-bottom:8px">ファイル内容を解析して物件・カテゴリ・日付を自動判定</div>
-    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">${['PDF','Excel','CSV','Word','画像'].map(t=>`<span style="padding:2px 8px;border:0.5px solid #d0d0c8;border-radius:20px;font-size:11px;color:#666">${t}</span>`).join('')}</div>
-  </div><div id="procList"></div></div>`;
+  let html=`<div class="card">
+    <div class="flex-b" style="margin-bottom:10px">
+      <span class="ct">ファイルをアップロード</span>
+      <span style="font-size:10px;color:#2563eb">✨ AIが内容を自動解析してリネーム・振り分け</span>
+    </div>
+    <div class="upload-zone" id="dropZone">
+      <input type="file" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
+      <div style="font-size:28px;margin-bottom:10px">📂</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:4px">ファイルをドロップ、またはタップして選択</div>
+      <div style="font-size:11px;color:#888;margin-bottom:8px">AIが日付・発行者・カテゴリを判定してリネームします</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">${['PDF','Excel','CSV','Word','画像'].map(t=>`<span style="padding:2px 8px;border:0.5px solid #d0d0c8;border-radius:20px;font-size:11px;color:#666">${t}</span>`).join('')}</div>
+    </div>
+    <div id="procList"></div>
+  </div>`;
   if(unclassifiedItems.length>0){
     html+=`<div class="card"><div class="ct" style="color:#b45309;margin-bottom:10px">未分類トレイ（${unclassifiedItems.length}件）</div>`;
-    unclassifiedItems.forEach((item,idx)=>{const propOptions=properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===item.cat?'selected':''}>${s}</option>`).join('');html+=`<div class="unclassified-item"><div style="font-size:12px;font-weight:500">${item.name}</div><div class="uc-controls"><select id="ucProp${idx}" style="flex:1"><option value="">物件を選択</option>${propOptions}</select><select id="ucCat${idx}">${catOptions}</select><input type="date" id="ucDate${idx}" value="${item.date||today()}" style="width:130px"><button class="btn btn-b" onclick="classifyItem(${idx})">振り分け</button></div></div>`;});
+    unclassifiedItems.forEach((item,idx)=>{
+      const propOptions=properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+      const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===item.cat?'selected':''}>${s}</option>`).join('');
+      html+=`<div class="unclassified-item">
+        <div style="font-size:12px;font-weight:500;margin-bottom:4px">${item.name}</div>
+        ${item.result?.summary?`<div style="font-size:11px;color:#888;margin-bottom:6px">${item.result.summary}</div>`:''}
+        <div class="uc-controls">
+          <select id="ucProp${idx}" style="flex:1"><option value="">物件を選択</option>${propOptions}</select>
+          <select id="ucCat${idx}">${catOptions}</select>
+          <input type="date" id="ucDate${idx}" value="${item.date||today()}" style="width:130px">
+          <button class="btn btn-b" onclick="classifyItem(${idx})">振り分け</button>
+        </div>
+      </div>`;
+    });
     html+=`</div>`;
   }
-  document.getElementById('pages').innerHTML=html;setTimeout(setupDragDrop,50);
+  document.getElementById('pages').innerHTML=html;
+  setTimeout(setupDragDrop,50);
 }
+
 
 function renderFiles(){
   const filtered=currentFileFilter==='all'?driveFiles:driveFiles.filter(f=>f.folderName===currentFileFilter);
