@@ -272,7 +272,7 @@ const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_その
 const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
 
 let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
-let properties=JSON.parse(localStorage.getItem('re_props')||'[]');
+let properties=[];
 let driveFiles=[],unclassifiedItems=[];
 let currentProp='all',charts={},currentTabId='cashflow',currentFileFilter='all';
 let pendingUpload=null,folderCreatingLock={};
@@ -328,7 +328,12 @@ async function tryAutoLogin(){
       document.getElementById('driveStatus').textContent='Drive 接続済';
       document.getElementById('authScreen').style.display='none';
       document.getElementById('appScreen').style.display='block';
-      if(properties.length===0)loadDefaultProperties();
+      const loaded2=await loadPropsFromD();
+      if(!loaded2){
+        const local=localStorage.getItem('re_props');
+        if(local)try{properties=JSON.parse(local);}catch{}
+        if(!properties.length)loadDefaultProperties();
+      }
       buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
       await loadDriveFiles();
       return;
@@ -367,7 +372,64 @@ function loadDefaultProperties(){
   properties=[];
   saveProps();
 }
-function saveProps(){localStorage.setItem('re_props',JSON.stringify(properties));}
+function saveProps(){
+  localStorage.setItem('re_props',JSON.stringify(properties));
+  // Drive にも非同期保存（エラーは無視）
+  savePropsToD().catch(()=>{});
+}
+
+let _appdataFileId=null;
+let _savePending=false;
+
+async function savePropsToD(){
+  if(!accessToken)return;
+  if(_savePending)return; // 連続保存を防ぐ
+  _savePending=true;
+  try{
+    const data=JSON.stringify({properties,savedAt:new Date().toISOString()});
+    const blob=new Blob([data],{type:'application/json'});
+    if(_appdataFileId){
+      // 既存ファイルを上書き
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${_appdataFileId}?uploadType=media`,{
+        method:'PATCH',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:blob
+      });
+    } else {
+      // 新規作成
+      const form=new FormData();
+      form.append('metadata',new Blob([JSON.stringify({name:'appdata.json',parents:[DRIVE_FOLDER_ID]})],{type:'application/json'}));
+      form.append('file',blob);
+      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{
+        method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
+      });
+      const j=await r.json();
+      _appdataFileId=j.id;
+    }
+  }finally{_savePending=false;}
+}
+
+async function loadPropsFromD(){
+  if(!accessToken)return false;
+  try{
+    // appdata.json を検索
+    const r=await gapi.client.drive.files.list({
+      q:`name='appdata.json' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
+      fields:'files(id,modifiedTime)',orderBy:'modifiedTime desc',pageSize:1
+    });
+    if(!r.result.files.length)return false;
+    _appdataFileId=r.result.files[0].id;
+    // ファイルをダウンロード
+    const resp=await fetch(`https://www.googleapis.com/drive/v3/files/${_appdataFileId}?alt=media`,{
+      headers:{Authorization:'Bearer '+accessToken}
+    });
+    const json=await resp.json();
+    if(json.properties&&Array.isArray(json.properties)){
+      properties=json.properties;
+      localStorage.setItem('re_props',JSON.stringify(properties));
+      return true;
+    }
+  }catch(e){console.warn('Drive load error:',e);}
+  return false;
+}
 
 function buildYearSel(){
   const sel=document.getElementById('yearSel');
