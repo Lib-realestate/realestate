@@ -1429,7 +1429,9 @@ function setupDragDrop(){
 
 async function handleFiles(files){
   if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}
-  for(const file of files) await analyzeAndConfirm(file);
+  if(files.length===0)return;
+  const file=files[0];
+  await analyzeAndConfirm(file);
 }
 
 // ── AI解析（Anthropic API経由） ──
