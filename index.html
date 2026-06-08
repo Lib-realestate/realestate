@@ -1333,7 +1333,7 @@ const segs=p.loanSegs||[];
     const ap=mp*12;
     const tp=mp*seg.years*12;
     const ti=tp-seg.loan;
-    const ratio=ap/(currRentFull*12)*100;
+    const ratio=(currRentFull>0)?(ap/(currRentFull*12)*100):0;
     const rc=ratio<=40?'#16a34a':ratio<=50?'#f59e0b':'#dc2626';
     const s=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
     s(`an_mp${i}`,Math.round(mp).toLocaleString());
