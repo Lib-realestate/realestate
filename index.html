@@ -1359,6 +1359,11 @@ function syncLoanToSeg(pi,val){
   if(!p||!p.loanSegs||!p.loanSegs[0])return;
   p.loanSegs[0].loan=val;
   saveProps();
+  // ローン計算結果も即時更新
+  calcAnalysis(pi);
+  // 借入額入力欄の表示も更新（loanSegsの入力ボックス）
+  const loanInput=document.querySelector(`#loanseg_${pi}_0 input[type="text"]`);
+  if(loanInput) loanInput.value=val.toLocaleString();
 }
   
 /* ── 出口戦略 ── */
