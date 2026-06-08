@@ -1362,16 +1362,26 @@ function updateRoomCount(pi,count){
   }
   saveProps();
 }
-function syncLoanToSeg(pi,val){
+function calcTotalLoan(pi){
   const p=properties[pi];
-  if(!p||!p.loanSegs||!p.loanSegs[0])return;
-  p.loanSegs[0].loan=val;
+  if(!p||!p.loanSegs||!p.loanSegs.length) return p?.loan||0;
+  const base=p.loanSegs[0].loan||0;
+  const additional=p.loanSegs
+    .filter(s=>s.segType==='additional')
+    .reduce((sum,s)=>sum+(s.loan||0),0);
+  return base+additional;
+}
+
+function syncSegToLoan(pi){
+  const p=properties[pi];
+  if(!p) return;
+  const total=calcTotalLoan(pi);
+  p.loan=total;
   saveProps();
-  // ローン計算結果も即時更新
+  // 借入額欄の表示を更新
+  const loanInput=document.querySelector('.nbox.ai[onchange*="loan"]');
+  if(loanInput) loanInput.value=total.toLocaleString();
   calcAnalysis(pi);
-  // 借入額入力欄の表示も更新（loanSegsの入力ボックス）
-  const loanInput=document.querySelector(`#loanseg_${pi}_0 input[type="text"]`);
-  if(loanInput) loanInput.value=val.toLocaleString();
 }
   
 /* ── 出口戦略 ── */
