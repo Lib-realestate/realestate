@@ -1515,17 +1515,18 @@ async function analyzeAndConfirm(file){
     const detectedPropIdx=result.property?properties.findIndex(p=>p.name===result.property||(result.property&&p.name.includes(result.property))):-1;
     pendingUpload={file,id,result,detectedPropIdx};
     console.log('showClassifyModal呼ばれた', result);
-    function buildRename(file,result){
+    showClassifyModal(file,result,detectedPropIdx);
+  }catch(e){
+    updateProc(id,'error','解析エラー: '+e.message);
+  }
+}
+
+  function buildRename(file,result){
   const ext=file.name.includes('.')?file.name.slice(file.name.lastIndexOf('.')):'';
   const base=file.name.replace(ext,'');
   const d=(result.date||'').replace(/-/g,'');
   const issuer=(result.description||'').slice(0,20).replace(/[/\\:*?"<>|]/g,'');
   return [d,issuer,base].filter(Boolean).join('_')+ext;
-}
-    showClassifyModal(file,result,detectedPropIdx);
-  }catch(e){
-    updateProc(id,'error','解析エラー: '+e.message);
-  }
 }
 
 function showClassifyModal(file,result,detectedPropIdx){
