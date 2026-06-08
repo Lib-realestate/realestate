@@ -1272,7 +1272,9 @@ function removeLoanSeg(pi,i){
 function updateLoanSegCalc(pi,i,key,val){
   if(!properties[pi].loanSegs||!properties[pi].loanSegs[i])return;
   properties[pi].loanSegs[i][key]=val;
-  saveProps();calcAnalysis(pi);
+  saveProps();
+  if(key==='loan') syncSegToLoan(pi);
+  else calcAnalysis(pi);
 }
 
 
