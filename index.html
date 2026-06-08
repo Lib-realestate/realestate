@@ -1561,7 +1561,9 @@ function showClassifyModal(file,result,detectedPropIdx){
       <input type="date" id="classifyDate" value="${result.date||today()}" style="width:100%">
     </div>
     <div style="font-size:10px;color:#2563eb;margin-top:4px">✨ AIが内容を解析して自動判定しました。内容を確認・修正してからアップロードしてください。</div>`;
-  document.getElementById('classifyModal').classList.add('open');
+  const modal=document.getElementById('classifyModal');
+modal.style.display='flex';
+modal.classList.add('open');
 }
 
 async function confirmUpload(){
