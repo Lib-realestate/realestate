@@ -1354,6 +1354,12 @@ function updateRoomCount(pi,count){
   }
   saveProps();
 }
+function syncLoanToSeg(pi,val){
+  const p=properties[pi];
+  if(!p||!p.loanSegs||!p.loanSegs[0])return;
+  p.loanSegs[0].loan=val;
+  saveProps();
+}
   
 /* ── 出口戦略 ── */
 function renderExit(){
