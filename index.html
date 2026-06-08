@@ -1533,7 +1533,7 @@ const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propN
 
 function showClassifyModal(file,result,detectedPropIdx){
   const propOptions=properties.map((p,i)=>`<option value="${i}" ${i===detectedPropIdx?'selected':''}>${p.name}</option>`).join('');
-  const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===result.category?'selected':''}>${s}</option>`).join('');
+  const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s.includes(result.category||'')?'selected':''}>${s}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
     <div style="margin-bottom:12px">
       <div style="font-size:11px;color:#888;margin-bottom:2px">元のファイル名</div>
