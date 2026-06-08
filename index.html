@@ -1105,7 +1105,8 @@ function renderAnalysis(){
     const rc=ratio<=40?'#16a34a':ratio<=50?'#f59e0b':'#dc2626';
     return`<div class="loan-seg" id="loanseg_${pi}_${i}">
       <div class="flex-b" style="margin-bottom:6px">
-        <span style="font-size:12px;font-weight:500">${i===0?'当初条件':'変更条件 '+i}${i>0?'<span class="badge" style="background:#fef9c3;color:#854d0e;margin-left:6px">借り換え・金利変更</span>':''}</span>
+        <span style="font-size:12px;font-weight:500">${i===0?'当初条件':seg.segType==='additional'?'追加融資 '+i:'借り換え '+i}
+${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfce7':'#fef9c3'};color:${seg.segType==='additional'?'#166534':'#854d0e'};margin-left:6px">${seg.segType==='additional'?'追加融資':'借り換え・金利変更'}</span>`:''}</span>
         ${i>0?`<button class="btn-sm" onclick="removeLoanSeg(${pi},${i})" style="color:#dc2626">削除</button>`:''}
       </div>
       <div class="period-badge">📅 ${ml(seg.startYM)} 〜 ${endLbl}（${dur}ヶ月）</div>
