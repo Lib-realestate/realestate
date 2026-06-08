@@ -1418,12 +1418,13 @@ async function loadDriveFiles(){
 
 /* ── ファイル操作 ── */
 function setupDragDrop(){
- const zone=document.getElementById('dropZone');
-  if(!zone||zone._dragSetup)return;
-  zone._dragSetup=true;
-  zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.borderColor='#2563eb';});
-  zone.addEventListener('dragleave',()=>{zone.style.borderColor='';});
-  zone.addEventListener('drop',e=>{e.preventDefault();zone.style.borderColor='';handleFiles(e.dataTransfer.files);});
+  const zone=document.getElementById('dropZone');
+  if(!zone)return;
+  const newZone=zone.cloneNode(true);
+  zone.parentNode.replaceChild(newZone,zone);
+  newZone.addEventListener('dragover',e=>{e.preventDefault();newZone.style.borderColor='#2563eb';});
+  newZone.addEventListener('dragleave',()=>{newZone.style.borderColor='';});
+  newZone.addEventListener('drop',e=>{e.preventDefault();newZone.style.borderColor='';handleFiles(e.dataTransfer.files);});
 }
 
 async function handleFiles(files){
@@ -1669,7 +1670,7 @@ function renderUpload(){
       <span style="font-size:10px;color:#2563eb">✨ AIが内容を自動解析してリネーム・振り分け</span>
     </div>
     <div class="upload-zone" id="dropZone">
-      <input type="file" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
+      <input type="file" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
       <div style="font-size:28px;margin-bottom:10px">📂</div>
       <div style="font-size:13px;font-weight:500;margin-bottom:4px">ファイルをドロップ、またはタップして選択</div>
       <div style="font-size:11px;color:#888;margin-bottom:8px">AIが日付・発行者・カテゴリを判定してリネームします</div>
