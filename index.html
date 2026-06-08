@@ -1345,7 +1345,8 @@ function updatePropField(pi,key,val){
 /* ── 出口戦略 ── */
 function renderExit(){
   if(currentProp==='all')return;
-  const p=properties[parseInt(currentProp)];if(!p||!p.price)return;
+  const p=properties[parseInt(currentProp)];if(!p){document.getElementById('pages').innerHTML='<div class="card" style="text-align:center;padding:32px;color:#888">物件が見つかりません</div>';return;}
+if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style="padding:20px"><div class="ct" style="margin-bottom:8px">出口戦略 − 売却シミュレーション</div><p style="color:#888;font-size:12px">分析タブで取得価格を入力すると売却シミュレーションが表示されます。</p></div>';return;}
   document.getElementById('pages').innerHTML=`<div class="card"><div class="ct" style="margin-bottom:12px">売却シミュレーション — ${p.name}</div>
   <div class="grid2" style="margin-bottom:12px">
     <div><div style="font-size:11px;color:#888;margin-bottom:3px">売却想定価格（円）</div><input type="number" id="exitPrice" value="${Math.round(p.price*1.2)}" style="width:100%;font-size:14px;text-align:right" oninput="calcExit()"></div>
