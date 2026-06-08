@@ -1418,8 +1418,9 @@ async function loadDriveFiles(){
 
 /* ── ファイル操作 ── */
 function setupDragDrop(){
-  const zone=document.getElementById('dropZone');
-  if(!zone)return;
+ const zone=document.getElementById('dropZone');
+  if(!zone||zone._dragSetup)return;
+  zone._dragSetup=true;
   zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.borderColor='#2563eb';});
   zone.addEventListener('dragleave',()=>{zone.style.borderColor='';});
   zone.addEventListener('drop',e=>{e.preventDefault();zone.style.borderColor='';handleFiles(e.dataTransfer.files);});
@@ -1696,7 +1697,6 @@ function renderUpload(){
     html+=`</div>`;
   }
   document.getElementById('pages').innerHTML=html;
-  setTimeout(setupDragDrop,50);
 }
 
 
