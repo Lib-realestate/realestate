@@ -1753,7 +1753,7 @@ async function addNewProperty(){
 
 function deleteProp(id){if(!confirm('この物件を削除しますか？\n（Driveのフォルダは削除されません）'))return;properties=properties.filter(p=>p.id!==id);saveProps();buildPropSelector();renderSettings();}
 
-function closeModal(id){document.getElementById(id).classList.remove('open');pendingUpload=null;}
+function closeModal(id){const el=document.getElementById(id);el.classList.remove('open');el.style.display='';}
 
 function showToast(msg,type='info'){
   const icons={success:'✓',error:'✕',info:'ℹ'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;document.getElementById('toastArea').appendChild(el);setTimeout(()=>el.remove(),4000);
