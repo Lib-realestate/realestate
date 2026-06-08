@@ -1148,7 +1148,7 @@ function renderAnalysis(){
         <div class="ir"><div class="ic lbl">建物構造 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><select onchange="updatePropField(${pi},'structure',this.value)"><option ${p.structure==='RC'?'selected':''}>RC</option><option ${p.structure==='鉄骨造'?'selected':''}>鉄骨造</option><option ${p.structure==='木造'?'selected':''}>木造</option></select></div></div>
         <div class="ir"><div class="ic lbl">階数</div><div class="ic amt" style="text-align:left"><input type="number" value="${p.floors||''}" style="width:60px" onchange="updatePropField(${pi},'floors',parseInt(this.value))"> 階建て</div></div>
         <div class="ir"><div class="ic lbl">延床面積</div><div class="ic amt" style="text-align:left"><input type="number" value="${p.area||''}" style="width:80px" onchange="updatePropField(${pi},'area',parseInt(this.value))"> ㎡</div></div>
-        <div class="ir"><div class="ic lbl">戸数</div><div class="ic amt" style="text-align:left">${p.rooms.length}戸</div></div>
+        <div class="ir"><div class="ic lbl">戸数</div><div class="ic amt" style="text-align:left"><input type="number" value="${p.rooms.length}" min="1" style="width:60px" onchange="updateRoomCount(${pi},parseInt(this.value))"> 戸</div></div>
       </div>
     </div></div>
   </div>
@@ -1204,8 +1204,8 @@ function renderAnalysis(){
         <div>
           <div class="col-head">購入時想定</div>
           <div class="info-rows">
-            <div class="ir"><div class="ic lbl" style="width:140px">設定家賃（満室）<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(origRent)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value))"><span class="nunit">/月</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:140px">年間収入（満室）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_origRentAnn">${fmt(origRent*12)}</span><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;height:38px;line-height:38px">設定家賃（満室）<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" id="origRentMon_${pi}" value="${fmt(origRent)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value));document.getElementById('origRentAnn_${pi}').value=fmt(pa(this.value)*12)"><span class="nunit">/月</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;height:38px;line-height:38px">年間収入（満室）<span class="badge ba-b">自動</span></div><div class="ic amt"><input class="nbox" type="text" id="origRentAnn_${pi}" value="${fmt(origRent*12)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',Math.round(pa(this.value)/12));document.getElementById('origRentMon_${pi}').value=fmt(Math.round(pa(this.value)/12))"><span class="nunit">/年</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:140px">想定年間純利益<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(origNet)}" onblur="fi(this)" onchange="updatePropField(${pi},'origNet',pa(this.value))"><span class="nunit">/年</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g" id="an_ccrOrig">${sf>0&&origNet>0?(origNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_pbOrig">${sf>0&&origNet>0?(sf/origNet).toFixed(1)+'年':'—'}</span></div></div>
@@ -1214,7 +1214,8 @@ function renderAnalysis(){
         <div>
           <div class="col-head">現時点（実績平均）</div>
           <div class="info-rows">
-            <div class="ir"><div class="ic lbl" style="width:140px">現在家賃（満室想定）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_currRentAnn">${fmt(currRentFull*12)}</span><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;height:38px;line-height:38px">現在家賃（満室・月額）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(currRentFull)}</span><span class="nunit">/月</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px;height:38px;line-height:38px">現在家賃（満室・年額）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(currRentFull*12)}</span><span class="nunit">/年</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:140px">年間純利益（実績平均）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_avgNet">${fmt(avgNet)}</span><span class="nunit">/年</span><span class="nnote" id="an_avgNote">累計${fmt(cumNet)}÷${elapsed}ヶ月×12</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g" id="an_ccrCurr">${sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_pbCurr">${sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—'}</span></div></div>
@@ -1233,7 +1234,7 @@ function renderAnalysis(){
       <div class="info-rows">
         <div class="ir"><div class="ic lbl">法定耐用年数</div><div class="ic amt"><span class="nbox auto">${dur2}</span><span class="nunit">年（${p.structure||'RC'}）</span></div></div>
         <div class="ir"><div class="ic lbl">残存耐用年数</div><div class="ic amt"><span class="nbox auto">${Math.max(0,dur2-age2)}</span><span class="nunit">年</span></div></div>
-        <div class="ir"><div class="ic lbl">年間減価償却費</div><div class="ic amt"><span class="nbox auto r">${p.price?fmt(Math.round(p.price*0.7/dur2)):'—'}</span><span class="nunit">円/年</span></div></div>
+        <div class="ir"><div class="ic lbl">年間減価償却費 <span class="badge bz" style="font-size:9px">手入力可</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.depreciation||Math.round((p.price||0)*0.7/dur2))}" onblur="fi(this)" onchange="updatePropField(${pi},'depreciation',pa(this.value))"><span class="nunit">円/年</span></div></div>
       </div>
     </div></div>
   </div>
@@ -1341,7 +1342,19 @@ function updatePropField(pi,key,val){
   // 自動計算値を即時更新（ページ再レンダリングなし）
   calcAnalysis(pi);
 }
-
+function updateRoomCount(pi,count){
+  const p=properties[pi];if(!p||count<1)return;
+  const current=p.rooms.length;
+  if(count>current){
+    for(let i=current;i<count;i++){
+      p.rooms.push({no:p.type==='1棟'?String(101+i):'全室',layout:'',area:null,status:'occupied',since:today(),note:'',items:[{label:'家賃',amt:0}]});
+    }
+  }else if(count<current){
+    p.rooms=p.rooms.slice(0,count);
+  }
+  saveProps();
+}
+  
 /* ── 出口戦略 ── */
 function renderExit(){
   if(currentProp==='all')return;
