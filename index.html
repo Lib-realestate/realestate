@@ -1526,8 +1526,7 @@ async function analyzeAndConfirm(file){
   const ext=file.name.includes('.')?file.name.slice(file.name.lastIndexOf('.')):'';
   const base=file.name.replace(ext,'');
   const d=(result.date||'').replace(/-/g,'');
-  const issuer=(result.description||'').slice(0,20).replace(/[\/\\:\*\?"<>\|]/g,'');
-  return [d,issuer,base].filter(Boolean).join('_')+ext;
+  return [d,base].filter(Boolean).join('_')+ext;
 }
 
 function showClassifyModal(file,result,detectedPropIdx){
