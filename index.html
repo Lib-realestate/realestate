@@ -1168,7 +1168,10 @@ function renderAnalysis(){
       <div style="margin-top:12px;border-top:0.5px solid #e0e0d8;padding-top:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span class="ct">ローン返済条件</span>
-          <button class="btn-add" onclick="addLoanSeg(${pi})">＋ 借り換え・金利変更を追加</button>
+          <div style="display:flex;gap:6px">
+  <button class="btn-add" onclick="addLoanSeg(${pi},'refi')">＋ 借り換え・金利変更</button>
+  <button class="btn-add" style="background:#dcfce7;border-color:#86efac;color:#166534" onclick="addLoanSeg(${pi},'additional')">＋ 追加融資</button>
+</div>
         </div>
         <div id="loanSegsContainer">${segHTML}</div>
       </div>
