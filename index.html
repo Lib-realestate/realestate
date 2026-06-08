@@ -816,25 +816,167 @@ p.rooms[ri].moveOutDate=val;
 saveProps();
 }
 function renderAnalysis(){
-const pi=parseInt(currentProp);
-const p=properties[pi];
-if(!p){document.getElementById('pages').innerHTML='<div class="card">物件を選択してください</div>';return;}
-const annI=getAnnualI(pi),annE=getAnnualE(pi),annNet=annI-annE;
-const price=p.price||0,loan=p.loan||0,selfFund=price-loan;
-const grossYield=price>0?Math.round(annI/price*1000)/10:0;
-const netYield=price>0?Math.round(annNet/price*1000)/10:0;
-document.getElementById('pages').innerHTML=`
-<div class="card">
-<div class="ct" style="margin-bottom:12px">収益分析</div>
-<div class="info-rows">
-<div class="ir"><div class="ic lbl">年間収入</div><div class="ic amt"><span class="nbox auto">${fmt(annI)}</span><span class="nunit">円</span></div></div>
-<div class="ir"><div class="ic lbl">年間支出</div><div class="ic amt"><span class="nbox auto">${fmt(annE)}</span><span class="nunit">円</span></div></div>
-<div class="ir"><div class="ic lbl">年間純利益</div><div class="ic amt"><span class="nbox auto" style="color:${annNet>=0?'#16a34a':'#dc2626'}">${annNet<0?'▲':''}${fmt(annNet)}</span><span class="nunit">円</span></div></div>
-<div class="ir"><div class="ic lbl">表面利回り</div><div class="ic amt"><span class="nbox auto">${grossYield}</span><span class="nunit">%</span></div></div>
-<div class="ir"><div class="ic lbl">実質利回り</div><div class="ic amt"><span class="nbox auto">${netYield}</span><span class="nunit">%</span></div></div>
-</div>
-</div>`;
+  const isAll=currentProp==='all';
+  if(isAll){document.getElementById('pages').innerHTML='<div class="card" style="text-align:center;padding:32px;color:#888">個別物件を選択してください</div>';return;}
+  const pi=parseInt(currentProp);
+  const p=properties[pi];if(!p)return;
+  if(!p.loanSegs||!p.loanSegs.length) p.loanSegs=[{id:0,startYM:(p.acquireDate||'2022-01').slice(0,7),rate:1.5,years:35,loan:p.loan||0}];
+  const tc=p.price+(p.reform||0)+(p.miscCost||0);
+  const sf=tc-(p.loan||0);
+  const pr=p.price+(p.reform||0);
+  const acq=p.acquireDate?p.acquireDate.slice(0,7):nowYM();
+  const elapsed=Math.max(1,mdiff(acq,nowYM()));
+  const annI=getAnnualI(pi),annE=getAnnualE(pi);
+  const cumNet=Math.round((annI-annE)/12*elapsed);
+  const avgNet=Math.round(cumNet/elapsed*12);
+  const origRent=p.origRent||0;
+  const currRentFull=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  const gy=(r,b)=>b>0?(r*12/b*100).toFixed(2)+'%':'—';
+  const origNet=p.origNet||0;
+  const segHTML=p.loanSegs.map((seg,i)=>{
+    const now=nowYM(),isLast=i===p.loanSegs.length-1;
+    let endLbl='現在',dur=mdiff(seg.startYM||nowYM(),now);
+    if(!isLast&&p.loanSegs[i+1]){const ns=p.loanSegs[i+1].startYM,[ny,nm]=ns.split('-').map(Number);const pm=nm===1?12:nm-1,py=nm===1?ny-1:ny;endLbl=ml(`${py}-${String(pm).padStart(2,'0')}`);dur=mdiff(seg.startYM,ns);}
+    const mp=cm(seg.loan,seg.rate,seg.years);
+    const mi=seg.loan*(seg.rate/100/12);
+    const mk=mp-mi,ap=mp*12,tp=mp*seg.years*12,ti=tp-seg.loan;
+    const ratio=ap/(currRentFull*12)*100;
+    const rc=ratio<=40?'#16a34a':ratio<=50?'#f59e0b':'#dc2626';
+    return`<div class="loan-seg" id="loanseg_${pi}_${i}">
+      <div class="flex-b" style="margin-bottom:6px">
+        <span style="font-size:12px;font-weight:500">${i===0?'当初条件':'変更条件 '+i}${i>0?'<span class="badge" style="background:#fef9c3;color:#854d0e;margin-left:6px">借り換え・金利変更</span>':''}</span>
+        ${i>0?`<button class="btn-sm" onclick="removeLoanSeg(${pi},${i})" style="color:#dc2626">削除</button>`:''}
+      </div>
+      <div class="period-badge">📅 ${ml(seg.startYM)} 〜 ${endLbl}（${dur}ヶ月）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 120px 90px;gap:10px;align-items:end;margin-top:6px">
+        <div><div style="font-size:10px;color:#888;margin-bottom:3px">${i===0?'借入額':'変更時残債'} <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">${i===0?'AI':'手入力'}</span></div>
+          <input class="nbox ${i===0?'ai':''}" type="text" value="${fmt(seg.loan)}" onblur="fi(this)" onchange="updateLoanSegCalc(${pi},${i},'loan',pa(this.value))" style="width:100%"></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:3px">開始年月 <span class="badge bz" style="font-size:9px">手入力</span></div>
+          <input type="month" value="${seg.startYM||nowYM()}" style="width:100%;height:30px;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updateLoanSegCalc(${pi},${i},'startYM',this.value)"></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:3px">金利 <span class="badge" style="background:${i===0?'#dbeafe':'#f3f4f6'};color:${i===0?'#1e40af':'#4b5563'};font-size:9px">${i===0?'AI':'手入力'}</span></div>
+          <div style="display:flex;align-items:center;gap:4px"><input type="number" value="${seg.rate}" step="0.1" min="0" style="width:68px;text-align:right;height:30px;font-size:13px;border:0.5px solid ${i===0?'#93c5fd':'#d0d0c8'};border-radius:6px;padding:4px 8px;background:${i===0?'#eff6ff':'#fff'}" onchange="updateLoanSegCalc(${pi},${i},'rate',parseFloat(this.value))"><span style="font-size:11px;color:#888">%</span></div></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:3px">期間 <span class="badge bz" style="font-size:9px">手入力</span></div>
+          <div style="display:flex;align-items:center;gap:4px"><input type="number" value="${seg.years}" min="1" max="50" style="width:60px;text-align:right;height:30px;font-size:13px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updateLoanSegCalc(${pi},${i},'years',parseInt(this.value))"><span style="font-size:11px;color:#888">年</span></div></div>
+      </div>
+      <div style="margin-top:10px;border-top:0.5px solid #e0e0d8;padding-top:8px">
+        <div class="info-rows">
+          <div class="ir"><div class="ic lbl" style="width:200px;font-size:11px">月返済額（元利合計）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto r" id="an_mp${i}">${fmt(mp)}</span><span class="nunit">/月</span></div></div>
+          <div class="ir"><div class="ic lbl" style="width:200px;font-size:11px">　うち利息（初回）</div><div class="ic amt"><span class="nbox auto w400" id="an_mi${i}">${fmt(mi)}</span><span class="nunit">/月</span></div></div>
+          <div class="ir"><div class="ic lbl" style="width:200px;font-size:11px">　うち元金（初回）</div><div class="ic amt"><span class="nbox auto w400" id="an_mk${i}">${fmt(mk)}</span><span class="nunit">/月</span></div></div>
+          <div class="ir"><div class="ic lbl" style="width:200px;font-size:11px">年間返済額<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto r" id="an_ap${i}">${fmt(ap)}</span><span class="nunit">/年</span></div></div>
+          <div class="ir"><div class="ic lbl" style="width:200px;font-size:11px">返済比率（満室収入比）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_ratio${i}" style="color:${rc};font-weight:600">${ratio.toFixed(1)}%</span><span class="nnote" id="an_rationote${i}">${ratio<=40?'✓ 安全圏':ratio<=50?'⚠ 注意':'⚠ 要注意'}</span></div></div>
+          <div class="ir"><div class="ic lbl" style="width:200px;font-size:11px">総返済額</div><div class="ic amt"><span class="nbox auto w400" id="an_tp${i}">${fmt(tp)}</span><span class="nnote">（うち利息 <span id="an_ti${i}">${fmt(ti)}</span>）</span></div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  const dur2={RC:47,'鉄骨造':34,'木造':22}[p.structure]||47;
+  const age2=p.builtYear?2025-p.builtYear:0;
+  document.getElementById('pages').innerHTML=`
+  <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
+    <div class="sec-toggle" onclick="togSec('info')"><span style="font-size:13px;font-weight:500">物件概要・基本情報</span><span id="ic_info">▲</span></div>
+    <div class="sec-body" id="body_info" style="max-height:1000px"><div style="padding:12px 14px">
+      <div style="font-size:10px;color:#888;margin-bottom:8px;text-align:right"><span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span> 自動読み取り（編集可）</div>
+      <div class="info-rows">
+        <div class="ir"><div class="ic lbl">物件種別</div><div class="ic amt" style="text-align:left"><span class="badge bb">${p.type}</span></div></div>
+        <div class="ir"><div class="ic lbl">所在地 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="text" value="${p.addr||''}" style="width:200px" onchange="updatePropField(${pi},'addr',this.value)"></div></div>
+        <div class="ir"><div class="ic lbl">物件取得年月日 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="text" value="${p.acquireDate||''}" style="width:120px" onchange="updatePropField(${pi},'acquireDate',this.value)"></div></div>
+        <div class="ir"><div class="ic lbl">建築年月 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="number" value="${p.builtYear||''}" style="width:72px" onchange="updatePropField(${pi},'builtYear',parseInt(this.value))"> 年 <input type="number" value="${p.builtMonth||''}" style="width:50px" onchange="updatePropField(${pi},'builtMonth',parseInt(this.value))"> 月${p.builtYear?'（築'+(2025-p.builtYear)+'年）':''}</div></div>
+        <div class="ir"><div class="ic lbl">建物構造 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><select onchange="updatePropField(${pi},'structure',this.value)"><option ${p.structure==='RC'?'selected':''}>RC</option><option ${p.structure==='鉄骨造'?'selected':''}>鉄骨造</option><option ${p.structure==='木造'?'selected':''}>木造</option></select></div></div>
+        <div class="ir"><div class="ic lbl">階数</div><div class="ic amt" style="text-align:left"><input type="number" value="${p.floors||''}" style="width:60px" onchange="updatePropField(${pi},'floors',parseInt(this.value))"> 階建て</div></div>
+        <div class="ir"><div class="ic lbl">延床面積</div><div class="ic amt" style="text-align:left"><input type="number" value="${p.area||''}" style="width:80px" onchange="updatePropField(${pi},'area',parseInt(this.value))"> ㎡</div></div>
+        <div class="ir"><div class="ic lbl">戸数</div><div class="ic amt" style="text-align:left">${p.rooms.length}戸</div></div>
+      </div>
+    </div></div>
+  </div>
+  <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
+    <div class="sec-toggle" onclick="togSec('fund')"><span style="font-size:13px;font-weight:500">取得・資金情報</span><span id="ic_fund">▲</span></div>
+    <div class="sec-body" id="body_fund" style="max-height:2000px"><div style="padding:12px 14px">
+      <div class="info-rows">
+        <div class="ir"><div class="ic lbl">取得価格 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.price)}" onblur="fi(this)" onchange="updatePropField(${pi},'price',pa(this.value))"><span class="nunit">円</span></div></div>
+        <div class="ir"><div class="ic lbl">リフォーム費用 <span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.reform||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'reform',pa(this.value))"><span class="nunit">円</span></div></div>
+        <div class="ir"><div class="ic lbl">諸費用合計 <span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.miscCost||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'miscCost',pa(this.value))"><span class="nunit">円</span><span class="nnote">${p.price?`取得価格の ${((p.miscCost||0)/p.price*100).toFixed(1)}%`:''}</span></div></div>
+        <div class="ir"><div class="ic lbl">取得コスト合計 <span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(tc)}</span><span class="nunit">円</span></div></div>
+        <div class="ir"><div class="ic lbl">借入額 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.loan||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'loan',pa(this.value))"><span class="nunit">円</span></div></div>
+        <div class="ir"><div class="ic lbl">自己資金 <span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(sf)}</span><span class="nunit">円</span></div></div>
+        <div class="ir"><div class="ic lbl">現時点の残債 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.debt||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'debt',pa(this.value))"><span class="nunit">円</span></div></div>
+      </div>
+      <div style="margin-top:12px;border-top:0.5px solid #e0e0d8;padding-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span class="ct">ローン返済条件</span>
+          <button class="btn-add" onclick="addLoanSeg(${pi})">＋ 借り換え・金利変更を追加</button>
+        </div>
+        <div id="loanSegsContainer">${segHTML}</div>
+      </div>
+    </div></div>
+  </div>
+  <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
+    <div class="sec-toggle" onclick="togSec('yield')"><span style="font-size:13px;font-weight:500">利回り・CCR</span><span id="ic_yield">▲</span></div>
+    <div class="sec-body" id="body_yield" style="max-height:1000px"><div style="padding:12px 14px">
+      <div class="ct" style="margin-bottom:8px">表面利回り比較</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">
+        <thead><tr style="background:#fafaf8">
+          <th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:500;color:#888;border-bottom:0.5px solid #e0e0d8">計算基準</th>
+          <th style="padding:5px 8px;text-align:right;font-size:10px;font-weight:500;color:#888;border-bottom:0.5px solid #e0e0d8">合計額</th>
+          <th style="padding:5px 8px;text-align:right;font-size:10px;font-weight:500;color:#888;border-bottom:0.5px solid #e0e0d8">購入時想定</th>
+          <th style="padding:5px 8px;text-align:right;font-size:10px;font-weight:500;color:#888;border-bottom:0.5px solid #e0e0d8">現時点（満室）</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;color:#888">取得価格のみ</td>
+            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-size:11px;color:#888">${fmt(p.price)}</td>
+            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-weight:500">${gy(origRent,p.price)}</td>
+            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-weight:500">${gy(currRentFull,p.price)}</td></tr>
+          <tr><td style="padding:6px 8px;color:#888">取得価格＋リフォーム費用</td>
+            <td style="padding:6px 8px;text-align:right;font-size:11px;color:#888">${fmt(pr)}</td>
+            <td style="padding:6px 8px;text-align:right;font-weight:500">${gy(origRent,pr)}</td>
+            <td style="padding:6px 8px;text-align:right;font-weight:500">${gy(currRentFull,pr)}</td></tr>
+        </tbody>
+      </table>
+      <div style="height:1px;background:#e0e0d8;margin:10px 0"></div>
+      <div class="ct" style="margin-bottom:10px">CCR（Cash on Cash Return）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div class="col-head">購入時想定</div>
+          <div class="info-rows">
+            <div class="ir"><div class="ic lbl" style="width:140px">設定家賃（満室）<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(origRent)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value))"><span class="nunit">/月</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">年間収入（満室）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(origRent*12)}</span><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">想定年間純利益<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(origNet)}" onblur="fi(this)" onchange="updatePropField(${pi},'origNet',pa(this.value))"><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g">${sf>0&&origNet>0?(origNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${sf>0&&origNet>0?(sf/origNet).toFixed(1)+'年':'—'}</span></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="col-head">現時点（実績平均）</div>
+          <div class="info-rows">
+            <div class="ir"><div class="ic lbl" style="width:140px">現在家賃（満室想定）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(currRentFull*12)}</span><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">年間純利益（実績平均）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(avgNet)}</span><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g">${sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—'}</span></div></div>
+          </div>
+          <div style="margin-top:8px;padding:8px 10px;background:#fafaf8;border-radius:6px;font-size:11px;color:#888">
+            物件取得年月：${acq}　経過：${elapsed}ヶ月
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+  <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
+    <div class="sec-toggle" onclick="togSec('dep')"><span style="font-size:13px;font-weight:500">耐用年数・減価償却</span><span id="ic_dep">▼</span></div>
+    <div class="sec-body" id="body_dep" style="max-height:0"><div style="padding:12px 14px">
+      <div class="info-rows">
+        <div class="ir"><div class="ic lbl">法定耐用年数</div><div class="ic amt"><span class="nbox auto">${dur2}</span><span class="nunit">年（${p.structure||'RC'}）</span></div></div>
+        <div class="ir"><div class="ic lbl">残存耐用年数</div><div class="ic amt"><span class="nbox auto">${Math.max(0,dur2-age2)}</span><span class="nunit">年</span></div></div>
+        <div class="ir"><div class="ic lbl">年間減価償却費</div><div class="ic amt"><span class="nbox auto r">${p.price?fmt(Math.round(p.price*0.7/dur2)):'—'}</span><span class="nunit">円/年</span></div></div>
+      </div>
+    </div></div>
+  </div>
+  <div class="card" style="border-style:dashed">
+    <div class="ct" style="margin-bottom:8px">Drive フォルダ</div>
+    <div style="font-size:12px;color:#888;margin-bottom:8px">${p.folderId?'✓ フォルダ作成済み':'未作成'}</div>
+    <button class="btn btn-b" onclick="createFolders('${p.id}')">フォルダを作成／確認</button>
+  </div>`;
 }
+  
 function renderExit(){
 document.getElementById('pages').innerHTML='<div class="card"><div class="ct">出口戦略</div><p style="margin-top:8px;font-size:12px;color:#888">準備中</p></div>';
 }
