@@ -1511,8 +1511,10 @@ async function analyzeAndConfirm(file){
       };
     }
     // 物件を名前で照合
+    console.log('AI解析結果受信', result);
     const detectedPropIdx=result.property?properties.findIndex(p=>p.name===result.property||(result.property&&p.name.includes(result.property))):-1;
     pendingUpload={file,id,result,detectedPropIdx};
+    console.log('showClassifyModal呼ばれた', result);
     showClassifyModal(file,result,detectedPropIdx);
   }catch(e){
     updateProc(id,'error','解析エラー: '+e.message);
