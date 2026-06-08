@@ -1246,12 +1246,20 @@ function renderAnalysis(){
   </div>`;
 }
 
-function addLoanSeg(pi){
+function addLoanSeg(pi, segType){
   const p=properties[pi];
   if(!p.loanSegs) p.loanSegs=[];
   const last=p.loanSegs[p.loanSegs.length-1]||{};
-  p.loanSegs.push({id:p.loanSegs.length,startYM:nowYM(),rate:last.rate||1.5,years:20,loan:p.debt||Math.round((p.loan||0)*0.8)});
-  saveProps();renderAnalysis();
+  p.loanSegs.push({
+    id:p.loanSegs.length,
+    segType: segType, // 'refi' or 'additional'
+    startYM:nowYM(),
+    rate:last.rate||1.5,
+    years:segType==='additional'?35:20,
+    loan:segType==='refi'?(p.debt||Math.round((p.loan||0)*0.8)):0
+  });
+  saveProps();
+  renderAnalysis();
 }
 function removeLoanSeg(pi,i){
   properties[pi].loanSegs.splice(i,1);
