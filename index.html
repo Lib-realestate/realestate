@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>不動産収支管理</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="不動産管理">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-title" content="不動産管理">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans JP',sans-serif;font-size:14px;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
@@ -22,6 +22,8 @@ select,input[type=number],input[type=text],input[type=date],input[type=month]{bo
 .nb.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:500}
 .nb:hover:not(.active){color:#333}
 .content{padding:12px;max-width:960px;margin:0 auto}
+
+/* サブグリッド3列 */
 .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
 .col{background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;padding:12px 14px;display:grid;grid-template-rows:auto auto 6px auto auto auto}
 .col.single{display:block}
@@ -33,6 +35,7 @@ select,input[type=number],input[type=text],input[type=date],input[type=month]{bo
 .bar-wrap{display:flex;border-radius:3px;overflow:hidden;gap:1px;margin:3px 0 2px}
 .bar-i{background:#86efac}.bar-e{background:#fca5a5}
 .bar-bg{background:#e0e0d8;border-radius:3px;overflow:hidden;margin:3px 0 2px}
+
 .card{background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;padding:12px 14px;margin-bottom:10px}
 .ct{font-size:10px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.04em}
 .flex-b{display:flex;align-items:center;justify-content:space-between}
@@ -42,12 +45,15 @@ select,input[type=number],input[type=text],input[type=date],input[type=month]{bo
 .bg{background:#dcfce7;color:#166534}.br-b{background:#fee2e2;color:#991b1b}
 .bb{background:#dbeafe;color:#1e40af}.bz{background:#f3f4f6;color:#4b5563}
 .ba-b{background:#f3f4f6;color:#4b5563;font-size:9px}
+
+/* 数字揃えグリッド */
 .info-rows{display:table;width:100%;border-collapse:collapse}
 .ir{display:table-row}
 .ir:not(:last-child) .ic{border-bottom:0.5px solid #f0f0e8}
 .ic{display:table-cell;padding:7px 6px;vertical-align:middle}
 .ic.lbl{color:#888;font-size:12px;width:210px;padding-right:10px;line-height:1.5}
 .ic.amt{white-space:nowrap;vertical-align:middle}
+/* 数字ボックス：入力・自動計算で完全同一サイズ */
 .nbox{display:inline-block;width:130px;min-width:80px;max-width:100%;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-variant-numeric:tabular-nums;text-align:right;padding:4px 10px;height:30px;line-height:22px;border-radius:6px;border:0.5px solid #d0d0c8;background:#fff;color:#1a1a1a;vertical-align:middle}
 input.nbox{box-sizing:border-box}
 input.nbox.ai{border-color:#93c5fd;background:#eff6ff}
@@ -55,6 +61,8 @@ span.nbox.auto{background:#f3f4f6;border-color:transparent;font-weight:600}
 span.nbox.auto.w400{font-weight:400;font-size:12px}
 .nunit{display:inline-block;font-size:12px;color:#888;margin-left:6px;vertical-align:middle;white-space:nowrap}
 .nnote{display:inline-block;font-size:11px;color:#888;margin-left:8px;vertical-align:middle}
+
+/* 部屋テーブル */
 .rtable{width:100%;border-collapse:collapse;font-size:12px}
 .rtable th{padding:7px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;font-weight:500;background:#fafaf8;white-space:nowrap}
 .rtable td{padding:0;border-bottom:0.5px solid #f0f0e8;vertical-align:middle}
@@ -67,10 +75,13 @@ span.nbox.auto.w400{font-weight:400;font-size:12px}
 .rdetail.open{display:block}
 .eicon{font-size:10px;color:#aaa;transition:transform .15s;display:inline-block;margin-left:3px}
 .eicon.open{transform:rotate(180deg)}
+/* 内訳：名称右寄せ・金額右揃え */
 .ftable{border-collapse:collapse;margin:4px 0 4px 8px}
 .ftable td{padding:2px 6px;font-size:11px;border:none;white-space:nowrap}
 .ftable .fl{text-align:right;color:#888;min-width:60px}
 .ftable .fv{text-align:right;color:#1a1a1a;min-width:80px}
+
+/* 収支テーブル */
 .cf-wrap{overflow-x:auto}
 .cftable{border-collapse:collapse;font-size:11px;width:100%}
 .cftable th{padding:6px 7px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;font-weight:500;white-space:nowrap;background:#fafaf8}
@@ -83,6 +94,8 @@ span.nbox.auto.w400{font-weight:400;font-size:12px}
 .cftable tr.future td{color:#aaa;font-style:italic}
 .toggle-row td{cursor:pointer}
 .toggle-row:hover td{background:#f5f5f0}
+
+/* 入居状況テーブル */
 .occ-table{border-collapse:collapse;font-size:11px;width:100%}
 .occ-table th{padding:5px 7px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;font-weight:500;white-space:nowrap;background:#fafaf8}
 .occ-table th.lbl{text-align:left}
@@ -94,6 +107,8 @@ span.nbox.auto.w400{font-weight:400;font-size:12px}
 .pill-hi{background:#dcfce7;color:#166534}
 .pill-lo{background:#fee2e2;color:#991b1b}
 .pill-mid{background:#fef9c3;color:#854d0e}
+
+/* ガント */
 .gantt-header{display:flex;align-items:center;margin-bottom:2px}
 .gantt-lbl{width:52px;flex-shrink:0;font-size:10px;color:#888;text-align:right;padding-right:8px}
 .gantt-months-hdr{flex:1;display:grid;grid-template-columns:repeat(12,1fr)}
@@ -107,12 +122,16 @@ span.nbox.auto.w400{font-weight:400;font-size:12px}
 .gcell.vac{background:#fca5a5;opacity:.4}
 .gantt-pct{width:46px;text-align:right;font-size:11px;padding-right:4px}
 .gantt-overall{display:flex;align-items:center;padding:7px 0 4px;border-top:1px solid #d0d0c8;margin-top:4px}
+
+/* 分析タブ */
 .sec-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 14px;border-bottom:0.5px solid #f0f0e8}
 .sec-toggle:hover{background:#fafaf8}
 .sec-body{overflow:hidden;transition:max-height .3s ease}
 .loan-seg{background:#fafaf8;border-radius:8px;padding:10px 12px;margin-bottom:8px;border:0.5px solid #e0e0d8}
 .period-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;background:#fff;border:0.5px solid #d0d0c8;color:#888;margin-bottom:8px}
 .col-head{font-size:11px;font-weight:500;color:#888;padding-bottom:6px;margin-bottom:8px;border-bottom:0.5px solid #e0e0d8}
+
+/* モーダル */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:12px;padding:22px 24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
@@ -128,6 +147,8 @@ span.nbox.auto.w400{font-weight:400;font-size:12px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn-add{padding:4px 12px;border:0.5px solid #93c5fd;border-radius:6px;background:#dbeafe;color:#1e40af;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif}
 .btn-sm{padding:3px 10px;border:0.5px solid #d0d0c8;border-radius:6px;background:none;cursor:pointer;font-size:11px;color:#666;font-family:'Noto Sans JP',sans-serif}
+
+/* アップロード */
 .upload-zone{border:2px dashed #d0d0c8;border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fafaf8;margin-bottom:10px}
 .upload-zone:hover{border-color:#2563eb;background:#eff6ff}
 .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
@@ -149,6 +170,7 @@ span.nbox.auto.w400{font-weight:400;font-size:12px}
 .file-cat-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
 .fct{padding:4px 12px;border:0.5px solid #d0d0c8;border-radius:20px;font-size:11px;cursor:pointer;background:#fff;color:#666;font-family:'Noto Sans JP',sans-serif}
 .fct.active{background:#2563eb;color:#fff;border-color:#2563eb}
+
 #toastArea{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:200}
 .toast{background:#fff;border:0.5px solid #e0e0d8;border-radius:8px;padding:10px 14px;font-size:12px;min-width:220px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);animation:slideIn .3s ease}
 .toast.success{border-left:3px solid #16a34a}.toast.error{border-left:3px solid #dc2626}.toast.info{border-left:3px solid #2563eb}
@@ -172,65 +194,72 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 <div id="authScreen">
-<div class="auth-card">
-<div class="auth-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-<div class="auth-title">不動産収支管理</div>
-<div class="auth-sub">Google アカウントでログインして<br>Google Drive と連携します</div>
-<button class="btn-google" onclick="handleAuth()">
-<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-Google でログイン
-</button>
+  <div class="auth-card">
+    <div class="auth-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="auth-title">不動産収支管理</div>
+    <div class="auth-sub">Google アカウントでログインして<br>Google Drive と連携します</div>
+    <button class="btn-google" onclick="handleAuth()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google でログイン
+    </button>
+  </div>
 </div>
-</div>
+
 <div id="appScreen" style="display:none">
-<div class="topbar">
-<div class="topbar-left">
-<select id="propSel" onchange="switchProp()" style="min-width:140px"></select>
-<select id="yearSel" onchange="renderCurrent()" style="min-width:74px"></select>
-<select id="monthSel" onchange="renderCurrent()" style="min-width:60px">
-<option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6" selected>6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-</select>
+  <div class="topbar">
+    <div class="topbar-left">
+      <select id="propSel" onchange="switchProp()" style="min-width:140px"></select>
+      <select id="yearSel" onchange="renderCurrent()" style="min-width:74px"></select>
+      <select id="monthSel" onchange="renderCurrent()" style="min-width:60px">
+        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6" selected>6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      </select>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="iconUpload" title="ファイルアップロード" onclick="showIconPage('upload')" aria-label="ファイルアップロード"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg></button>
+      <button class="icon-btn" id="iconFiles" title="ファイル一覧" onclick="showIconPage('files')" aria-label="ファイル一覧"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+      <button class="icon-btn" id="iconSettings" title="設定" onclick="showIconPage('settings')" aria-label="設定"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <span id="userEmail" style="font-size:10px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+  </div>
+  <div class="drive-bar"><div class="drive-dot" id="driveDot"></div><span id="driveStatus">未接続</span></div>
+  <div class="nav" id="mainNav"></div>
+  <div class="content" id="pages"></div>
 </div>
-<div class="topbar-right">
-<button class="icon-btn" id="iconUpload" title="ファイルアップロード" onclick="showIconPage('upload')" aria-label="ファイルアップロード"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg></button>
-<button class="icon-btn" id="iconFiles" title="ファイル一覧" onclick="showIconPage('files')" aria-label="ファイル一覧"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
-<button class="icon-btn" id="iconSettings" title="設定" onclick="showIconPage('settings')" aria-label="設定"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-<span id="userEmail" style="font-size:10px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-</div>
-</div>
-<div class="drive-bar"><div class="drive-dot" id="driveDot"></div><span id="driveStatus">未接続</span></div>
-<div class="nav" id="mainNav"></div>
-<div class="content" id="pages"></div>
-</div>
+
+<!-- 物件追加モーダル -->
 <div class="modal-overlay" id="addPropModal">
-<div class="modal">
-<div class="modal-title">物件を追加</div>
-<div class="form-group"><label class="form-label">物件名 *</label><input type="text" id="newPropName" placeholder="例: 三恵マンション" style="width:100%"></div>
-<div class="form-group"><label class="form-label">種別 *</label><select id="newPropType" style="width:100%"><option value="区分">区分マンション</option><option value="1棟">1棟マンション</option><option value="戸建">一戸建て</option></select></div>
-<div class="grid2">
-<div class="form-group"><label class="form-label">取得価格（円）</label><input type="number" id="newPropPrice" placeholder="18000000" style="width:100%"></div>
-<div class="form-group"><label class="form-label">自己資金（円）</label><input type="number" id="newPropSelf" placeholder="5000000" style="width:100%"></div>
+  <div class="modal">
+    <div class="modal-title">物件を追加</div>
+    <div class="form-group"><label class="form-label">物件名 *</label><input type="text" id="newPropName" placeholder="例: 三恵マンション" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">種別 *</label><select id="newPropType" style="width:100%"><option value="区分">区分マンション</option><option value="1棟">1棟マンション</option><option value="戸建">一戸建て</option></select></div>
+    <div class="grid2">
+      <div class="form-group"><label class="form-label">取得価格（円）</label><input type="number" id="newPropPrice" placeholder="18000000" style="width:100%"></div>
+      <div class="form-group"><label class="form-label">自己資金（円）</label><input type="number" id="newPropSelf" placeholder="5000000" style="width:100%"></div>
+    </div>
+    <div class="grid2">
+      <div class="form-group"><label class="form-label">借入額（円）</label><input type="number" id="newPropLoan" placeholder="13000000" style="width:100%"></div>
+      <div class="form-group"><label class="form-label">建築年</label><input type="number" id="newPropBuilt" placeholder="2010" style="width:100%"></div>
+    </div>
+    <div class="grid2">
+      <div class="form-group"><label class="form-label">構造</label><select id="newPropStruct" style="width:100%"><option>RC</option><option>鉄骨造</option><option>木造</option></select></div>
+      <div class="form-group"><label class="form-label">所在地</label><input type="text" id="newPropAddr" placeholder="東京都新宿区" style="width:100%"></div>
+    </div>
+    <div class="form-group"><label class="form-label">部屋数</label><input type="number" id="newPropUnits" placeholder="1" style="width:100%"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('addPropModal')">キャンセル</button><button class="btn btn-primary" onclick="addNewProperty()">追加してフォルダ作成</button></div>
+  </div>
 </div>
-<div class="grid2">
-<div class="form-group"><label class="form-label">借入額（円）</label><input type="number" id="newPropLoan" placeholder="13000000" style="width:100%"></div>
-<div class="form-group"><label class="form-label">建築年</label><input type="number" id="newPropBuilt" placeholder="2010" style="width:100%"></div>
-</div>
-<div class="grid2">
-<div class="form-group"><label class="form-label">構造</label><select id="newPropStruct" style="width:100%"><option>RC</option><option>鉄骨造</option><option>木造</option></select></div>
-<div class="form-group"><label class="form-label">所在地</label><input type="text" id="newPropAddr" placeholder="東京都新宿区" style="width:100%"></div>
-</div>
-<div class="form-group"><label class="form-label">部屋数</label><input type="number" id="newPropUnits" placeholder="1" style="width:100%"></div>
-<div class="modal-actions"><button class="btn" onclick="closeModal('addPropModal')">キャンセル</button><button class="btn btn-primary" onclick="addNewProperty()">追加してフォルダ作成</button></div>
-</div>
-</div>
+
+<!-- 振り分け確認モーダル -->
 <div class="modal-overlay" id="classifyModal">
-<div class="modal">
-<div class="modal-title">振り分け先を確認</div>
-<div id="classifyContent"></div>
-<div class="modal-actions"><button class="btn" onclick="closeModal('classifyModal')">キャンセル</button><button class="btn btn-primary" onclick="confirmUpload()">この内容でアップロード</button></div>
+  <div class="modal">
+    <div class="modal-title">振り分け先を確認</div>
+    <div id="classifyContent"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('classifyModal')">キャンセル</button><button class="btn btn-primary" onclick="confirmUpload()">この内容でアップロード</button></div>
+  </div>
 </div>
-</div>
+
 <div id="toastArea"></div>
+
 <script src="https://apis.google.com/js/api.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -241,6 +270,7 @@ const DRIVE_FOLDER_ID='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
 const SCOPES='https://www.googleapis.com/auth/drive';
 const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_その他'];
 const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
+
 let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
 let properties=[];
 let driveFiles=[],unclassifiedItems=[];
@@ -249,6 +279,7 @@ let pendingUpload=null,folderCreatingLock={};
 let fiscalMonth=parseInt(localStorage.getItem('fiscalMonth')||'3');
 let yearMode=localStorage.getItem('yearMode')||'fiscal';
 let iconPageActive=null;
+
 function saveFiscal(){localStorage.setItem('fiscalMonth',fiscalMonth);localStorage.setItem('yearMode',yearMode);}
 const fmt=n=>Math.round(Math.abs(n)).toLocaleString();
 const fmtPN=n=>n===0?'—':n<0?'▲'+fmt(n):fmt(n);
@@ -262,145 +293,175 @@ const ml=ym=>{if(!ym)return'—';const[y,m]=ym.split('-');return`${y}年${parseI
 const pa=s=>parseInt((s||'0').replace(/[^0-9]/g,''))||0;
 const fi=el=>{const v=pa(el.value);if(v>0)el.value=v.toLocaleString();};
 const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+
+/* ── Google API + ログイン継続 ── */
 document.addEventListener('DOMContentLoaded',()=>{
-gapi.load('client',async()=>{
-await gapi.client.init({apiKey:API_KEY,discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']});
-gapiInited=true;
-tryAutoLogin();
+  gapi.load('client',async()=>{
+    await gapi.client.init({apiKey:API_KEY,discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']});
+    gapiInited=true;
+    tryAutoLogin();
+  });
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID,scope:SCOPES,
+    callback:(resp)=>{
+      if(resp.error){showToast('認証エラー: '+resp.error,'error');return;}
+      accessToken=resp.access_token;
+      const exp=Date.now()+55*60*1000;
+      localStorage.setItem(TOKEN_KEY,accessToken);
+      localStorage.setItem(TOKEN_EXP_KEY,String(exp));
+      onSignIn();
+    }
+  });
+  gisInited=true;
 });
-tokenClient=google.accounts.oauth2.initTokenClient({
-client_id:CLIENT_ID,scope:SCOPES,
-callback:(resp)=>{
-if(resp.error){showToast('認証エラー: '+resp.error,'error');return;}
-accessToken=resp.access_token;
-const exp=Date.now()+55*60*1000;
-localStorage.setItem(TOKEN_KEY,accessToken);
-localStorage.setItem(TOKEN_EXP_KEY,String(exp));
-onSignIn();
-}
-});
-gisInited=true;
-});
+
 async function tryAutoLogin(){
-const saved=localStorage.getItem(TOKEN_KEY);
-const exp=parseInt(localStorage.getItem(TOKEN_EXP_KEY)||'0');
-if(saved&&exp>Date.now()){
-accessToken=saved;
-gapi.client.setToken({access_token:accessToken});
-try{
-const r=await gapi.client.drive.about.get({fields:'user'});
-document.getElementById('userEmail').textContent=r.result.user.emailAddress;
-document.getElementById('driveDot').classList.add('on');
-document.getElementById('driveStatus').textContent='Drive 接続済';
-document.getElementById('authScreen').style.display='none';
-document.getElementById('appScreen').style.display='block';
-const loaded2=await loadPropsFromD();
-if(!loaded2){
-const local=localStorage.getItem('re_props');
-if(local)try{properties=JSON.parse(local);}catch{}
-if(!properties.length)loadDefaultProperties();
+  const saved=localStorage.getItem(TOKEN_KEY);
+  const exp=parseInt(localStorage.getItem(TOKEN_EXP_KEY)||'0');
+  if(saved&&exp>Date.now()){
+    accessToken=saved;
+    gapi.client.setToken({access_token:accessToken});
+    try{
+      const r=await gapi.client.drive.about.get({fields:'user'});
+      document.getElementById('userEmail').textContent=r.result.user.emailAddress;
+      document.getElementById('driveDot').classList.add('on');
+      document.getElementById('driveStatus').textContent='Drive 接続済';
+      document.getElementById('authScreen').style.display='none';
+      document.getElementById('appScreen').style.display='block';
+      const loaded2=await loadPropsFromD();
+      if(!loaded2){
+        const local=localStorage.getItem('re_props');
+        if(local)try{properties=JSON.parse(local);}catch{}
+        if(!properties.length)loadDefaultProperties();
+      }
+      buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
+      await loadDriveFiles();
+      return;
+    }catch(e){}
+  }
+  // トークン期限切れの場合は自動再取得試みる
+  if(saved&&gisInited){
+    tokenClient.requestAccessToken({prompt:''});
+  }
 }
-buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
-await loadDriveFiles();
-return;
-}catch(e){}
-}
-if(saved&&gisInited){tokenClient.requestAccessToken({prompt:''});}
-}
+
 function handleAuth(){
-if(!gapiInited||!gisInited){showToast('初期化中です','info');return;}
-tokenClient.requestAccessToken({prompt:'consent'});
+  if(!gapiInited||!gisInited){showToast('初期化中です','info');return;}
+  tokenClient.requestAccessToken({prompt:'consent'});
 }
+
 async function onSignIn(){
-try{
-gapi.client.setToken({access_token:accessToken});
-const r=await gapi.client.drive.about.get({fields:'user'});
-document.getElementById('userEmail').textContent=r.result.user.emailAddress;
-document.getElementById('driveDot').classList.add('on');
-document.getElementById('driveStatus').textContent='Drive 接続済';
-document.getElementById('authScreen').style.display='none';
-document.getElementById('appScreen').style.display='block';
-if(properties.length===0)loadDefaultProperties();
-buildPropSelector();buildNav();showTab('cashflow');
-await loadDriveFiles();
-showToast('Google Drive に接続しました','success');
-}catch(e){showToast('接続エラー: '+e.message,'error');}
+  try{
+    gapi.client.setToken({access_token:accessToken});
+    const r=await gapi.client.drive.about.get({fields:'user'});
+    document.getElementById('userEmail').textContent=r.result.user.emailAddress;
+    document.getElementById('driveDot').classList.add('on');
+    document.getElementById('driveStatus').textContent='Drive 接続済';
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('appScreen').style.display='block';
+    if(properties.length===0)loadDefaultProperties();
+    buildPropSelector();buildNav();showTab('cashflow');
+    await loadDriveFiles();
+    showToast('Google Drive に接続しました','success');
+  }catch(e){showToast('接続エラー: '+e.message,'error');}
 }
-function loadDefaultProperties(){properties=[];saveProps();}
+
+/* ── デフォルト物件 ── */
+function loadDefaultProperties(){
+  // 初期状態は空（サンプルデータなし）
+  properties=[];
+  saveProps();
+}
 function saveProps(){
-localStorage.setItem('re_props',JSON.stringify(properties));
-savePropsToD().catch(()=>{});
+  localStorage.setItem('re_props',JSON.stringify(properties));
+  // Drive にも非同期保存（エラーは無視）
+  savePropsToD().catch(()=>{});
 }
+
 let _appdataFileId=null;
 let _savePending=false;
+
 async function savePropsToD(){
-if(!accessToken)return;
-if(_savePending)return;
-_savePending=true;
-try{
-const data=JSON.stringify({properties,savedAt:new Date().toISOString()});
-const blob=new Blob([data],{type:'application/json'});
-if(_appdataFileId){
-await fetch(`https://www.googleapis.com/upload/drive/v3/files/${_appdataFileId}?uploadType=media`,{
-method:'PATCH',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:blob
-});
-}else{
-const form=new FormData();
-form.append('metadata',new Blob([JSON.stringify({name:'appdata.json',parents:[DRIVE_FOLDER_ID]})],{type:'application/json'}));
-form.append('file',blob);
-const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{
-method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
-});
-const j=await r.json();
-_appdataFileId=j.id;
+  if(!accessToken)return;
+  if(_savePending)return; // 連続保存を防ぐ
+  _savePending=true;
+  try{
+    const data=JSON.stringify({properties,savedAt:new Date().toISOString()});
+    const blob=new Blob([data],{type:'application/json'});
+    if(_appdataFileId){
+      // 既存ファイルを上書き
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${_appdataFileId}?uploadType=media`,{
+        method:'PATCH',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:blob
+      });
+    } else {
+      // 新規作成
+      const form=new FormData();
+      form.append('metadata',new Blob([JSON.stringify({name:'appdata.json',parents:[DRIVE_FOLDER_ID]})],{type:'application/json'}));
+      form.append('file',blob);
+      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{
+        method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
+      });
+      const j=await r.json();
+      _appdataFileId=j.id;
+    }
+  }finally{_savePending=false;}
 }
-}finally{_savePending=false;}
-}
+
 async function loadPropsFromD(){
-if(!accessToken)return false;
-try{
-const r=await gapi.client.drive.files.list({
-q:`name='appdata.json' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
-fields:'files(id,modifiedTime)',orderBy:'modifiedTime desc',pageSize:1
-});
-if(!r.result.files.length)return false;
-_appdataFileId=r.result.files[0].id;
-const resp=await fetch(`https://www.googleapis.com/drive/v3/files/${_appdataFileId}?alt=media`,{
-headers:{Authorization:'Bearer '+accessToken}
-});
-const json=await resp.json();
-if(json.properties&&Array.isArray(json.properties)){
-properties=json.properties;
-localStorage.setItem('re_props',JSON.stringify(properties));
-return true;
+  if(!accessToken)return false;
+  try{
+    // appdata.json を検索
+    const r=await gapi.client.drive.files.list({
+      q:`name='appdata.json' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
+      fields:'files(id,modifiedTime)',orderBy:'modifiedTime desc',pageSize:1
+    });
+    if(!r.result.files.length)return false;
+    _appdataFileId=r.result.files[0].id;
+    // ファイルをダウンロード
+    const resp=await fetch(`https://www.googleapis.com/drive/v3/files/${_appdataFileId}?alt=media`,{
+      headers:{Authorization:'Bearer '+accessToken}
+    });
+    const json=await resp.json();
+    if(json.properties&&Array.isArray(json.properties)){
+      properties=json.properties;
+      localStorage.setItem('re_props',JSON.stringify(properties));
+      return true;
+    }
+  }catch(e){console.warn('Drive load error:',e);}
+  return false;
 }
-}catch(e){console.warn('Drive load error:',e);}
-return false;
-}
+
 function buildYearSel(){
-const sel=document.getElementById('yearSel');
-if(!sel)return;
-const thisYear=new Date().getFullYear();
-let minYear=thisYear;
-properties.forEach(p=>{
-if(p.acquireDate){const y=parseInt(p.acquireDate.slice(0,4));if(y>2000&&y<minYear)minYear=y;}
-});
-const current=sel.value?parseInt(sel.value):thisYear;
-sel.innerHTML='';
-for(let y=thisYear;y>=minYear;y--){
-const opt=document.createElement('option');
-opt.value=y;opt.textContent=y+'年';
-if(y===current)opt.selected=true;
-sel.appendChild(opt);
-}
-if(!sel.value)sel.value=thisYear;
+  const sel=document.getElementById('yearSel');
+  if(!sel)return;
+  const thisYear=new Date().getFullYear();
+  // 最初の物件取得年を探す
+  let minYear=thisYear;
+  properties.forEach(p=>{
+    if(p.acquireDate){
+      const y=parseInt(p.acquireDate.slice(0,4));
+      if(y>2000&&y<minYear) minYear=y;
+    }
+  });
+  const current=sel.value?parseInt(sel.value):thisYear;
+  sel.innerHTML='';
+  for(let y=thisYear;y>=minYear;y--){
+    const opt=document.createElement('option');
+    opt.value=y;opt.textContent=y+'年';
+    if(y===current)opt.selected=true;
+    sel.appendChild(opt);
+  }
+  // 現在の選択値が範囲外なら今年を選択
+  if(!sel.value) sel.value=thisYear;
 }
 function buildPropSelector(){
-const sel=document.getElementById('propSel');
-sel.innerHTML='<option value="all">全物件</option>'+properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
-sel.value=currentProp;
-buildYearSel();
+  const sel=document.getElementById('propSel');
+  sel.innerHTML='<option value="all">全物件</option>'+properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+  sel.value=currentProp;
+  buildYearSel();
 }
+
+/* ── 月次データ ── */
 const MONTH_BASE=[4,5,6,7,8,9,10,11,12,1,2,3];
 const MONTH_LABELS_ALL=['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月'];
 function getFiscalIndices(){
@@ -411,10 +472,6 @@ return Array.from({length:12},(_,i)=>(startIdx+i)%12);
 }
 function getFiscalLabels(){return getFiscalIndices().map(i=>MONTH_LABELS_ALL[i]);}
 function getMonthlyIdx(){const mo=parseInt(document.getElementById('monthSel').value);return MONTH_BASE.indexOf(mo);}
-function getTx(p,ym,type){
-if(!p||!p.transactions)return 0;
-return p.transactions.filter(t=>t.ym===ym&&t.type===type).reduce((s,t)=>s+t.amount,0);
-}
 function getMonthI(mi,pi){
 const mo=MONTH_BASE[mi];
 const yr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
@@ -429,398 +486,600 @@ const ym=`${yr}-${String(mo).padStart(2,'0')}`;
 if(pi===null)return properties.reduce((s,p)=>s+getTx(p,ym,'expense'),0);
 return getTx(properties[pi],ym,'expense');
 }
+function getTx(p,ym,type){
+if(!p||!p.transactions)return 0;
+return p.transactions.filter(t=>t.ym===ym&&t.type===type).reduce((s,t)=>s+t.amount,0);
+}
 function getAnnualI(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthI(i,pi),0);}
 function getAnnualE(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthE(i,pi),0);}
+
+/* ── ナビ ── */
 function switchProp(){currentProp=document.getElementById('propSel').value;iconPageActive=null;updateIconBtns();buildNav();showTab('cashflow');}
 function renderCurrent(){if(iconPageActive)showIconPage(iconPageActive);else showTab(currentTabId);}
+
 function buildNav(){
-const isAll=currentProp==='all';
-const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略'];
-document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
-document.getElementById('mainNav').firstChild.classList.add('active');
+  const isAll=currentProp==='all';
+  const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略'];
+  document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
+  document.getElementById('mainNav').firstChild.classList.add('active');
 }
+
 function showTab(id,el){
-iconPageActive=null;updateIconBtns();
-currentTabId=id;
-if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
-else{const L={cashflow:'収支',occupancy:'入居状況',analysis:'分析',exit:'出口戦略'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
-da();
-({cashflow:renderCashflow,occupancy:renderOccupancy,analysis:renderAnalysis,exit:renderExit}[id]||renderCashflow)();
+  iconPageActive=null;updateIconBtns();
+  currentTabId=id;
+  if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+  else{const L={cashflow:'収支',occupancy:'入居状況',analysis:'分析',exit:'出口戦略'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
+  da();
+  ({cashflow:renderCashflow,occupancy:renderOccupancy,analysis:renderAnalysis,exit:renderExit}[id]||renderCashflow)();
 }
+
 function showIconPage(id){
-iconPageActive=id;updateIconBtns();
-document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-da();
-({upload:renderUpload,files:renderFiles,settings:renderSettings}[id]||renderSettings)();
-if(id==='upload')setTimeout(setupDragDrop,100);
+  iconPageActive=id;updateIconBtns();
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  da();
+  ({upload:renderUpload,files:renderFiles,settings:renderSettings}[id]||renderSettings)();
+  if(id==='upload')setTimeout(setupDragDrop,100);
 }
+
 function updateIconBtns(){
-['upload','files','settings'].forEach(id=>{
-const btn=document.getElementById('icon'+id.charAt(0).toUpperCase()+id.slice(1));
-if(btn)btn.classList.toggle('active-page',iconPageActive===id);
-});
+  ['upload','files','settings'].forEach(id=>{
+    const btn=document.getElementById('icon'+id.charAt(0).toUpperCase()+id.slice(1));
+    if(btn)btn.classList.toggle('active-page',iconPageActive===id);
+  });
 }
+
+/* ── 収支タブ ── */
 function renderCashflow(){
-const isAll=currentProp==='all';
-const pi=isAll?null:parseInt(currentProp);
-const mi=getMonthlyIdx();
-const moI=getMonthI(mi,pi),moE=getMonthE(mi,pi),moNet=moI-moE;
-const annI=getAnnualI(pi),annE=getAnnualE(pi),annNet=annI-annE;
-const periodLabel=yearMode==='fiscal'?`${fiscalMonth}月決算年度`:'暦年（1〜12月）';
-const moLabel=document.getElementById('monthSel').options[document.getElementById('monthSel').selectedIndex].text;
-const selfFund=isAll?properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0):((properties[pi]?.price||0)+(properties[pi]?.reform||0)+(properties[pi]?.miscCost||0)-(properties[pi]?.loan||0));
-let summaryHTML='';
-if(isAll){
-let colAnn=`<div class="col-header"><span class="ct">年間収支 </span><span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
-<div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="g">${fmt(annNet)}</span></div>
-<div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
-<div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div><div class="col-sep"></div>`;
-properties.forEach((p,i)=>{const pI=getAnnualI(i),pE=getAnnualE(i);colAnn+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="g" style="font-size:11px;font-weight:500">${fmt(pI-pE)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(pI,pI+pE)}%"></div><div class="bar-e" style="width:${pct(pE,pI+pE)}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(pI)}</span><span class="r">${fmt(pE)}</span></div></div>`;});
-let colMon=`<div class="col-header"><span class="ct">月間収支 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
-<div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${moNet>=0?'g':'r'}">${fmt(moNet)}</span></div>
-<div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(moI,moI+moE)}%"></div><div class="bar-e" style="width:${pct(moE,moI+moE)}%"></div></div>
-<div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(moI)}</span><span class="r">${fmt(moE)}</span></div></div><div class="col-sep"></div>`;
-properties.forEach((p,i)=>{const pI=getMonthI(mi,i),pE=getMonthE(mi,i);colMon+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="g" style="font-size:11px;font-weight:500">${fmt(pI-pE)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(pI,pI+pE)}%"></div><div class="bar-e" style="width:${pct(pE,pI+pE)}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(pI)}</span><span class="r">${fmt(pE)}</span></div></div>`;});
-const totOcc=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
-const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
-const occR=pct(totOcc,totRooms);
-let colOcc=`<div class="col-header"><span class="ct">入居率 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
-<div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500;color:${occR>=75?'#16a34a':'#dc2626'}">${occR}%</span></div>
-<div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
-<div style="font-size:11px;color:#888;margin-top:2px">${totOcc}/${totRooms}室 稼働中</div></div><div class="col-sep"></div>`;
-properties.forEach(p=>{const o=p.rooms.filter(r=>r.status==='occupied').length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
-summaryHTML=`<div class="summary-grid"><div class="col">${colAnn}</div><div class="col">${colMon}</div><div class="col">${colOcc}</div></div>`;
-}else{
-const p=properties[pi];
-const occR=pct(p.rooms.filter(r=>r.status==='occupied').length,p.rooms.length);
-summaryHTML=`<div class="summary-grid">
-<div class="col single"><div class="ct" style="margin-bottom:8px">年間収支 <span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
-<div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="g">${fmt(annNet)}</span></div>
-<div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
-<div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div>
-<div class="col single"><div class="ct" style="margin-bottom:8px">月間収支 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
-<div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${moNet>=0?'g':'r'}">${fmt(moNet)}</span></div>
-<div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(moI,moI+moE)}%"></div><div class="bar-e" style="width:${pct(moE,moI+moE)}%"></div></div>
-<div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(moI)}</span><span class="r">${fmt(moE)}</span></div></div>
-<div class="col single"><div class="ct" style="margin-bottom:8px">入居率 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
-<div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500;color:${occR>=75?'#16a34a':'#dc2626'}">${occR}%</span></div>
-<div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
-<div style="font-size:11px;color:#888;margin-top:2px">${p.rooms.filter(r=>r.status==='occupied').length}/${p.rooms.length}室 稼働中</div></div>
-</div>`;
+  const isAll=currentProp==='all';
+  const pi=isAll?null:parseInt(currentProp);
+  const mi=getMonthlyIdx();
+  const moI=getMonthI(mi,pi),moE=getMonthE(mi,pi),moNet=moI-moE;
+  const annI=getAnnualI(pi),annE=getAnnualE(pi),annNet=annI-annE;
+  const periodLabel=yearMode==='fiscal'?`${fiscalMonth}月決算年度`:'暦年（1〜12月）';
+  const moLabel=document.getElementById('monthSel').options[document.getElementById('monthSel').selectedIndex].text;
+  const selfFund=isAll?properties.reduce((s,p)=>s+((p.price+p.reform+p.miscCost)-p.loan),0):((properties[pi]?.price+properties[pi]?.reform+properties[pi]?.miscCost)-properties[pi]?.loan||0);
+
+  // 上段3列
+  let summaryHTML='';
+  if(isAll){
+    let colAnn=`<div class="col-header"><span class="ct">年間収支 </span><span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
+      <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="g">${fmt(annNet)}</span></div>
+      <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
+      <div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div><div class="col-sep"></div>`;
+    properties.forEach((p,i)=>{const pI=getAnnualI(i),pE=getAnnualE(i);colAnn+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="g" style="font-size:11px;font-weight:500">${fmt(pI-pE)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(pI,pI+pE)}%"></div><div class="bar-e" style="width:${pct(pE,pI+pE)}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(pI)}</span><span class="r">${fmt(pE)}</span></div></div>`;});
+    let colMon=`<div class="col-header"><span class="ct">月間収支 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
+      <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${moNet>=0?'g':'r'}">${fmt(moNet)}</span></div>
+      <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(moI,moI+moE)}%"></div><div class="bar-e" style="width:${pct(moE,moI+moE)}%"></div></div>
+      <div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(moI)}</span><span class="r">${fmt(moE)}</span></div></div><div class="col-sep"></div>`;
+    properties.forEach((p,i)=>{const pI=getMonthI(mi,i),pE=getMonthE(mi,i);colMon+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="g" style="font-size:11px;font-weight:500">${fmt(pI-pE)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(pI,pI+pE)}%"></div><div class="bar-e" style="width:${pct(pE,pI+pE)}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(pI)}</span><span class="r">${fmt(pE)}</span></div></div>`;});
+    const totOcc=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
+    const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
+    const occR=pct(totOcc,totRooms);
+    let colOcc=`<div class="col-header"><span class="ct">入居率 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
+      <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500;color:${occR>=75?'#16a34a':'#dc2626'}">${occR}%</span></div>
+      <div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
+      <div style="font-size:11px;color:#888;margin-top:2px">${totOcc}/${totRooms}室 稼働中</div></div><div class="col-sep"></div>`;
+    properties.forEach(p=>{const o=p.rooms.filter(r=>r.status==='occupied').length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
+    summaryHTML=`<div class="summary-grid"><div class="col">${colAnn}</div><div class="col">${colMon}</div><div class="col">${colOcc}</div></div>`;
+  } else {
+    const p=properties[pi];
+    const occR=pct(p.rooms.filter(r=>r.status==='occupied').length,p.rooms.length);
+    summaryHTML=`<div class="summary-grid">
+      <div class="col single"><div class="ct" style="margin-bottom:8px">年間収支 <span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
+        <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="g">${fmt(annNet)}</span></div>
+        <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
+        <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div>
+      <div class="col single"><div class="ct" style="margin-bottom:8px">月間収支 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
+        <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${moNet>=0?'g':'r'}">${fmt(moNet)}</span></div>
+        <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(moI,moI+moE)}%"></div><div class="bar-e" style="width:${pct(moE,moI+moE)}%"></div></div>
+        <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(moI)}</span><span class="r">${fmt(moE)}</span></div></div>
+      <div class="col single"><div class="ct" style="margin-bottom:8px">入居率 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
+        <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500;color:${occR>=75?'#16a34a':'#dc2626'}">${occR}%</span></div>
+        <div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
+        <div style="font-size:11px;color:#888;margin-top:2px">${p.rooms.filter(r=>r.status==='occupied').length}/${p.rooms.length}室 稼働中</div></div>
+    </div>`;
+  }
+
+  // 月次テーブル
+  const COMMON_MONTHLY=[15000,15000,15000,15000,15000,15000,15000,15000,15000,15000,15000,15000];
+  const TAX_MONTHLY=[0,0,0,0,0,0,0,0,0,80000,0,200000];
+  let cumNet=0;
+  const indices=getFiscalIndices();
+  const labels=getFiscalLabels();
+
+  let rows=indices.map((idx,pos)=>{
+    const income=getMonthI(idx,pi);
+    const exp=getMonthE(idx,pi);
+    const common=isAll?COMMON_MONTHLY[idx]:0;
+    const corpTax=isAll?TAX_MONTHLY[idx]:0;
+    const totalExp=exp+common+corpTax;
+    const net=income-totalExp;
+    cumNet+=net;
+    const isFuture=pos>1;
+    const thCommon=isAll?`<td class="${corpTax>0?'toggle-row r':''}" onclick="${isAll?`toggleSub('t${idx}')`:''}">${corpTax>0?'▲'+fmt(corpTax)+'▾':'—'}</td><td>${common>0?'▲'+fmt(common):'—'}</td>`:'';
+    return`<tr class="${isFuture?'future':''}">
+      <td class="left">${labels[pos]}${isFuture?' <span style="font-size:9px;opacity:.5">予測</span>':''}</td>
+      <td class="g">${fmt(income)}</td>
+      <td class="r">▲${fmt(exp)}</td>
+      ${isAll?thCommon:''}
+      <td class="${net>=0?'g':'r'}" style="font-weight:500">${net<0?'▲':''}${fmt(net)}</td>
+      <td style="color:#888">${cumNet<0?'▲':''}${fmt(cumNet)}</td>
+      <td class="${pct(cumNet,selfFund)>=50?'g':'b'}" style="font-weight:500">${selfFund>0?pct(cumNet,selfFund)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const totI=indices.reduce((s,i)=>s+getMonthI(i,pi),0);
+  const totE=indices.reduce((s,i)=>s+getMonthE(i,pi),0);
+  const totCommon=isAll?COMMON_MONTHLY.reduce((s,v)=>s+v,0):0;
+  const totTax=isAll?TAX_MONTHLY.reduce((s,v)=>s+v,0):0;
+  const totNet=totI-totE-totCommon-totTax;
+  rows+=`<tr class="sum-total">
+    <td class="left">合計</td>
+    <td class="g">${fmt(totI)}</td><td class="r">▲${fmt(totE)}</td>
+    ${isAll?`<td class="r">▲${fmt(totTax)}</td><td class="r">▲${fmt(totCommon)}</td>`:''}
+    <td class="${totNet>=0?'g':'r'}" style="font-weight:700">${totNet<0?'▲':''}${fmt(totNet)}</td>
+    <td style="color:#888">${cumNet<0?'▲':''}${fmt(cumNet)}</td>
+    <td class="g" style="font-weight:700">${selfFund>0?pct(cumNet,selfFund)+'%':'—'}</td>
+  </tr>`;
+
+  const incData=indices.map(i=>getMonthI(i,pi));
+  const expData=indices.map(i=>getMonthE(i,pi)+(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0));
+
+  // 列定義：全物件=収入計|支出計|法人税等|共通経費|純利益|年間累計|取得累計|回収率
+  //         個別  =収入計|支出計|純利益|年間累計|取得累計|回収率
+  // 取得からの累計累計計算
+  let cumFromAcq=0;
+  const pi2=isAll?null:parseInt(currentProp);
+  if(!isAll&&pi2!==null){
+    const p=properties[pi2];
+    const acq=p.acquireDate?p.acquireDate.slice(0,7):nowYM();
+    const elapM=Math.max(0,mdiff(acq,nowYM()));
+    const aI=getAnnualI(pi2),aE=getAnnualE(pi2);
+    cumFromAcq=(aI-aE)/12*elapM; // 取得からの累計（簡易）
+  }
+
+  // 行を再生成（累計2種追加）
+  let cumAnn=0;
+  let cumAcq=isAll?0:cumFromAcq-(()=>{let s=0;indices.forEach(i=>{s+=getMonthI(i,pi)-getMonthE(i,pi)-(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0);});return s;})();
+
+  const rows2=indices.map((idx,pos)=>{
+    const income=getMonthI(idx,pi);
+    const exp=getMonthE(idx,pi);
+    const common=isAll?COMMON_MONTHLY[idx]:0;
+    const corpTax=isAll?TAX_MONTHLY[idx]:0;
+    const totalExp=exp+common+corpTax;
+    const net=income-totalExp;
+    cumAnn+=net;
+    cumAcq+=net;
+    const isFuture=pos>1;
+    const extraCols=isAll?`<td class="r">${corpTax>0?'▲'+fmt(corpTax):'—'}</td><td class="r">${common>0?'▲'+fmt(common):'—'}</td>`:'';
+    return`<tr class="${isFuture?'future':''}">
+      <td class="left" style="white-space:nowrap">${labels[pos]}${isFuture?' <span style="font-size:9px;opacity:.5">予測</span>':''}</td>
+      <td class="g" style="border-right:1px solid #d0d0c8">${fmt(income)}</td>
+      <td class="r">${fmt(exp)}</td>
+      ${extraCols}
+      <td style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;font-weight:500" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>
+      <td style="color:#888;font-size:10px">${cumAnn<0?'▲':''}${fmt(cumAnn)}</td>
+      <td style="color:#888;font-size:10px">${cumAcq<0?'▲':''}${fmt(cumAcq)}</td>
+      <td class="${pct(cumAcq,selfFund)>=50?'g':'b'}" style="font-weight:500">${selfFund>0?pct(cumAcq,selfFund)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const totI2=indices.reduce((s,i)=>s+getMonthI(i,pi),0);
+  const totE2=indices.reduce((s,i)=>s+getMonthE(i,pi),0);
+  const totCommon2=isAll?COMMON_MONTHLY.reduce((s,v)=>s+v,0):0;
+  const totTax2=isAll?TAX_MONTHLY.reduce((s,v)=>s+v,0):0;
+  const totNet2=totI2-totE2-totCommon2-totTax2;
+  const sumExtra=isAll?`<td class="r">▲${fmt(totTax2)}</td><td class="r">▲${fmt(totCommon2)}</td>`:'';
+  const sumRow=`<tr class="sum-total">
+    <td class="left">合計</td>
+    <td class="g" style="border-right:1px solid #d0d0c8">${fmt(totI2)}</td>
+    <td class="r">${fmt(totE2)}</td>
+    ${sumExtra}
+    <td style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;font-weight:700" class="${totNet2>=0?'g':'r'}">${totNet2<0?'▲':''}${fmt(totNet2)}</td>
+    <td style="color:#888;font-size:10px">${cumAnn<0?'▲':''}${fmt(cumAnn)}</td>
+    <td style="color:#888;font-size:10px">${cumAcq<0?'▲':''}${fmt(cumAcq)}</td>
+    <td class="g" style="font-weight:700">${selfFund>0?pct(cumAcq,selfFund)+'%':'—'}</td>
+  </tr>`;
+
+  // ヘッダー：列数を正確に合わせる
+  // 全物件: 月|収入計|支出計|法人税等|共通経費|純利益|年間累計|取得累計|回収率 = 9列
+  // 個別:   月|収入計|支出計|純利益|年間累計|取得累計|回収率 = 7列
+  const extraTh=isAll?'<th style="color:#dc2626">法人税等▾</th><th style="color:#dc2626">共通経費</th>':'';
+  const incColspan=1; // 収入は1列のみ
+  const expColspan=isAll?3:1; // 支出計+法人税等+共通経費 or 支出計のみ
+
+  document.getElementById('pages').innerHTML=`
+  ${summaryHTML}
+  <div class="card">
+    <div class="flex-b" style="margin-bottom:8px">
+      <span class="ct">月次収支推移（${periodLabel}）</span>
+      <div class="flex" style="gap:8px;font-size:10px;color:#888">
+        <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span>
+        <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span>
+        <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
+      </div>
+    </div>
+    <div style="position:relative;height:200px"><canvas id="cfChart"></canvas></div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
+      <span class="ct">月次収支明細</span>
+      <span style="font-size:10px;color:#888">▲=マイナス / 斜体=予測</span>
+    </div>
+    <div class="cf-wrap"><table class="cftable">
+      <thead>
+        <tr>
+          <th class="left" rowspan="2" style="vertical-align:middle;min-width:52px">月</th>
+          <th colspan="${incColspan}" style="text-align:center;color:#16a34a;border-right:1px solid #d0d0c8">収入</th>
+          <th colspan="${expColspan}" style="text-align:center;color:#dc2626">支出</th>
+          <th rowspan="2" style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;min-width:72px">純利益</th>
+          <th rowspan="2" style="min-width:72px;font-size:9px">年間累計</th>
+          <th rowspan="2" style="min-width:72px;font-size:9px">取得来累計</th>
+          <th rowspan="2" style="min-width:52px">回収率</th>
+        </tr>
+        <tr>
+          <th style="color:#16a34a;border-right:1px solid #d0d0c8;min-width:80px">収入計</th>
+          <th style="color:#dc2626;min-width:80px">支出計</th>
+          ${extraTh}
+        </tr>
+      </thead>
+      <tbody>${rows2}${sumRow}</tbody>
+    </table></div>
+  </div>`;
+
+  charts.cfChart=new Chart(document.getElementById('cfChart'),{type:'bar',data:{labels,datasets:[
+    {label:'収入',data:incData,backgroundColor:'rgba(134,239,172,.4)',borderColor:'#16a34a',borderWidth:1},
+    {label:'支出',data:expData,backgroundColor:'rgba(252,165,165,.4)',borderColor:'#dc2626',borderWidth:1},
+    {type:'line',label:'純利益',data:incData.map((v,i)=>v-expData[i]),borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000).toFixed(0)+'万',font:{size:10}}}}}});
 }
-const indices=getFiscalIndices();
-const labels=getFiscalLabels();
-let cumAnn=0;
-const rows2=indices.map((idx,pos)=>{
-const income=getMonthI(idx,pi);
-const exp=getMonthE(idx,pi);
-const net=income-exp;
-cumAnn+=net;
-const isFuture=false;
-return`<tr>
-<td class="left" style="white-space:nowrap">${labels[pos]}</td>
-<td class="g" style="border-right:1px solid #d0d0c8">${fmt(income)}</td>
-<td class="r">${fmt(exp)}</td>
-<td style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;font-weight:500" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>
-<td style="color:#888;font-size:10px">${cumAnn<0?'▲':''}${fmt(cumAnn)}</td>
-<td class="${pct(cumAnn,selfFund)>=50?'g':'b'}" style="font-weight:500">${selfFund>0?pct(cumAnn,selfFund)+'%':'—'}</td>
-</tr>`;
-}).join('');
-const totI2=indices.reduce((s,i)=>s+getMonthI(i,pi),0);
-const totE2=indices.reduce((s,i)=>s+getMonthE(i,pi),0);
-const totNet2=totI2-totE2;
-const sumRow=`<tr class="sum-total">
-<td class="left">合計</td>
-<td class="g" style="border-right:1px solid #d0d0c8">${fmt(totI2)}</td>
-<td class="r">${fmt(totE2)}</td>
-<td style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;font-weight:700" class="${totNet2>=0?'g':'r'}">${totNet2<0?'▲':''}${fmt(totNet2)}</td>
-<td style="color:#888;font-size:10px">${cumAnn<0?'▲':''}${fmt(cumAnn)}</td>
-<td class="g" style="font-weight:700">${selfFund>0?pct(cumAnn,selfFund)+'%':'—'}</td>
-</tr>`;
-const incData=indices.map(i=>getMonthI(i,pi));
-const expData=indices.map(i=>getMonthE(i,pi));
-document.getElementById('pages').innerHTML=`
-${summaryHTML}
-<div class="card">
-<div class="flex-b" style="margin-bottom:8px">
-<span class="ct">月次収支推移（${periodLabel}）</span>
-<div class="flex" style="gap:8px;font-size:10px;color:#888">
-<span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span>
-<span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span>
-<span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
-</div>
-</div>
-<div style="position:relative;height:200px"><canvas id="cfChart"></canvas></div>
-</div>
-<div class="card" style="padding:0;overflow:hidden">
-<div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
-<span class="ct">月次収支明細</span>
-<span style="font-size:10px;color:#888">▲=マイナス</span>
-</div>
-<div class="cf-wrap"><table class="cftable">
-<thead>
-<tr>
-<th class="left" style="vertical-align:middle;min-width:52px">月</th>
-<th style="text-align:center;color:#16a34a;border-right:1px solid #d0d0c8;min-width:80px">収入計</th>
-<th style="text-align:center;color:#dc2626;min-width:80px">支出計</th>
-<th style="border-left:1px solid #d0d0c8;border-right:1px solid #d0d0c8;min-width:72px">純利益</th>
-<th style="min-width:72px;font-size:9px">年間累計</th>
-<th style="min-width:52px">回収率</th>
-</tr>
-</thead>
-<tbody>${rows2}${sumRow}</tbody>
-</table></div>
-</div>`;
-charts.cfChart=new Chart(document.getElementById('cfChart'),{type:'bar',data:{labels,datasets:[
-{label:'収入',data:incData,backgroundColor:'rgba(134,239,172,.4)',borderColor:'#16a34a',borderWidth:1},
-{label:'支出',data:expData,backgroundColor:'rgba(252,165,165,.4)',borderColor:'#dc2626',borderWidth:1},
-{type:'line',label:'純利益',data:incData.map((v,i)=>v-expData[i]),borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.3},
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000).toFixed(0)+'万',font:{size:10}}}}}});
-}
+
 function toggleSub(...ids){ids.forEach(id=>{const el=document.getElementById('sub_'+id);if(el)el.style.display=el.style.display==='none'?'':'none';});}
+
+/* ── 入居状況タブ ── */
 function renderOccupancy(){
-const isAll=currentProp==='all';
-if(isAll)renderOccAll();
-else renderOccProp();
+  const isAll=currentProp==='all';
+  if(isAll) renderOccAll();
+  else renderOccProp();
 }
+
 function renderOccAll(){
-const colors=['#2563eb','#16a34a','#f59e0b'];
-const pillCls=r=>r>=80?'pill-hi':r>=60?'pill-mid':'pill-lo';
-let h1=`<th class="lbl" rowspan="2" style="vertical-align:middle">月</th><th colspan="2" style="text-align:center">全物件合計</th>`;
-let h2=`<th class="gsep" style="min-width:48px">稼働</th><th style="min-width:44px">入居率</th>`;
-properties.forEach(p=>{
-h1+=`<th colspan="2" class="gsep" style="text-align:center">${p.name}</th>`;
-h2+=`<th class="gsep" style="min-width:48px">稼働</th><th style="min-width:44px">入居率</th>`;
-});
-const labels=getFiscalLabels();
-const indices=getFiscalIndices();
-let body=indices.map((idx,pos)=>{
-const to=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
-const ta=properties.reduce((s,p)=>s+p.rooms.length,0);
-const r=pct(to,ta);
-let row=`<tr><td class="lbl">${labels[pos]}</td><td class="gsep">${to}/${ta}</td><td><span class="pill ${pillCls(r)}">${r}%</span></td>`;
-properties.forEach(p=>{const po=p.rooms.filter(r=>r.status==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);row+=`<td class="gsep">${po}/${pt}</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
-return row+'</tr>';
-}).join('');
-const annTo=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length*12,0);
-const annTa=properties.reduce((s,p)=>s+p.rooms.length*12,0);
-const annR=pct(annTo,annTa);
-let yrow=`<tr class="yr-row"><td class="lbl">年間平均</td><td class="gsep">—</td><td><span class="pill ${pillCls(annR)}">${annR}%</span></td>`;
-properties.forEach(p=>{const po=p.rooms.filter(r=>r.status==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);yrow+=`<td class="gsep">—</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
-yrow+=`</tr>`;
-document.getElementById('pages').innerHTML=`
-<div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
-<div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
-<span class="ct">物件別 月次稼働・入居率</span>
-<div class="flex" style="gap:6px;font-size:10px;color:#888">
-<span class="pill pill-hi">80%以上</span><span class="pill pill-mid">60〜79%</span><span class="pill pill-lo">60%未満</span>
-</div>
-</div>
-<div style="overflow-x:auto">
-<table class="occ-table">
-<thead><tr>${h1}</tr><tr>${h2}</tr></thead>
-<tbody>${body}${yrow}</tbody>
-</table>
-</div>
-</div>
-<div class="card">
-<div class="flex-b" style="margin-bottom:10px">
-<span class="ct">全物件 入居率推移</span>
-<div class="flex" style="gap:10px;font-size:10px;color:#888">
-${properties.map((p,i)=>`<span class="flex" style="gap:4px"><span style="width:12px;height:3px;background:${colors[i]};display:inline-block;border-radius:2px"></span>${p.name}</span>`).join('')}
-<span class="flex" style="gap:4px"><span style="width:12px;height:2px;background:#aaa;display:inline-block;border-radius:2px"></span>全体</span>
-</div>
-</div>
-<div style="position:relative;height:200px"><canvas id="occChart"></canvas></div>
-</div>`;
-const propRates=properties.map(p=>indices.map(()=>pct(p.rooms.filter(r=>r.status==='occupied').length,p.rooms.length)));
-charts.occChart=new Chart(document.getElementById('occChart'),{type:'line',data:{labels,datasets:[
-...properties.map((p,i)=>({label:p.name,data:propRates[i],borderColor:colors[i],backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.3})),
-{label:'全体',data:indices.map(()=>pct(properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0),properties.reduce((s,p)=>s+p.rooms.length,0))),borderColor:'#aaa',borderDash:[4,3],backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:.3},
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}}}}});
+  const totOcc=MONTHLY.map((_,i)=>properties.reduce((s,p)=>s+(p.rooms.filter(r=>r.status==='occupied').length),0));
+  const totAll=MONTHLY.map((_,i)=>properties.reduce((s,p)=>s+p.rooms.length,0));
+  const totRate=totOcc.map((o,i)=>pct(o,totAll[i]));
+  const colors=['#2563eb','#16a34a','#f59e0b'];
+  const pillCls=r=>r>=80?'pill-hi':r>=60?'pill-mid':'pill-lo';
+
+  let h1=`<th class="lbl" rowspan="2" style="vertical-align:middle">月</th><th colspan="2" style="text-align:center">全物件合計</th>`;
+  let h2=`<th class="gsep" style="min-width:48px">稼働</th><th style="min-width:44px">入居率</th>`;
+  properties.forEach(p=>{
+    h1+=`<th colspan="2" class="gsep" style="text-align:center">${p.name}</th>`;
+    h2+=`<th class="gsep" style="min-width:48px">稼働</th><th style="min-width:44px">入居率</th>`;
+  });
+
+  const labels=getFiscalLabels();
+  const indices=getFiscalIndices();
+
+  let body=indices.map((idx,pos)=>{
+    const m=MONTHLY[idx].m;
+    const to=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
+    const ta=properties.reduce((s,p)=>s+p.rooms.length,0);
+    const r=pct(to,ta);
+    let row=`<tr><td class="lbl">${labels[pos]}</td><td class="gsep">${to}/${ta}</td><td><span class="pill ${pillCls(r)}">${r}%</span></td>`;
+    properties.forEach(p=>{const po=p.rooms.filter(r=>r.status==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);row+=`<td class="gsep">${po}/${pt}</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
+    return row+'</tr>';
+  }).join('');
+
+  const annTo=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length*12,0);
+  const annTa=properties.reduce((s,p)=>s+p.rooms.length*12,0);
+  const annR=pct(annTo,annTa);
+  let yrow=`<tr class="yr-row"><td class="lbl">年間平均</td><td class="gsep">—</td><td><span class="pill ${pillCls(annR)}">${annR}%</span></td>`;
+  properties.forEach(p=>{const po=p.rooms.filter(r=>r.status==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);yrow+=`<td class="gsep">—</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
+  yrow+=`</tr>`;
+
+  document.getElementById('pages').innerHTML=`
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
+    <div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
+      <span class="ct">物件別 月次稼働・入居率</span>
+      <div class="flex" style="gap:6px;font-size:10px;color:#888">
+        <span class="pill pill-hi">80%以上</span><span class="pill pill-mid">60〜79%</span><span class="pill pill-lo">60%未満</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="occ-table">
+        <thead><tr>${h1}</tr><tr>${h2}</tr></thead>
+        <tbody>${body}${yrow}</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="flex-b" style="margin-bottom:10px">
+      <span class="ct">全物件 入居率推移</span>
+      <div class="flex" style="gap:10px;font-size:10px;color:#888">
+        ${properties.map((p,i)=>`<span class="flex" style="gap:4px"><span style="width:12px;height:3px;background:${colors[i]};display:inline-block;border-radius:2px"></span>${p.name}</span>`).join('')}
+        <span class="flex" style="gap:4px"><span style="width:12px;height:2px;background:#aaa;display:inline-block;border-radius:2px"></span>全体</span>
+      </div>
+    </div>
+    <div style="position:relative;height:200px"><canvas id="occChart"></canvas></div>
+  </div>`;
+
+  const propRates=properties.map(p=>indices.map(()=>pct(p.rooms.filter(r=>r.status==='occupied').length,p.rooms.length)));
+  charts.occChart=new Chart(document.getElementById('occChart'),{type:'line',data:{labels,datasets:[
+    ...properties.map((p,i)=>({label:p.name,data:propRates[i],borderColor:colors[i],backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.3})),
+    {label:'全体',data:indices.map(()=>pct(properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0),properties.reduce((s,p)=>s+p.rooms.length,0))),borderColor:'#aaa',borderDash:[4,3],backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:.3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}}}}});
 }
+
 function renderOccProp(){
-const pi=parseInt(currentProp);
-const p=properties[pi];if(!p)return;
-const moLabel=document.getElementById('monthSel').options[document.getElementById('monthSel').selectedIndex].text;
-const todayStr=new Date().toISOString().slice(0,10);
-p.rooms.forEach(r=>{
-if(!r.moveOutDate)r.moveOutDate='';
-if(!r.items||!r.items.length)r.items=[{label:'家賃',amt:0}];
-const labels=['家賃','管理費','駐車場','その他'];
-labels.forEach(lbl=>{if(!r.items.find(it=>it.label===lbl))r.items.push({label:lbl,amt:0});});
-});
-const getFiscalMonths=()=>{
-const startM=fiscalMonth===12?1:fiscalMonth+1;
-const now=new Date();
-const yr=now.getFullYear();
-let startYr=yr;
-if(now.getMonth()+1<=fiscalMonth)startYr=yr-1;
-const months=[];
-for(let i=0;i<12;i++){
-const m=(startM-1+i)%12+1;
-const y=startYr+Math.floor((startM-1+i)/12);
-months.push(`${y}-${String(m).padStart(2,'0')}`);
+  const pi=parseInt(currentProp);
+  const p=properties[pi];if(!p)return;
+  const moLabel=document.getElementById('monthSel').options[document.getElementById('monthSel').selectedIndex].text;
+  const today=new Date().toISOString().slice(0,10);
+
+  // デフォルトフィールド補完
+  p.rooms.forEach(r=>{
+    if(!r.moveOutDate) r.moveOutDate='';
+    if(!r.items||!r.items.length) r.items=[{label:'家賃',amt:0}];
+    // 固定4項目を保証（家賃・管理費・駐車場・その他）
+    const labels=['家賃','管理費','駐車場','その他'];
+    labels.forEach(lbl=>{if(!r.items.find(it=>it.label===lbl)) r.items.push({label:lbl,amt:0});});
+  });
+
+  // 決算年度の12ヶ月リスト（YYYY-MM形式）
+  const getFiscalMonths=()=>{
+    const startM=fiscalMonth===12?1:fiscalMonth+1;
+    const now=new Date();
+    const yr=now.getFullYear();
+    // 今年度の開始年を計算
+    let startYr=yr;
+    if(now.getMonth()+1<=fiscalMonth) startYr=yr-1;
+    const months=[];
+    for(let i=0;i<12;i++){
+      const m=(startM-1+i)%12+1;
+      const y=startYr+Math.floor((startM-1+i)/12);
+      months.push(`${y}-${String(m).padStart(2,'0')}`);
+    }
+    return months;
+  };
+  const fiscalMonths=getFiscalMonths(); // ['2024-04','2024-05',...,'2025-03']
+  const MONTH_LABELS=fiscalMonths.map(ym=>{const m=parseInt(ym.split('-')[1]);return m+'月';});
+
+  // ガントバー：入居日〜退去予定日（または今月）の期間を入居表示
+  const getRoomGantt=(r)=>{
+    const since=r.since||'';
+    const moveOut=r.moveOutDate||'';
+    return fiscalMonths.map(ym=>{
+      if(!since) return false;
+      const sinceYM=since.slice(0,7);
+      const endYM=moveOut?moveOut.slice(0,7):today.slice(0,7);
+      return ym>=sinceYM && ym<=endYM;
+    });
+  };
+
+  // 入居ステータス判定（退去予定日考慮）
+  const getRoomStatus=(r)=>{
+    if(!r.since) return 'vacant';
+    const moveOut=r.moveOutDate||'';
+    if(moveOut){
+      // 入居日≦今日≦退去予定日なら入居中
+      if(r.since<=today && moveOut>=today) return 'occupied';
+      // 退去予定日を過ぎたら空室
+      if(moveOut<today) return 'vacant';
+    }
+    return r.status||'occupied';
+  };
+
+  const mhdrs=MONTH_LABELS.map(m=>`<th style="font-size:8px;color:#888;text-align:center;padding:2px 1px;border-left:0.5px solid #e0e0d8;min-width:18px">${m.replace('月','')}</th>`).join('');
+
+  const rows=p.rooms.map((r,ri)=>{
+    const status=getRoomStatus(r);
+    const isOcc=status==='occupied';
+    const total=r.items.reduce((s,it)=>s+it.amt,0);
+    const uid=`r${pi}_${ri}`;
+    const gantt=getRoomGantt(r);
+    const occMonths=gantt.filter(Boolean).length;
+    const occRate=Math.round(occMonths/12*100);
+
+    const ganttCells=gantt.map(occ=>`<td style="padding:0;border-left:0.5px solid #e0e0d8"><div style="height:12px;margin:2px 1px;border-radius:2px;background:${occ?'#86efac':'#fca5a5'};opacity:${occ?1:0.35}"></div></td>`).join('');
+
+    // 内訳展開行：固定4項目（家賃・管理費・駐車場・その他）
+    const itemRows=['家賃','管理費','駐車場','その他'].map(lbl=>{
+      const it=r.items.find(x=>x.label===lbl)||{label:lbl,amt:0};
+      return `<tr>
+        <td style="color:#888;padding:3px 8px;text-align:right;width:60px;font-size:11px">${lbl}</td>
+        <td style="padding:3px 4px"><input type="number" value="${it.amt}" min="0" style="width:90px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:3px 6px;font-variant-numeric:tabular-nums" onchange="updateRoomAmt(${pi},${ri},'${lbl}',this.value)" onclick="event.stopPropagation()"></td>
+        <td style="color:#888;padding:3px 4px;font-size:11px">円/月</td>
+      </tr>`;
+    }).join('');
+
+    const detailRow=`<tr id="${uid}d" style="display:none;background:#f8f8f4">
+      <td colspan="3"></td>
+      <td colspan="${9+12}" style="padding:6px 8px">
+        <table style="border-collapse:collapse">
+          ${itemRows}
+          <tr><td colspan="3" style="padding:6px 8px 2px;font-size:11px;color:#888;font-weight:500">合計：<span id="${uid}total" style="color:${isOcc?'#16a34a':'#888'}">${total.toLocaleString()}</span> 円/月</td></tr>
+        </table>
+      </td>
+    </tr>`;
+
+    return`<tr style="cursor:pointer;border-bottom:0.5px solid #f0f0e8" onclick="togRoom('${uid}')">
+      <td style="padding:6px 8px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
+      <td style="padding:6px 8px;font-size:12px;color:#888;white-space:nowrap">${r.layout||'—'}</td>
+      <td style="padding:6px 8px;font-size:12px;color:#888;text-align:right;white-space:nowrap">${r.area||'—'}㎡</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:500;font-size:13px;white-space:nowrap;color:${isOcc?'#16a34a':'#888'}">
+        ${fmt(total)} <span id="${uid}i" style="font-size:10px;color:#aaa">▼</span>
+      </td>
+      <td style="padding:6px 8px;text-align:center;white-space:nowrap">
+        <span class="badge ${isOcc?'bg':'br-b'}">${isOcc?'入居中':'空室'}</span>
+      </td>
+      <td style="padding:4px 6px;white-space:nowrap">
+        <input type="date" value="${r.since||''}" style="font-size:10px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px" onclick="event.stopPropagation()" onchange="updateRoomSince(${pi},${ri},this.value)">
+      </td>
+      <td style="padding:4px 6px;white-space:nowrap">
+        <input type="date" value="${r.moveOutDate||''}" style="font-size:10px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px;background:${r.moveOutDate?'#fff7ed':'#fff'}" onclick="event.stopPropagation()" onchange="updateMoveOut(${pi},${ri},this.value)">
+      </td>
+      <td style="padding:6px 4px;text-align:right;font-size:11px;font-weight:500;color:${occRate>=75?'#16a34a':'#dc2626'};white-space:nowrap">${occRate}%</td>
+      ${ganttCells}
+      <td style="padding:6px 4px;white-space:nowrap;min-width:60px" id="${uid}n" onclick="editNote(event,'${uid}',${pi},${ri})">
+        <span style="font-size:11px;color:${r.note?'#dc2626':'#aaa'}">${r.note||'備考…'}</span>
+      </td>
+    </tr>
+    ${detailRow}`;
+  }).join('');
+
+  // 合計行：statusに退去予定日を反映した値を使う
+  const occTotal=p.rooms.filter(r=>getRoomStatus(r)==='occupied').reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  const fullTotal=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  const occCount=p.rooms.filter(r=>getRoomStatus(r)==='occupied').length;
+  const overallRate=pct(occCount,p.rooms.length);
+
+  document.getElementById('pages').innerHTML=`
+  <div class="summary-grid">
+    <div class="col single"><div class="ct" style="margin-bottom:8px">年間収支 <span style="font-size:9px;color:#aaa">${yearMode==='fiscal'?fiscalMonth+'月決算年度':'暦年'}</span></div>
+      <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="g">${fmt(getAnnualI(pi)-getAnnualE(pi))}</span></div>
+      <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(getAnnualI(pi),getAnnualI(pi)+getAnnualE(pi))}%"></div><div class="bar-e" style="width:${pct(getAnnualE(pi),getAnnualI(pi)+getAnnualE(pi))}%"></div></div>
+      <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(getAnnualI(pi))}</span><span class="r">${fmt(getAnnualE(pi))}</span></div></div>
+    <div class="col single"><div class="ct" style="margin-bottom:8px">月間収支 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
+      <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${getMonthI(getMonthlyIdx(),pi)-getMonthE(getMonthlyIdx(),pi)>=0?'g':'r'}">${fmt(getMonthI(getMonthlyIdx(),pi)-getMonthE(getMonthlyIdx(),pi))}</span></div>
+      <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(getMonthI(getMonthlyIdx(),pi),getMonthI(getMonthlyIdx(),pi)+getMonthE(getMonthlyIdx(),pi))}%"></div><div class="bar-e" style="width:${pct(getMonthE(getMonthlyIdx(),pi),getMonthI(getMonthlyIdx(),pi)+getMonthE(getMonthlyIdx(),pi))}%"></div></div>
+      <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(getMonthI(getMonthlyIdx(),pi))}</span><span class="r">${fmt(getMonthE(getMonthlyIdx(),pi))}</span></div></div>
+    <div class="col single"><div class="ct" style="margin-bottom:8px">入居率 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
+      <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500;color:${overallRate>=75?'#16a34a':'#dc2626'}">${overallRate}%</span></div>
+      <div class="bar-bg" style="height:6px"><div style="height:6px;width:${overallRate}%;background:${overallRate>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
+      <div style="font-size:11px;color:#888;margin-top:2px">${occCount}/${p.rooms.length}室 稼働中</div></div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:8px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
+      <span class="ct">部屋別 入居状況</span>
+      <div style="display:flex;gap:10px;font-size:10px;color:#888">
+        <span>▼で内訳表示・金額編集</span>
+        <span style="display:flex;gap:4px;align-items:center"><span style="width:10px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>入居中</span>
+        <span style="display:flex;gap:4px;align-items:center"><span style="width:10px;height:8px;background:#fca5a5;border-radius:2px;opacity:.4;display:inline-block"></span>空室</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="border-collapse:collapse;font-size:12px;width:100%;min-width:700px">
+      <thead style="background:#fafaf8">
+        <tr>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:48px">部屋</th>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:52px">間取り</th>
+          <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:48px">面積</th>
+          <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;min-width:100px">月額合計</th>
+          <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:64px">入居状況</th>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:116px">入居日</th>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:116px">退去予定日</th>
+          <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:40px">入居率</th>
+          ${mhdrs}
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:60px">備考</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr style="background:#fafaf8;font-weight:500">
+          <td colspan="3" style="padding:7px 8px;font-size:11px;color:#888">現況合計（入居中）</td>
+          <td style="padding:7px 8px;text-align:right;font-size:13px;color:#16a34a;font-variant-numeric:tabular-nums" id="occTotalCell">${occTotal.toLocaleString()}/月</td>
+          <td colspan="4" style="padding:7px 8px;font-size:11px;color:#888">${occCount}室稼働中</td>
+          <td colspan="13"></td>
+        </tr>
+        <tr style="color:#888">
+          <td colspan="3" style="padding:7px 8px;font-size:11px">満室合計</td>
+          <td style="padding:7px 8px;text-align:right;font-size:13px;font-variant-numeric:tabular-nums" id="fullTotalCell">${fullTotal.toLocaleString()}/月</td>
+          <td colspan="4" style="padding:7px 8px;font-size:11px">機会損失 <span class="r">▲${(fullTotal-occTotal).toLocaleString()}/月</span></td>
+          <td colspan="13"></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>`;
 }
-return months;
-};
-const fiscalMonths=getFiscalMonths();
-const MONTH_LABELS=fiscalMonths.map(ym=>{const m=parseInt(ym.split('-')[1]);return m+'月';});
-const getRoomGantt=(r)=>{
-const since=r.since||'';
-const moveOut=r.moveOutDate||'';
-return fiscalMonths.map(ym=>{
-if(!since)return false;
-const sinceYM=since.slice(0,7);
-const endYM=moveOut?moveOut.slice(0,7):todayStr.slice(0,7);
-return ym>=sinceYM&&ym<=endYM;
-});
-};
-const getRoomStatus=(r)=>{
-if(!r.since)return'vacant';
-const moveOut=r.moveOutDate||'';
-if(moveOut){
-if(r.since<=todayStr&&moveOut>=todayStr)return'occupied';
-if(moveOut<todayStr)return'vacant';
-}
-return r.status||'occupied';
-};
-const rows=p.rooms.map((r,ri)=>{
-const status=getRoomStatus(r);
-const isOcc=status==='occupied';
-const total=r.items.reduce((s,it)=>s+it.amt,0);
-const uid=`r${pi}_${ri}`;
-const gantt=getRoomGantt(r);
-const occMonths=gantt.filter(Boolean).length;
-const occRate=Math.round(occMonths/12*100);
-const ganttCells=gantt.map(occ=>`<td style="padding:0;border-left:0.5px solid #e0e0d8"><div style="height:12px;margin:2px 1px;border-radius:2px;background:${occ?'#86efac':'#fca5a5'};opacity:${occ?1:0.35}"></div></td>`).join('');
-const itemRows=['家賃','管理費','駐車場','その他'].map(lbl=>{
-const it=r.items.find(x=>x.label===lbl)||{label:lbl,amt:0};
-return`<tr>
-<td style="color:#888;padding:3px 8px;text-align:right;width:60px;font-size:11px">${lbl}</td>
-<td style="padding:3px 4px"><input type="number" value="${it.amt}" min="0" style="width:90px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:3px 6px;font-variant-numeric:tabular-nums" onchange="updateRoomAmt(${pi},${ri},'${lbl}',this.value)" onclick="event.stopPropagation()"></td>
-<td style="color:#888;padding:3px 4px;font-size:11px">円/月</td>
-</tr>`;
-}).join('');
-const detailRow=`<tr id="${uid}d" style="display:none;background:#f8f8f4">
-<td colspan="3"></td>
-<td colspan="${9+12}" style="padding:6px 8px">
-<table style="border-collapse:collapse">
-${itemRows}
-<tr><td colspan="3" style="padding:6px 8px 2px;font-size:11px;color:#888;font-weight:500">合計：<span id="${uid}total" style="color:${isOcc?'#16a34a':'#888'}">${total.toLocaleString()}</span> 円/月</td></tr>
-</table>
-</td>
-</tr>`;
-return`<tr style="cursor:pointer;border-bottom:0.5px solid #f0f0e8" onclick="togRoom('${uid}')">
-<td style="padding:6px 8px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
-<td style="padding:6px 8px;font-size:12px;color:#888;white-space:nowrap">${r.layout||'—'}</td>
-<td style="padding:6px 8px;font-size:12px;color:#888;text-align:right;white-space:nowrap">${r.area||'—'}㎡</td>
-<td style="padding:6px 8px;text-align:right;font-weight:500;font-size:13px;white-space:nowrap;color:${isOcc?'#16a34a':'#888'}">
-${fmt(total)} <span id="${uid}i" style="font-size:10px;color:#aaa">▼</span>
-</td>
-<td style="padding:6px 8px;text-align:center;white-space:nowrap">
-<span class="badge ${isOcc?'bg':'br-b'}">${isOcc?'入居中':'空室'}</span>
-</td>
-<td style="padding:4px 6px;white-space:nowrap">
-<input type="date" value="${r.since||''}" style="font-size:10px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px" onclick="event.stopPropagation()" onchange="updateRoomSince(${pi},${ri},this.value)">
-</td>
-<td style="padding:4px 6px;white-space:nowrap">
-<input type="date" value="${r.moveOutDate||''}" style="font-size:10px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px;background:${r.moveOutDate?'#fff7ed':'#fff'}" onclick="event.stopPropagation()" onchange="updateMoveOut(${pi},${ri},this.value)">
-</td>
-<td style="padding:6px 4px;text-align:right;font-size:11px;font-weight:500;color:${occRate>=75?'#16a34a':'#dc2626'};white-space:nowrap">${occRate}%</td>
-${ganttCells}
-<td style="padding:6px 4px;white-space:nowrap;min-width:60px" id="${uid}n" onclick="editNote(event,'${uid}',${pi},${ri})">
-<span style="font-size:11px;color:${r.note?'#dc2626':'#aaa'}">${r.note||'備考…'}</span>
-</td>
-</tr>
-${detailRow}`;
-}).join('');
-const occCount=p.rooms.filter(r=>getRoomStatus(r)==='occupied').length;
-const overallRate=pct(occCount,p.rooms.length);
-const mhdrs=MONTH_LABELS.map(m=>`<th style="font-size:8px;color:#888;text-align:center;padding:2px 1px;border-left:0.5px solid #e0e0d8;min-width:18px">${m.replace('月','')}</th>`).join('');
-document.getElementById('pages').innerHTML=`
-<div class="summary-grid">
-<div class="col single"><div class="ct" style="margin-bottom:8px">年間収支</div>
-<div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="g">${fmt(getAnnualI(pi)-getAnnualE(pi))}</span></div>
-<div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(getAnnualI(pi),getAnnualI(pi)+getAnnualE(pi))}%"></div><div class="bar-e" style="width:${pct(getAnnualE(pi),getAnnualI(pi)+getAnnualE(pi))}%"></div></div>
-<div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(getAnnualI(pi))}</span><span class="r">${fmt(getAnnualE(pi))}</span></div></div>
-<div class="col single"><div class="ct" style="margin-bottom:8px">月間収支 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
-<div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${getMonthI(getMonthlyIdx(),pi)-getMonthE(getMonthlyIdx(),pi)>=0?'g':'r'}">${fmt(getMonthI(getMonthlyIdx(),pi)-getMonthE(getMonthlyIdx(),pi))}</span></div>
-<div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(getMonthI(getMonthlyIdx(),pi),getMonthI(getMonthlyIdx(),pi)+getMonthE(getMonthlyIdx(),pi))}%"></div><div class="bar-e" style="width:${pct(getMonthE(getMonthlyIdx(),pi),getMonthI(getMonthlyIdx(),pi)+getMonthE(getMonthlyIdx(),pi))}%"></div></div>
-<div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(getMonthI(getMonthlyIdx(),pi))}</span><span class="r">${fmt(getMonthE(getMonthlyIdx(),pi))}</span></div></div>
-<div class="col single"><div class="ct" style="margin-bottom:8px">入居率 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
-<div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500;color:${overallRate>=75?'#16a34a':'#dc2626'}">${overallRate}%</span></div>
-<div class="bar-bg" style="height:6px"><div style="height:6px;width:${overallRate}%;background:${overallRate>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
-<div style="font-size:11px;color:#888;margin-top:2px">${occCount}/${p.rooms.length}室 稼働中</div></div>
-</div>
-<div class="card" style="padding:0;overflow:hidden">
-<div style="padding:8px 14px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
-<span class="ct">部屋別 入居状況</span>
-</div>
-<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:12px">
-<thead><tr>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">部屋</th>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">間取</th>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;text-align:right">面積</th>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;text-align:right">月額</th>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;text-align:center">状況</th>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">入居日</th>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">退去予定</th>
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;text-align:right">稼働率</th>
-${mhdrs}
-<th style="padding:6px 8px;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">備考</th>
-</tr></thead>
-<tbody>${rows}</tbody>
-</table></div>
-</div>`;
-}
+
 function togRoom(uid){
-const d=document.getElementById(uid+'d');
-const i=document.getElementById(uid+'i');
-if(d){d.style.display=d.style.display==='none'?'table-row':'none';}
-if(i){i.textContent=d&&d.style.display!=='none'?'▲':'▼';}
+  const d=document.getElementById(uid+'d');
+  const ic=document.getElementById(uid+'i');
+  if(!d)return;
+  const isOpen=d.style.display==='table-row';
+  d.style.display=isOpen?'none':'table-row';
+  if(ic)ic.textContent=isOpen?'▼':'▲';
 }
-function editNote(e,uid,pi,ri){
-e.stopPropagation();
-const p=properties[pi];if(!p)return;
-const r=p.rooms[ri];if(!r)return;
-const note=prompt('備考を入力',r.note||'');
-if(note===null)return;
-r.note=note;
-saveProps();
-const el=document.getElementById(uid+'n');
-if(el)el.innerHTML=`<span style="font-size:11px;color:${note?'#dc2626':'#aaa'}">${note||'備考…'}</span>`;
+
+function updateRoomAmt(pi,ri,label,val){
+  const p=properties[pi];
+  const it=p.rooms[ri].items.find(x=>x.label===label);
+  if(it) it.amt=parseInt(val)||0;
+  else p.rooms[ri].items.push({label,amt:parseInt(val)||0});
+  saveProps();
+  // 月額合計を即時反映
+  const uid=`r${pi}_${ri}`;
+  const total=p.rooms[ri].items.reduce((s,it)=>s+it.amt,0);
+  const isOcc=p.rooms[ri].status==='occupied';
+  // メイン行の月額合計
+  const mainRow=document.querySelector(`tr[onclick="togRoom('${uid}')"] td:nth-child(4)`);
+  if(mainRow){mainRow.style.color=isOcc?'#16a34a':'#888';mainRow.innerHTML=`${total.toLocaleString()} <span id="${uid}i" style="font-size:10px;color:#aaa">▼</span>`;}
+  // 展開内の合計表示
+  const totalEl=document.getElementById(uid+'total');
+  if(totalEl) totalEl.textContent=total.toLocaleString();
+  // 現況合計・満室合計を更新
+  recalcTotals(pi);
 }
-function updateRoomAmt(pi,ri,lbl,val){
-const p=properties[pi];if(!p)return;
-const r=p.rooms[ri];if(!r)return;
-const it=r.items.find(x=>x.label===lbl);
-if(it)it.amt=parseInt(val)||0;
-saveProps();
-const uid=`r${pi}_${ri}`;
-const total=r.items.reduce((s,it)=>s+it.amt,0);
-const el=document.getElementById(uid+'total');
-if(el)el.textContent=total.toLocaleString();
+
+function recalcTotals(pi){
+  const p=properties[pi];
+  const today=new Date().toISOString().slice(0,10);
+  const getStatus=r=>{
+    if(!r.since) return 'vacant';
+    if(r.moveOutDate){
+      if(r.since<=today&&r.moveOutDate>=today) return 'occupied';
+      if(r.moveOutDate<today) return 'vacant';
+    }
+    return r.status||'occupied';
+  };
+  const occTotal=p.rooms.filter(r=>getStatus(r)==='occupied').reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  const fullTotal=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  const occ=document.getElementById('occTotalCell');
+  const full=document.getElementById('fullTotalCell');
+  if(occ) occ.textContent=occTotal.toLocaleString()+'/月';
+  if(full) full.textContent=fullTotal.toLocaleString()+'/月';
 }
+
 function updateRoomSince(pi,ri,val){
-const p=properties[pi];if(!p)return;
-p.rooms[ri].since=val;
-p.rooms[ri].status=val?'occupied':'vacant';
-saveProps();
+  properties[pi].rooms[ri].since=val;
+  saveProps();renderOccProp();
 }
+
 function updateMoveOut(pi,ri,val){
-const p=properties[pi];if(!p)return;
-p.rooms[ri].moveOutDate=val;
-saveProps();
+  const r=properties[pi].rooms[ri];
+  r.moveOutDate=val;
+  const today=new Date().toISOString().slice(0,10);
+  if(val){
+    if(val<today){
+      // 退去予定日が過ぎた → 空室、備考に記録
+      if(r.status==='occupied'){
+        r.status='vacant';
+        r.note=(r.note?r.note+' / ':'')+'退去：'+val;
+      }
+    } else if(r.since&&r.since<=today){
+      // 退去予定日が今日以降で入居日が過去 → 入居中に戻す
+      r.status='occupied';
+    }
+  }
+  saveProps();renderOccProp();
 }
+
+function editNote(e,uid,pi,ri){e.stopPropagation();const el=document.getElementById(uid+'n');const cur=properties[pi].rooms[ri].note||'';el.innerHTML=`<input type="text" value="${cur}" placeholder="備考を入力" style="width:100%;font-size:11px;border:none;background:transparent;outline:none;border-bottom:1px solid #93c5fd" onblur="saveNote('${uid}',${pi},${ri},this.value)" onkeydown="if(event.key==='Enter')this.blur()" onclick="event.stopPropagation()">`;setTimeout(()=>el.querySelector('input')?.focus(),10);}
+function saveNote(uid,pi,ri,val){properties[pi].rooms[ri].note=val;saveProps();const el=document.getElementById(uid+'n');if(el){el.innerHTML=`<span style="font-size:11px;color:${val?'#dc2626':'#aaa'}">${val||'備考…'}</span>`;}}
+function updateRoomField(pi,ri,key,val){properties[pi].rooms[ri][key]=val;saveProps();}
+
+/* ── 分析タブ（物件概要統合） ── */
 function renderAnalysis(){
   const isAll=currentProp==='all';
   if(isAll){document.getElementById('pages').innerHTML='<div class="card" style="text-align:center;padding:32px;color:#888">個別物件を選択してください</div>';return;}
   const pi=parseInt(currentProp);
   const p=properties[pi];if(!p)return;
   if(!p.loanSegs||!p.loanSegs.length) p.loanSegs=[{id:0,startYM:(p.acquireDate||'2022-01').slice(0,7),rate:1.5,years:35,loan:p.loan||0}];
+
   const tc=p.price+(p.reform||0)+(p.miscCost||0);
   const sf=tc-(p.loan||0);
   const pr=p.price+(p.reform||0);
@@ -833,6 +1092,8 @@ function renderAnalysis(){
   const currRentFull=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
   const gy=(r,b)=>b>0?(r*12/b*100).toFixed(2)+'%':'—';
   const origNet=p.origNet||0;
+
+
   const segHTML=p.loanSegs.map((seg,i)=>{
     const now=nowYM(),isLast=i===p.loanSegs.length-1;
     let endLbl='現在',dur=mdiff(seg.startYM||nowYM(),now);
@@ -870,8 +1131,10 @@ function renderAnalysis(){
       </div>
     </div>`;
   }).join('');
+
   const dur2={RC:47,'鉄骨造':34,'木造':22}[p.structure]||47;
   const age2=p.builtYear?2025-p.builtYear:0;
+
   document.getElementById('pages').innerHTML=`
   <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
     <div class="sec-toggle" onclick="togSec('info')"><span style="font-size:13px;font-weight:500">物件概要・基本情報</span><span id="ic_info">▲</span></div>
@@ -889,17 +1152,18 @@ function renderAnalysis(){
       </div>
     </div></div>
   </div>
+
   <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
     <div class="sec-toggle" onclick="togSec('fund')"><span style="font-size:13px;font-weight:500">取得・資金情報</span><span id="ic_fund">▲</span></div>
     <div class="sec-body" id="body_fund" style="max-height:2000px"><div style="padding:12px 14px">
       <div class="info-rows">
         <div class="ir"><div class="ic lbl">取得価格 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.price)}" onblur="fi(this)" onchange="updatePropField(${pi},'price',pa(this.value))"><span class="nunit">円</span></div></div>
         <div class="ir"><div class="ic lbl">リフォーム費用 <span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.reform||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'reform',pa(this.value))"><span class="nunit">円</span></div></div>
-        <div class="ir"><div class="ic lbl">諸費用合計 <span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.miscCost||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'miscCost',pa(this.value))"><span class="nunit">円</span><span class="nnote">${p.price?`取得価格の ${((p.miscCost||0)/p.price*100).toFixed(1)}%`:''}</span></div></div>
-        <div class="ir"><div class="ic lbl">取得コスト合計 <span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(tc)}</span><span class="nunit">円</span></div></div>
-        <div class="ir"><div class="ic lbl">借入額 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.loan||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'loan',pa(this.value))"><span class="nunit">円</span></div></div>
-        <div class="ir"><div class="ic lbl">自己資金 <span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(sf)}</span><span class="nunit">円</span></div></div>
-        <div class="ir"><div class="ic lbl">現時点の残債 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.debt||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'debt',pa(this.value))"><span class="nunit">円</span></div></div>
+        <div class="ir"><div class="ic lbl">諸費用合計 <span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.miscCost||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'miscCost',pa(this.value))"><span class="nunit">円</span><span class="nnote" id="an_miscPct">${p.price?`取得価格の ${((p.miscCost||0)/p.price*100).toFixed(1)}%`:''}</span></div></div>
+        <div class="ir"><div class="ic lbl">取得コスト合計 <span class="badge ba-b">自動</span><br><span style="font-size:10px">(取得価格＋リフォーム＋諸費用)</span></div><div class="ic amt"><span class="nbox auto" id="an_totalCost">${fmt(tc)}</span><span class="nunit">円</span></div></div>
+        <div class="ir"><div class="ic lbl">借入額 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.loan||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'loan',pa(this.value))"><span class="nunit">円</span><span class="nnote" id="an_loanPct">${p.price?`取得価格の ${((p.loan||0)/p.price*100).toFixed(1)}%`:''}</span></div></div>
+        <div class="ir"><div class="ic lbl">自己資金 <span class="badge ba-b">自動</span><br><span style="font-size:10px">(取得コスト合計−借入額)</span></div><div class="ic amt"><span class="nbox auto" id="an_selfFund">${fmt(sf)}</span><span class="nunit">円</span><span class="nnote" id="an_selfPct">${tc?`取得コストの ${(sf/tc*100).toFixed(1)}%`:''}</span></div></div>
+        <div class="ir"><div class="ic lbl">現時点の残債 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.debt||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'debt',pa(this.value))"><span class="nunit">円</span><span class="nnote" id="an_debtPct">${p.price?`取得価格の ${((p.debt||0)/p.price*100).toFixed(1)}%`:''}</span></div></div>
       </div>
       <div style="margin-top:12px;border-top:0.5px solid #e0e0d8;padding-top:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -910,11 +1174,13 @@ function renderAnalysis(){
       </div>
     </div></div>
   </div>
+
   <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
     <div class="sec-toggle" onclick="togSec('yield')"><span style="font-size:13px;font-weight:500">利回り・CCR</span><span id="ic_yield">▲</span></div>
     <div class="sec-body" id="body_yield" style="max-height:1000px"><div style="padding:12px 14px">
       <div class="ct" style="margin-bottom:8px">表面利回り比較</div>
       <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">
+        <colgroup><col><col style="width:140px"><col style="width:100px"><col style="width:100px"></colgroup>
         <thead><tr style="background:#fafaf8">
           <th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:500;color:#888;border-bottom:0.5px solid #e0e0d8">計算基準</th>
           <th style="padding:5px 8px;text-align:right;font-size:10px;font-weight:500;color:#888;border-bottom:0.5px solid #e0e0d8">合計額</th>
@@ -923,13 +1189,13 @@ function renderAnalysis(){
         </tr></thead>
         <tbody>
           <tr><td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;color:#888">取得価格のみ</td>
-            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-size:11px;color:#888">${fmt(p.price)}</td>
-            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-weight:500">${gy(origRent,p.price)}</td>
-            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-weight:500">${gy(currRentFull,p.price)}</td></tr>
+            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-size:11px;color:#888" id="an_base1">${fmt(p.price)}</td>
+            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-weight:500" id="an_y1orig">${gy(origRent,p.price)}</td>
+            <td style="padding:6px 8px;border-bottom:0.5px solid #f0f0e8;text-align:right;font-weight:500" id="an_y1curr">${gy(currRentFull,p.price)}</td></tr>
           <tr><td style="padding:6px 8px;color:#888">取得価格＋リフォーム費用</td>
-            <td style="padding:6px 8px;text-align:right;font-size:11px;color:#888">${fmt(pr)}</td>
-            <td style="padding:6px 8px;text-align:right;font-weight:500">${gy(origRent,pr)}</td>
-            <td style="padding:6px 8px;text-align:right;font-weight:500">${gy(currRentFull,pr)}</td></tr>
+            <td style="padding:6px 8px;text-align:right;font-size:11px;color:#888" id="an_base2">${fmt(pr)}</td>
+            <td style="padding:6px 8px;text-align:right;font-weight:500" id="an_y2orig">${gy(origRent,pr)}</td>
+            <td style="padding:6px 8px;text-align:right;font-weight:500" id="an_y2curr">${gy(currRentFull,pr)}</td></tr>
         </tbody>
       </table>
       <div style="height:1px;background:#e0e0d8;margin:10px 0"></div>
@@ -939,27 +1205,28 @@ function renderAnalysis(){
           <div class="col-head">購入時想定</div>
           <div class="info-rows">
             <div class="ir"><div class="ic lbl" style="width:140px">設定家賃（満室）<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(origRent)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value))"><span class="nunit">/月</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:140px">年間収入（満室）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(origRent*12)}</span><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">年間収入（満室）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_origRentAnn">${fmt(origRent*12)}</span><span class="nunit">/年</span></div></div>
             <div class="ir"><div class="ic lbl" style="width:140px">想定年間純利益<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(origNet)}" onblur="fi(this)" onchange="updatePropField(${pi},'origNet',pa(this.value))"><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g">${sf>0&&origNet>0?(origNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${sf>0&&origNet>0?(sf/origNet).toFixed(1)+'年':'—'}</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g" id="an_ccrOrig">${sf>0&&origNet>0?(origNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_pbOrig">${sf>0&&origNet>0?(sf/origNet).toFixed(1)+'年':'—'}</span></div></div>
           </div>
         </div>
         <div>
           <div class="col-head">現時点（実績平均）</div>
           <div class="info-rows">
-            <div class="ir"><div class="ic lbl" style="width:140px">現在家賃（満室想定）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(currRentFull*12)}</span><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:140px">年間純利益（実績平均）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(avgNet)}</span><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g">${sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—'}</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">現在家賃（満室想定）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_currRentAnn">${fmt(currRentFull*12)}</span><span class="nunit">/年</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">年間純利益（実績平均）<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_avgNet">${fmt(avgNet)}</span><span class="nunit">/年</span><span class="nnote" id="an_avgNote">累計${fmt(cumNet)}÷${elapsed}ヶ月×12</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g" id="an_ccrCurr">${sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
+            <div class="ir"><div class="ic lbl" style="width:140px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_pbCurr">${sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—'}</span></div></div>
           </div>
-          <div style="margin-top:8px;padding:8px 10px;background:#fafaf8;border-radius:6px;font-size:11px;color:#888">
+          <div style="margin-top:8px;padding:8px 10px;background:#fafaf8;border-radius:6px;font-size:11px;color:#888" id="an_elapsed">
             物件取得年月：${acq}　経過：${elapsed}ヶ月
           </div>
         </div>
       </div>
     </div></div>
   </div>
+
   <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
     <div class="sec-toggle" onclick="togSec('dep')"><span style="font-size:13px;font-weight:500">耐用年数・減価償却</span><span id="ic_dep">▼</span></div>
     <div class="sec-body" id="body_dep" style="max-height:0"><div style="padding:12px 14px">
@@ -970,422 +1237,553 @@ function renderAnalysis(){
       </div>
     </div></div>
   </div>
+
   <div class="card" style="border-style:dashed">
     <div class="ct" style="margin-bottom:8px">Drive フォルダ</div>
     <div style="font-size:12px;color:#888;margin-bottom:8px">${p.folderId?'✓ フォルダ作成済み':'未作成'}</div>
     <button class="btn btn-b" onclick="createFolders('${p.id}')">フォルダを作成／確認</button>
   </div>`;
 }
-  
+
+function addLoanSeg(pi){
+  const p=properties[pi];
+  if(!p.loanSegs) p.loanSegs=[];
+  const last=p.loanSegs[p.loanSegs.length-1]||{};
+  p.loanSegs.push({id:p.loanSegs.length,startYM:nowYM(),rate:last.rate||1.5,years:20,loan:p.debt||Math.round((p.loan||0)*0.8)});
+  saveProps();renderAnalysis();
+}
+function removeLoanSeg(pi,i){
+  properties[pi].loanSegs.splice(i,1);
+  saveProps();renderAnalysis();
+}
+function updateLoanSegCalc(pi,i,key,val){
+  if(!properties[pi].loanSegs||!properties[pi].loanSegs[i])return;
+  properties[pi].loanSegs[i][key]=val;
+  saveProps();calcAnalysis(pi);
+}
+
+
+function calcAnalysis(pi){
+  const p=properties[pi];if(!p)return;
+  const price=p.price||0,reform=p.reform||0,misc=p.miscCost||0,loan=p.loan||0,debt=p.debt||0;
+  const tc=price+reform+misc;
+  const sf=tc-loan;
+  const pr=price+reform;
+
+  // 取得コスト合計・自己資金
+  const tcEl=document.getElementById('an_totalCost');if(tcEl)tcEl.textContent=tc.toLocaleString();
+  const sfEl=document.getElementById('an_selfFund');if(sfEl)sfEl.textContent=sf.toLocaleString();
+  const sfPctEl=document.getElementById('an_selfPct');if(sfPctEl)sfPctEl.textContent=tc?`取得コストの ${(sf/tc*100).toFixed(1)}%`:'';
+  const miscPctEl=document.getElementById('an_miscPct');if(miscPctEl)miscPctEl.textContent=price?`取得価格の ${(misc/price*100).toFixed(1)}%`:'';
+  const loanPctEl=document.getElementById('an_loanPct');if(loanPctEl)loanPctEl.textContent=price?`取得価格の ${(loan/price*100).toFixed(1)}%`:'';
+  const debtPctEl=document.getElementById('an_debtPct');if(debtPctEl)debtPctEl.textContent=price?`取得価格の ${(debt/price*100).toFixed(1)}%`:'';
+
+  // 表面利回り
+  const gy=(r,b)=>b>0?(r*12/b*100).toFixed(2)+'%':'—';
+  const origRent=p.origRent||0;
+  const currRentFull=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  ['an_y1orig','an_y1curr','an_y2orig','an_y2curr'].forEach((id,i)=>{
+    const rent=[origRent,currRentFull,origRent,currRentFull][i];
+    const base=[price,price,pr,pr][i];
+    const el=document.getElementById(id);if(el)el.textContent=gy(rent,base);
+  });
+  const b1=document.getElementById('an_base1');if(b1)b1.textContent=price.toLocaleString();
+  const b2=document.getElementById('an_base2');if(b2)b2.textContent=pr.toLocaleString();
+
+  // 購入時CCR
+  const origNet=p.origNet||0;
+  const origRentAnnEl=document.getElementById('an_origRentAnn');if(origRentAnnEl)origRentAnnEl.textContent=(origRent*12).toLocaleString();
+  const ccrOrigEl=document.getElementById('an_ccrOrig');if(ccrOrigEl)ccrOrigEl.textContent=sf>0&&origNet>0?(origNet/sf*100).toFixed(2)+'%':'—';
+  const pbOrigEl=document.getElementById('an_pbOrig');if(pbOrigEl)pbOrigEl.textContent=sf>0&&origNet>0?(sf/origNet).toFixed(1)+'年':'—';
+
+  // 現時点CCR
+  const acq=p.acquireDate?p.acquireDate.slice(0,7):nowYM();
+  const elapsed=Math.max(1,mdiff(acq,nowYM()));
+  const annI=getAnnualI(pi),annE=getAnnualE(pi);
+  const cumNet=Math.round((annI-annE)/12*elapsed);
+  const avgNet=Math.round(cumNet/elapsed*12);
+  const currRentAnnEl=document.getElementById('an_currRentAnn');if(currRentAnnEl)currRentAnnEl.textContent=(currRentFull*12).toLocaleString();
+  const avgNetEl=document.getElementById('an_avgNet');if(avgNetEl)avgNetEl.textContent=avgNet.toLocaleString();
+  const avgNoteEl=document.getElementById('an_avgNote');if(avgNoteEl)avgNoteEl.textContent=`累計${cumNet.toLocaleString()}÷${elapsed}ヶ月×12`;
+  const ccrCurrEl=document.getElementById('an_ccrCurr');if(ccrCurrEl)ccrCurrEl.textContent=sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—';
+  const pbCurrEl=document.getElementById('an_pbCurr');if(pbCurrEl)pbCurrEl.textContent=sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—';
+  const elapsedEl=document.getElementById('an_elapsed');if(elapsedEl)elapsedEl.textContent=`物件取得年月：${acq}　経過：${elapsed}ヶ月`;
+
+  // ローン計算
+const segs=p.loanSegs||[];
+  segs.forEach((seg,i)=>{
+    const mp=cm(seg.loan,seg.rate,seg.years);
+    const mi=seg.loan*(seg.rate/100/12);
+    const mk=mp-mi;
+    const ap=mp*12;
+    const tp=mp*seg.years*12;
+    const ti=tp-seg.loan;
+    const ratio=ap/(currRentFull*12)*100;
+    const rc=ratio<=40?'#16a34a':ratio<=50?'#f59e0b':'#dc2626';
+    const s=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+    s(`an_mp${i}`,Math.round(mp).toLocaleString());
+    s(`an_mi${i}`,Math.round(mi).toLocaleString());
+    s(`an_mk${i}`,Math.round(mk).toLocaleString());
+    s(`an_ap${i}`,Math.round(ap).toLocaleString());
+    s(`an_tp${i}`,Math.round(tp).toLocaleString());
+    s(`an_ti${i}`,Math.round(ti).toLocaleString());
+    const rEl=document.getElementById(`an_ratio${i}`);if(rEl){rEl.textContent=ratio.toFixed(1)+'%';rEl.style.color=rc;}
+    const rnEl=document.getElementById(`an_rationote${i}`);if(rnEl)rnEl.textContent=ratio<=40?'✓ 安全圏':ratio<=50?'⚠ 注意':'⚠ 要注意';
+  });
+}
+
+
+function cm(principal,rate,years){const r=rate/100/12,n=years*12;if(r===0||n<=0)return principal/Math.max(n,1);return principal*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);}
+function togSec(id){const b=document.getElementById('body_'+id),ic=document.getElementById('ic_'+id);const op=b.style.maxHeight!=='0px'&&b.style.maxHeight!=='0';b.style.maxHeight=op?'0':'1200px';if(ic)ic.textContent=op?'▼':'▲';}
+function updatePropField(pi,key,val){
+  properties[pi][key]=val;
+  saveProps();
+  // 自動計算値を即時更新（ページ再レンダリングなし）
+  calcAnalysis(pi);
+}
+
+/* ── 出口戦略 ── */
 function renderExit(){
-document.getElementById('pages').innerHTML='<div class="card"><div class="ct">出口戦略</div><p style="margin-top:8px;font-size:12px;color:#888">準備中</p></div>';
+  if(currentProp==='all')return;
+  const p=properties[parseInt(currentProp)];if(!p||!p.price)return;
+  document.getElementById('pages').innerHTML=`<div class="card"><div class="ct" style="margin-bottom:12px">売却シミュレーション — ${p.name}</div>
+  <div class="grid2" style="margin-bottom:12px">
+    <div><div style="font-size:11px;color:#888;margin-bottom:3px">売却想定価格（円）</div><input type="number" id="exitPrice" value="${Math.round(p.price*1.2)}" style="width:100%;font-size:14px;text-align:right" oninput="calcExit()"></div>
+    <div><div style="font-size:11px;color:#888;margin-bottom:3px">課税区分</div><select id="taxType" style="width:100%" onchange="calcExit()"><option value="longPersonal">個人 長期（20.315%）</option><option value="shortPersonal">個人 短期（39.63%）</option><option value="corporate">法人（実効税率34%）</option></select></div>
+  </div>
+  <div class="grid2"><div><div style="font-size:11px;font-weight:500;color:#888;margin-bottom:8px">費用内訳</div><div id="exitBreakdown"></div></div>
+    <div><div class="card" style="padding:10px 12px;margin:0 0 8px"><div style="font-size:10px;color:#888;margin-bottom:3px">手取り利益</div><div style="font-size:18px;font-weight:500" class="g" id="exitNet">—</div></div>
+      <div class="card" style="padding:10px 12px;margin:0"><div style="font-size:10px;color:#888;margin-bottom:3px">自己資金回収率</div><div style="font-size:18px;font-weight:500" class="b" id="exitRecovery">—</div></div>
+    </div></div>
+  <div style="margin-top:12px"><div class="ct" style="margin-bottom:8px">売却価格別 手取り試算</div><div style="position:relative;height:150px"><canvas id="exitChart"></canvas></div></div></div>`;
+  calcExit();
 }
-async function loadDriveFiles(){
-if(!accessToken)return;
-try{
-driveFiles=[];
-for(const prop of properties){
-if(!prop.folderId)continue;
-for(const[folderName,folderId]of Object.entries(prop.subFolders||{})){
-if(!folderId)continue;
-const r=await gapi.client.drive.files.list({q:`'${folderId}' in parents and trashed=false`,fields:'files(id,name,createdTime,webViewLink,mimeType)',orderBy:'createdTime desc'});
-for(const f of r.result.files)driveFiles.push({...f,propId:prop.id,propName:prop.name,folderName,folderId});
+
+function calcExit(){
+  const pi=parseInt(currentProp),p=properties[pi];if(!p)return;
+  const price=parseInt(document.getElementById('exitPrice').value)||0;
+  const taxType=document.getElementById('taxType').value;
+  const agentFee=Math.round((price*.03+60000)*1.1),taxAdj=35000,debt=p.debt||Math.round((p.loan||0)*.75);
+  const gain=price-p.price,rates={longPersonal:.20315,shortPersonal:.3963,corporate:.34};
+  const cgTax=gain>0?Math.round(gain*rates[taxType]):0,net=price-agentFee-taxAdj-debt-cgTax;
+  const tc=(p.price||0)+(p.reform||0)+(p.miscCost||0);
+  const sf=tc-(p.loan||0);
+  document.getElementById('exitBreakdown').innerHTML=[['売却価格',fmt(price),''],['仲介手数料',fmt(agentFee),'r'],['固都税精算',fmt(taxAdj),'r'],['残債',fmt(debt),'r'],['譲渡所得税',fmt(cgTax),'r']]
+    .map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0e8;font-size:12px"><span style="color:#888">${k}</span><span class="${c}" style="font-weight:500">${c==='r'?'▲':''}${v}</span></div>`).join('')+
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:13px;border-top:0.5px solid #d0d0c8;margin-top:4px"><span>手取り</span><span class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</span></div>`;
+  document.getElementById('exitNet').textContent=(net<0?'▲':'')+fmt(net);
+  document.getElementById('exitRecovery').textContent=(sf>0?Math.round(net/sf*100):0)+'%';
+  dc('exitChart');
+  const prices=[.8,.9,1,1.1,1.2].map(r=>Math.round(price*r));
+  const nets=prices.map(pr=>{const f=Math.round((pr*.03+60000)*1.1),g=pr-p.price,t=g>0?Math.round(g*rates[taxType]):0;return pr-f-taxAdj-debt-t;});
+  charts.exitChart=new Chart(document.getElementById('exitChart'),{type:'bar',data:{labels:prices.map(pr=>'¥'+(pr/10000000).toFixed(1)+'千万'),datasets:[{data:nets,backgroundColor:nets.map(v=>v>=0?'rgba(134,239,172,.5)':'rgba(252,165,165,.5)'),borderColor:nets.map(v=>v>=0?'#16a34a':'#dc2626'),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'¥'+(v/10000)+'万',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
 }
+
+/* ── Drive API ── */
+async function findOrCreateFolder(name,parentId){
+  const lockKey=`${parentId}/${name}`;
+  if(folderCreatingLock[lockKey]){await folderCreatingLock[lockKey];const r=await gapi.client.drive.files.list({q:`name='${name}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,fields:'files(id)',spaces:'drive'});return r.result.files[0]?.id;}
+  let resolveLock;folderCreatingLock[lockKey]=new Promise(r=>{resolveLock=r;});
+  try{const r=await gapi.client.drive.files.list({q:`name='${name}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,fields:'files(id,name)',spaces:'drive'});
+    if(r.result.files.length>0){for(let i=1;i<r.result.files.length;i++){try{await gapi.client.drive.files.delete({fileId:r.result.files[i].id});}catch{}}return r.result.files[0].id;}
+    const cr=await gapi.client.drive.files.create({resource:{name,mimeType:'application/vnd.google-apps.folder',parents:[parentId]},fields:'id'});return cr.result.id;
+  }finally{resolveLock();delete folderCreatingLock[lockKey];}
 }
-driveFiles.sort((a,b)=>new Date(b.createdTime)-new Date(a.createdTime));
-}catch(e){console.error(e);}
-}
-function renderUpload(){
-let html=`<div class="card">
-<div class="flex-b" style="margin-bottom:10px">
-<span class="ct">ファイルをアップロード</span>
-<span style="font-size:10px;color:#2563eb">✨ AIが内容を自動解析してリネーム・振り分け</span>
-</div>
-<div class="upload-zone" id="dropZone">
-<input type="file" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
-<div style="font-size:28px;margin-bottom:10px">🗂</div>
-<div style="font-size:13px;font-weight:500;margin-bottom:4px">ファイルをドロップ、またはタップして選択</div>
-<div style="font-size:11px;color:#888;margin-bottom:8px">AIが日付・発行者・カテゴリを判定してリネームします</div>
-<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">${['PDF','Excel','CSV','Word','画像'].map(t=>`<span style="padding:2px 8px;border:0.5px solid #d0d0c8;border-radius:20px;font-size:11px;color:#888">${t}</span>`).join('')}</div>
-</div>
-<div id="procList"></div>
-</div>`;
-if(unclassifiedItems.length>0){
-html+=`<div class="card"><div class="ct" style="color:#b45309;margin-bottom:10px">未分類トレイ （${unclassifiedItems.length}件） </div>`;
-unclassifiedItems.forEach((item,idx)=>{
-const propOptions=properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
-const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===item.cat?'selected':''}>${s}</option>`).join('');
-html+=`<div class="unclassified-item">
-<div style="font-size:12px;font-weight:500;margin-bottom:4px">${item.name}</div>
-${item.result?.summary?`<div style="font-size:11px;color:#888;margin-bottom:6px">${item.result.summary}</div>`:''}
-<div class="uc-controls">
-<select id="ucProp${idx}" style="flex:1"><option value="">物件を選択</option>${propOptions}</select>
-<select id="ucCat${idx}">${catOptions}</select>
-<input type="date" id="ucDate${idx}" value="${item.date||today()}" style="width:130px">
-<button class="btn btn-b" onclick="classifyItem(${idx})">振り分け</button>
-</div>
-</div>`;
-});
-html+=`</div>`;
-}
-document.getElementById('pages').innerHTML=html;
-setTimeout(setupDragDrop,50);
-}
-function renderFiles(){
-const filtered=currentFileFilter==='all'?driveFiles:driveFiles.filter(f=>f.folderName===currentFileFilter);
-document.getElementById('pages').innerHTML=`<div class="flex-b" style="margin-bottom:10px"><div class="file-cat-tabs">${['all',...SUB_FOLDERS].map(c=>`<button class="fct ${currentFileFilter===c?'active':''}" onclick="filterFiles('${c}',this)">${c==='all'?'すべて':c}</button>`).join('')}</div></div>
-<div class="card" style="padding:0"><div style="overflow-x:auto"><table style="min-width:440px"><thead><tr><th>ファイル名</th><th>物件</th><th>カテゴリ</th><th>日付</th><th></th></tr></thead><tbody>
-${filtered.map(f=>`<tr><td><a href="${f.webViewLink}" target="_blank" style="color:#2563eb;text-decoration:none;font-size:12px">${f.name}</a></td><td style="font-size:11px;color:#888">${f.propName}</td><td style="font-size:11px;color:#888">${f.folderName}</td><td style="font-size:11px;color:#888">${f.createdTime?.slice(0,10)||''}</td><td><button class="btn-sm" onclick="showMoveDialog('${f.id}','${f.propId}','${f.folderName}')">移動</button></td></tr>`).join('')}
-</tbody></table></div></div>`;
-}
-function filterFiles(cat,el){currentFileFilter=cat;document.querySelectorAll('.fct').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderFiles();}
-async function showMoveDialog(fileId,propId,currentFolder){
-const propOptions=properties.map((p,i)=>`<option value="${p.id}" ${p.id===propId?'selected':''}>${p.name}</option>`).join('');
-const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===currentFolder?'selected':''}>${s}</option>`).join('');
-document.getElementById('classifyContent').innerHTML=`
-<div class="form-group"><label class="form-label">移動先物件</label><select id="mvProp" style="width:100%">${propOptions}</select></div>
-<div class="form-group"><label class="form-label">カテゴリ</label><select id="mvCat" style="width:100%">${catOptions}</select></div>`;
-pendingUpload={fileId,isMoveOnly:true};
-const modal=document.getElementById('classifyModal');
-modal.style.display='flex';
-modal.classList.add('open');
-}
-function renderSettings(){
-document.getElementById('pages').innerHTML=`
-<div class="card">
-<div class="ct" style="margin-bottom:12px">物件管理</div>
-<button class="btn btn-primary" onclick="document.getElementById('addPropModal').style.display='flex';document.getElementById('addPropModal').classList.add('open')" style="margin-bottom:12px">＋ 物件を追加</button>
-${properties.map((p,i)=>`
-<div style="border:0.5px solid #e0e0d8;border-radius:8px;padding:10px 12px;margin-bottom:8px">
-<div class="flex-b">
-<div>
-<div style="font-weight:500;font-size:13px">${p.name} <span class="badge bz">${p.type}</span></div>
-<div style="font-size:11px;color:#888;margin-top:2px">${p.addr||''} ${p.builtYear?p.builtYear+'年築':''} ${p.structure||''}</div>
-<div style="font-size:11px;color:#888">取得価格: ${fmt(p.price||0)}円 / 借入: ${fmt(p.loan||0)}円 / ${p.rooms?.length||0}室</div>
-${p.transactions?.length?`<div style="font-size:10px;color:#2563eb;margin-top:2px">取引記録: ${p.transactions.length}件</div>`:''}
-</div>
-<button class="btn-sm" style="color:#dc2626" onclick="deleteProp('${p.id}')">削除</button>
-</div>
-</div>`).join('')}
-</div>
-<div class="card">
-<div class="ct" style="margin-bottom:12px">決算期設定</div>
-<div class="form-group">
-<label class="form-label">決算月</label>
-<select onchange="fiscalMonth=parseInt(this.value);saveFiscal();renderCurrent()" style="width:100%">
-${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${m}" ${fiscalMonth===m?'selected':''}>${m}月</option>`).join('')}
-</select>
-</div>
-<div class="form-group">
-<label class="form-label">表示モード</label>
-<select onchange="yearMode=this.value;saveFiscal();renderCurrent()" style="width:100%">
-<option value="fiscal" ${yearMode==='fiscal'?'selected':''}>決算年度</option>
-<option value="calendar" ${yearMode==='calendar'?'selected':''}>暦年（1〜12月）</option>
-</select>
-</div>
-</div>`;
-}
-function setupDragDrop(){
-const zone=document.getElementById('dropZone');
-if(!zone)return;
-const newZone=zone.cloneNode(true);
-zone.parentNode.replaceChild(newZone,zone);
-newZone.addEventListener('dragover',e=>{e.preventDefault();newZone.style.borderColor='#2563eb';});
-newZone.addEventListener('dragleave',()=>{newZone.style.borderColor='';});
-newZone.addEventListener('drop',e=>{e.preventDefault();newZone.style.borderColor='';handleFiles(e.dataTransfer.files);});
-}
-async function handleFiles(files){
-if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}
-if(files.length===0)return;
-const file=files[0];
-await analyzeAndConfirm(file);
-}
-function updateProc(id,status,msg){
-const el=document.getElementById(id);if(!el)return;
-const p=el.querySelector('.proc-path');
-const b=el.querySelector('.pfill');
-const s=el.querySelector('.spinner');
-const badge=el.querySelector('.badge');
-if(p)p.textContent=msg;
-if(b){b.className='pfill '+status;}
-if(s)s.style.display=status==='done'||status==='error'?'none':'block';
-if(badge){
-badge.textContent=status==='done'?'完了':status==='error'?'エラー':'解析中';
-badge.className='badge '+(status==='done'?'bg':status==='error'?'br-b':'bz');
-}
-if(status==='done'){
-const openLink=el.querySelector('.open-link');
-if(!openLink){
-const span=document.createElement('a');
-span.className='btn-sm open-link';span.style.marginLeft='8px';span.textContent='開く';
-span.href='#';span.onclick=e=>{e.preventDefault();};
-el.querySelector('.proc-info').appendChild(span);
-}
-}
-}
-function extractDate(name,text){
-const s=name+' '+(text||'');
-const m=s.match(/(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})/);
-if(m)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
-const m2=s.match(/R(\d+)[年.](\d{1,2})[月.]/);
-if(m2)return`${2018+parseInt(m2[1])}-${m2[2].padStart(2,'0')}-01`;
-return null;
-}
-function detectCategory(name,text){
-const s=(name+' '+(text||'')).toLowerCase();
-if(s.includes('収入')||s.includes('家賃')||s.includes('入金'))return'02_収入';
-if(s.includes('請求')||s.includes('領収')||s.includes('支出')||s.includes('修繕')||s.includes('管理'))return'03_支出';
-if(s.includes('契約')||s.includes('重説'))return'01_契約書';
-if(s.includes('税')||s.includes('確定申告'))return'04_税金';
-return'05_その他';
-}
-function detectProperty(name,text){
-const s=name+' '+(text||'');
-return properties.find(p=>s.includes(p.name))||null;
-}
-async function extractTextFallback(file){
-if(file.type.includes('text')||file.name.endsWith('.csv')){
-return new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result.slice(0,2000));r.readAsText(file);});
-}
-return'';
-}
-async function analyzeAndConfirm(file){
-const id='f_'+Date.now()+Math.random().toString(36).slice(2,8);
-const list=document.getElementById('procList');
-if(list){
-const el=document.createElement('div');el.className='proc-item';el.id=id;
-el.innerHTML=`<div class="proc-info"><div class="proc-name">${file.name}</div><div class="proc-path" id="${id}_p">AIが解析中...</div><div class="pbar"><div class="pfill analyzing" id="${id}_b"></div></div></div><div class="spinner" id="${id}_s"></div><span class="badge bz" id="${id}_badge">解析中</span>`;
-list.prepend(el);
-}
-try{
-updateProc(id,'analyzing','AIが内容を解析中...');
-let result;
-try{
-result=await analyzeWithAI(file);
-}catch(aiErr){
-console.warn('AI解析失敗、ルールベースで処理:',aiErr.message);
-const text=await extractTextFallback(file);
-result={
-date:extractDate(file.name,text)||today(),
-propertyName:detectProperty(file.name,text)?.name||null,
-category:detectCategory(file.name,text),
-description:'',
-summary:'',
-amount:0,
-confidence:0
-};
-}
-console.log('AI解析結果受信',result);
-const propName=result.propertyName||result.property||'';
-const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propName&&p.name.includes(propName))):-1;
-pendingUpload={file,id,result,detectedPropIdx};
-console.log('showClassifyModal呼ばれた',result);
-showClassifyModal(file,result,detectedPropIdx);
-}catch(e){
-updateProc(id,'error','解析エラー: '+e.message);
-}
-}
-function buildRename(file,result){
-const ext=file.name.includes('.')?file.name.slice(file.name.lastIndexOf('.')):'';
-const base=file.name.replace(ext,'');
-const d=(result.date||'').replace(/-/g,'');
-return[d,base].filter(Boolean).join('_')+ext;
-}
-function showClassifyModal(file,result,detectedPropIdx){
-const propOptions=properties.map((p,i)=>`<option value="${i}" ${i===detectedPropIdx?'selected':''}>${p.name}</option>`).join('');
-const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s.includes(result.category||'')?'selected':''}>${s}</option>`).join('');
-document.getElementById('classifyContent').innerHTML=`
-<div style="margin-bottom:12px">
-<div style="font-size:11px;color:#888;margin-bottom:2px">元のファイル名</div>
-<div style="font-size:12px;font-weight:500">${file.name}</div>
-</div>
-${result.summary?`<div style="padding:8px 10px;background:#f0f9ff;border-radius:6px;font-size:11px;color:#0369a1;margin-bottom:12px">📄 ${result.summary}</div>`:''}
-<div class="form-group">
-<label class="form-label">リネーム後のファイル名 <span style="font-size:10px;color:#888">（変更可）</span></label>
-<input type="text" id="classifyRename" value="${buildRename(file,result)}" style="width:100%;font-size:11px">
-</div>
-<div class="grid2">
-<div class="form-group">
-<label class="form-label">物件</label>
-<select id="classifyProp" style="width:100%"><option value="">— 未分類 —</option>${propOptions}</select>
-</div>
-<div class="form-group">
-<label class="form-label">カテゴリ</label>
-<select id="classifyCat" style="width:100%">${catOptions}</select>
-</div>
-</div>
-<div class="form-group">
-<label class="form-label">日付</label>
-<input type="date" id="classifyDate" value="${result.date||today()}" style="width:100%">
-</div>
-<div style="font-size:10px;color:#2563eb;margin-top:4px">✨ AIが内容を解析して自動判定しました。内容を確認・修正してからアップロードしてください。</div>`;
-const modal=document.getElementById('classifyModal');
-modal.style.display='flex';
-modal.classList.add('open');
-}
-async function confirmUpload(){
-  const exp=parseInt(localStorage.getItem('re_gtoken_exp')||'0');
-if(exp<Date.now()){
-  showToast('セッションが切れました。再ログインしてください','error');
-  document.getElementById('authScreen').style.display='flex';
-  document.getElementById('appScreen').style.display='none';
-  pendingUpload=null;return;
-}
-closeModal('classifyModal');
-if(!pendingUpload)return;
-if(pendingUpload.isMoveOnly){
-const propId=document.getElementById('mvProp')?.value;
-const cat=document.getElementById('mvCat')?.value;
-if(!propId||!cat){showToast('物件とカテゴリを選択してください','error');return;}
-const prop=properties.find(p=>p.id===propId);
-if(!prop||!prop.subFolders?.[cat]){showToast('移動先フォルダが見つかりません','error');return;}
-try{
-await fetch(`https://www.googleapis.com/drive/v3/files/${pendingUpload.fileId}?addParents=${prop.subFolders[cat]}&removeParents=${Object.values(prop.subFolders||{}).join(',')}`,{
-method:'PATCH',headers:{Authorization:'Bearer '+accessToken}
-});
-showToast('移動しました','success');
-await loadDriveFiles();
-renderFiles();
-}catch(e){showToast('移動エラー: '+e.message,'error');}
-pendingUpload=null;return;
-}
-const{file,id}=pendingUpload;
-const propIdx=document.getElementById('classifyProp').value;
-const cat=document.getElementById('classifyCat').value;
-const date=document.getElementById('classifyDate').value;
-const rename=document.getElementById('classifyRename').value||file.name;
-if(propIdx===''){
-updateProc(id,'error','物件未選択 → 未分類トレイへ');
-unclassifiedItems.push({file,name:rename,cat,date,id,result:pendingUpload.result});
-showToast('未分類トレイに追加しました','info');
-pendingUpload=null;return;
-}
-const prop=properties[parseInt(propIdx)];
-updateProc(id,'uploading',`${prop.name} / ${cat} へアップロード中…`);
-try{
-const up=await ensurePropFolders(prop);
-const targetId=up.subFolders[cat]||up.subFolders['05_その他'];
-const driveResult=await uploadToDrive(file,targetId,rename);
-updateProc(id,'done',`✓ ${prop.name} / ${cat} → ${rename}`,driveResult.webViewLink);
-showToast(`${rename} を格納しました`,'success');
-applyFileDataToApp(parseInt(propIdx),cat,pendingUpload.result,date);
-await loadDriveFiles();
-}catch(e){
-updateProc(id,'error','エラー: '+e.message);
-showToast('アップロードに失敗しました','error');
-}
-pendingUpload=null;
-}
-function applyFileDataToApp(propIdx,cat,result,date){
-if(propIdx<0||propIdx>=properties.length)return;
-const p=properties[propIdx];
-if(!p.transactions)p.transactions=[];
-const ym=date?date.slice(0,7):'';
-if(!ym)return;
-const amount=result?.amount||0;
-if(amount<=0)return;
-const type=cat.includes('収入')?'income':'expense';
-const dup=p.transactions.find(t=>t.ym===ym&&t.amount===amount&&t.type===type&&t.desc===(result?.description||''));
-if(!dup){
-p.transactions.push({ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString()});
-saveProps();
-showToast(`収支記録：${ym} ${type==='income'?'収入':'支出'} ${amount.toLocaleString()}円`,'success');
-}
-}
-async function classifyItem(idx){
-const item=unclassifiedItems[idx];if(!item)return;
-const propIdx=document.getElementById(`ucProp${idx}`)?.value;
-const cat=document.getElementById(`ucCat${idx}`)?.value;
-const date=document.getElementById(`ucDate${idx}`)?.value||today();
-if(!propIdx){showToast('物件を選択してください','error');return;}
-const prop=properties[parseInt(propIdx)];
-try{
-const up=await ensurePropFolders(prop);
-const targetId=up.subFolders[cat]||up.subFolders['05_その他'];
-await uploadToDrive(item.file,targetId,item.name);
-applyFileDataToApp(parseInt(propIdx),cat,item.result,date);
-unclassifiedItems.splice(idx,1);
-showToast('振り分け完了','success');
-await loadDriveFiles();
-renderUpload();
-}catch(e){showToast('エラー: '+e.message,'error');}
-}
+
 async function ensurePropFolders(prop){
-if(prop.subFolders&&Object.keys(prop.subFolders).length>=SUB_FOLDERS.length)return prop;
-if(folderCreatingLock[prop.id])return prop;
-folderCreatingLock[prop.id]=true;
-try{
-if(!prop.folderId){
-const r=await createDriveFolder(prop.name,DRIVE_FOLDER_ID);
-prop.folderId=r.id;
+  if(prop._creating)return prop;prop._creating=true;
+  try{prop.folderId=await findOrCreateFolder(prop.name,DRIVE_FOLDER_ID);prop.subFolders={};
+    for(const sub of SUB_FOLDERS)prop.subFolders[sub]=await findOrCreateFolder(sub,prop.folderId);
+    saveProps();return prop;
+  }finally{prop._creating=false;}
 }
-if(!prop.subFolders)prop.subFolders={};
-for(const sf of SUB_FOLDERS){
-if(!prop.subFolders[sf]){
-const r=await createDriveFolder(sf,prop.folderId);
-prop.subFolders[sf]=r.id;
-}
-}
-saveProps();
-}finally{folderCreatingLock[prop.id]=false;}
-return prop;
-}
-async function createDriveFolder(name,parentId){
-const r=await fetch('https://www.googleapis.com/drive/v3/files',{
-method:'POST',
-headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
-body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[parentId]})
-});
-return r.json();
-}
+
+async function createFolders(propId){const prop=properties.find(p=>p.id===propId);if(!prop)return;showToast('フォルダを作成・確認中…','info');try{await ensurePropFolders(prop);showToast('フォルダ作成完了','success');renderAnalysis();}catch(e){showToast('エラー: '+e.message,'error');}}
+
 async function uploadToDrive(file,folderId,fileName){
-const form=new FormData();
-form.append('metadata',new Blob([JSON.stringify({name:fileName,parents:[folderId]})],{type:'application/json'}));
-form.append('file',file);
-const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',{
-method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
-});
-return r.json();
+  const form=new FormData();form.append('metadata',new Blob([JSON.stringify({name:fileName,parents:[folderId]})],{type:'application/json'}));form.append('file',file);
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});return await r.json();
 }
-async function addNewProperty(){
-const name=document.getElementById('newPropName').value.trim();
-const type=document.getElementById('newPropType').value;
-if(!name){showToast('物件名を入力してください','error');return;}
-const units=parseInt(document.getElementById('newPropUnits').value)||1;
-const price=parseInt(document.getElementById('newPropPrice').value)||0;
-const selfInput=parseInt(document.getElementById('newPropSelf').value)||0;
-const loan=parseInt(document.getElementById('newPropLoan').value)||0;
-const rooms=Array.from({length:units},(_,i)=>({no:type==='1棟'?String(101+i):'全室',layout:'',area:null,status:'occupied',since:today(),note:'',items:[{label:'家賃',amt:0}]}));
-const newProp={id:'p'+Date.now(),name,type,addr:document.getElementById('newPropAddr').value,builtYear:parseInt(document.getElementById('newPropBuilt').value)||null,structure:document.getElementById('newPropStruct').value,price,loan,reform:0,miscCost:0,rooms,transactions:[]};
-properties.push(newProp);saveProps();buildPropSelector();buildYearSel();closeModal('addPropModal');
-showToast(`${name} を追加しました。フォルダを作成中…`,'info');
-try{await ensurePropFolders(newProp);showToast(`${name} のフォルダをDriveに作成しました`,'success');}catch(e){showToast('フォルダ作成エラー: '+e.message,'error');}
-showIconPage('settings');
+
+async function moveFileToDrive(fileId,newFolderId){const r=await gapi.client.drive.files.get({fileId,fields:'parents'});await gapi.client.drive.files.update({fileId,addParents:newFolderId,removeParents:r.result.parents.join(','),fields:'id,parents'});}
+
+async function loadDriveFiles(){
+  if(!accessToken)return;
+  try{driveFiles=[];
+    for(const prop of properties){if(!prop.folderId)continue;
+      for(const[folderName,folderId]of Object.entries(prop.subFolders||{})){if(!folderId)continue;
+        const r=await gapi.client.drive.files.list({q:`'${folderId}' in parents and trashed=false`,fields:'files(id,name,createdTime,webViewLink,mimeType)',orderBy:'createdTime desc',pageSize:100});
+        for(const f of r.result.files)driveFiles.push({...f,propId:prop.id,propName:prop.name,folderName,folderId});}}
+    driveFiles.sort((a,b)=>new Date(b.createdTime)-new Date(a.createdTime));
+  }catch(e){console.error(e);}
 }
-function deleteProp(id){if(!confirm('この物件を削除しますか？\n (Driveのフォルダは削除されません)'))return;properties=properties.filter(p=>p.id!==id);saveProps();buildPropSelector();renderSettings();}
-function closeModal(id){const el=document.getElementById(id);el.classList.remove('open');el.style.display='';}
-function showToast(msg,type='info'){
-const icons={success:'✓',error:'✗',info:'ℹ'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
-document.getElementById('toastArea').appendChild(el);setTimeout(()=>el.remove(),4000);
+
+/* ── ファイル操作 ── */
+function setupDragDrop(){
+  const zone=document.getElementById('dropZone');
+  if(!zone)return;
+  const newZone=zone.cloneNode(true);
+  zone.parentNode.replaceChild(newZone,zone);
+  newZone.addEventListener('dragover',e=>{e.preventDefault();newZone.style.borderColor='#2563eb';});
+  newZone.addEventListener('dragleave',()=>{newZone.style.borderColor='';});
+  newZone.addEventListener('drop',e=>{e.preventDefault();newZone.style.borderColor='';handleFiles(e.dataTransfer.files);});
 }
-const WORKER_URL='https://realestate-ai.elle-71-boc.workers.dev';
-function fileToBase64(file){
-return new Promise((resolve,reject)=>{
-const reader=new FileReader();
-reader.onload=()=>resolve(reader.result.split(',')[1]);
-reader.onerror=reject;
-reader.readAsDataURL(file);
-});
+
+async function handleFiles(files){
+  if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}
+  if(files.length===0)return;
+  const file=files[0];
+  await analyzeAndConfirm(file);
 }
+
+// ── AI解析（Anthropic API経由） ──
 async function analyzeWithAI(file){
-const base64=await fileToBase64(file);
-const response=await fetch(WORKER_URL,{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({fileBase64:base64,mimeType:file.type,fileName:file.name,properties:properties})
-});
-if(!response.ok)throw new Error('Worker応答エラー');
-return response.json();
+  // ファイルをbase64に変換
+  const toBase64=f=>new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(f);
+  });
+
+  const propNames=properties.map(p=>p.name).join('、');
+  const isImage=file.type.startsWith('image/');
+  const isPDF=file.type==='application/pdf';
+  const isText=file.type.includes('text')||file.name.endsWith('.csv');
+
+  let content=[];
+
+  if(isImage||isPDF){
+    const b64=await toBase64(file);
+    const mediaType=isPDF?'application/pdf':file.type;
+    content=[
+      {type:isPDF?'document':'image',source:{type:'base64',media_type:mediaType,data:b64}},
+      {type:'text',text:`このファイルを解析してください。物件名リスト：${propNames}\n\n以下をJSON形式のみで返してください（説明不要）：\n{"date":"YYYY-MM-DD","issuer":"発行会社または個人名","category":"02_収入|03_支出|04_税金|01_契約書|05_その他","property":"物件名（リストにあれば）またはnull","summary":"内容の要約（50文字以内）","rename":"YYYYMMDD_発行者名_${file.name}"}`}
+    ];
+  } else {
+    // テキスト系：直接読み込み
+    const text=await new Promise(res=>{
+      const r=new FileReader();
+      r.onload=e=>res((e.target.result||'').slice(0,3000));
+      r.onerror=()=>res('');
+      isText?r.readAsText(file,'UTF-8'):r.readAsBinaryString(file);
+    });
+    content=[{type:'text',text:`以下のファイル内容を解析してください。\nファイル名：${file.name}\n物件名リスト：${propNames}\n\n内容：\n${text}\n\n以下をJSON形式のみで返してください（説明不要）：\n{"date":"YYYY-MM-DD","issuer":"発行会社または個人名","category":"02_収入|03_支出|04_税金|01_契約書|05_その他","property":"物件名（リストにあれば）またはnull","summary":"内容の要約（50文字以内）","rename":"YYYYMMDD_発行者名_${file.name}"}`}];
+  }
+
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content}]
+    })
+  });
+
+  if(!resp.ok) throw new Error('API error: '+resp.status);
+  const data=await resp.json();
+  const text2=data.content.map(b=>b.text||'').join('');
+  // JSONを抽出
+  const match=text2.match(/\{[\s\S]*\}/);
+  if(!match) throw new Error('JSON not found');
+  return JSON.parse(match[0]);
+}
+
+async function analyzeAndConfirm(file){
+  const id='f_'+Date.now()+Math.random().toString(36).slice(2);
+  const list=document.getElementById('procList');
+  if(list){
+    const el=document.createElement('div');el.className='proc-item';el.id=id;
+    el.innerHTML=`<div class="proc-info"><div class="proc-name">${file.name}</div><div class="proc-path" id="${id}_p">AIが解析中…</div><div class="pbar"><div class="pfill analyzing" id="${id}_b"></div></div></div><div class="spinner" id="${id}_s"></div><span class="badge bz" id="${id}_badge">解析中</span>`;
+    list.prepend(el);
+  }
+  try{
+    updateProc(id,'analyzing','AIが内容を解析中…');
+    let result;
+    try{
+      result=await analyzeWithAI(file);
+    }catch(aiErr){
+      // AI解析失敗時はルールベースにフォールバック
+      console.warn('AI解析失敗、ルールベースで処理:',aiErr.message);
+      const text=await extractTextFallback(file);
+      result={
+        date:extractDate(file.name,text)||today(),
+        issuer:'',
+        category:detectCategory(file.name,text),
+        property:detectProperty(file.name,text)?.name||null,
+        summary:'',
+        rename:`${(extractDate(file.name,text)||today()).replace(/-/g,'')}_${file.name}`
+      };
+    }
+    // 物件を名前で照合
+    console.log('AI解析結果受信', result);
+    const propName=result.propertyName||result.property||'';
+const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propName&&p.name.includes(propName))):-1;
+    pendingUpload={file,id,result,detectedPropIdx};
+    console.log('showClassifyModal呼ばれた', result);
+    showClassifyModal(file,result,detectedPropIdx);
+  }catch(e){
+    updateProc(id,'error','解析エラー: '+e.message);
+  }
+}
+
+  function buildRename(file,result){
+  const ext=file.name.includes('.')?file.name.slice(file.name.lastIndexOf('.')):'';
+  const base=file.name.replace(ext,'');
+  const d=(result.date||'').replace(/-/g,'');
+  return [d,base].filter(Boolean).join('_')+ext;
+}
+
+function showClassifyModal(file,result,detectedPropIdx){
+  const propOptions=properties.map((p,i)=>`<option value="${i}" ${i===detectedPropIdx?'selected':''}>${p.name}</option>`).join('');
+  const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s.includes(result.category||'')?'selected':''}>${s}</option>`).join('');
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:#888;margin-bottom:2px">元のファイル名</div>
+      <div style="font-size:12px;font-weight:500">${file.name}</div>
+    </div>
+    ${result.summary?`<div style="padding:8px 10px;background:#f0f9ff;border-radius:6px;font-size:11px;color:#0369a1;margin-bottom:12px">📄 ${result.summary}</div>`:''}
+    <div class="form-group">
+      <label class="form-label">リネーム後のファイル名 <span style="font-size:10px;color:#888">（変更可）</span></label>
+      <input type="text" id="classifyRename" value="${buildRename(file,result)}" style="width:100%;font-size:11px">
+      </div>
+    <div class="grid2">
+      <div class="form-group">
+        <label class="form-label">物件</label>
+        <select id="classifyProp" style="width:100%"><option value="">— 未分類 —</option>${propOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">カテゴリ</label>
+        <select id="classifyCat" style="width:100%">${catOptions}</select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">日付</label>
+      <input type="date" id="classifyDate" value="${result.date||today()}" style="width:100%">
+    </div>
+    <div style="font-size:10px;color:#2563eb;margin-top:4px">✨ AIが内容を解析して自動判定しました。内容を確認・修正してからアップロードしてください。</div>`;
+  const modal=document.getElementById('classifyModal');
+modal.style.display='flex';
+modal.classList.add('open');
+}
+
+async function confirmUpload(){
+  closeModal('classifyModal');
+  if(!pendingUpload)return;
+  const{file,id}=pendingUpload;
+  const propIdx=document.getElementById('classifyProp').value;
+  const cat=document.getElementById('classifyCat').value;
+  const date=document.getElementById('classifyDate').value;
+  const rename=document.getElementById('classifyRename').value||file.name;
+
+  if(propIdx===''){
+    updateProc(id,'error','物件未選択 → 未分類トレイへ');
+    unclassifiedItems.push({file,name:rename,cat,date,id,result:pendingUpload.result});
+    showToast('未分類トレイに追加しました','info');
+    pendingUpload=null;return;
+  }
+  const prop=properties[parseInt(propIdx)];
+  updateProc(id,'uploading',`${prop.name} / ${cat} へアップロード中…`);
+  try{
+    const up=await ensurePropFolders(prop);
+    const targetId=up.subFolders[cat]||up.subFolders['05_その他'];
+    // リネームして格納
+    const finalName=rename.startsWith(date.replace(/-/g,''))?rename:`${date.replace(/-/g,'')}_${rename}`;
+    const driveResult=await uploadToDrive(file,targetId,finalName);
+    updateProc(id,'done',`✓ ${prop.name} / ${cat} → ${finalName}`,driveResult.webViewLink);
+    showToast(`${finalName} を格納しました`,'success');
+
+    // ── アプリデータへの反映 ──
+    applyFileDataToApp(parseInt(propIdx),cat,pendingUpload.result,date);
+    await loadDriveFiles();
+  }catch(e){
+    updateProc(id,'error','エラー: '+e.message);
+    showToast('アップロードに失敗しました','error');
+  }
+  pendingUpload=null;
+}
+
+// ── ファイル内容をアプリデータに反映 ──
+function applyFileDataToApp(propIdx,cat,result,date){
+  if(propIdx<0||propIdx>=properties.length)return;
+  const p=properties[propIdx];
+  if(!p.transactions)p.transactions=[];
+  const ym=date?date.slice(0,7):'';
+  if(!ym)return;
+  const amount=result?.amount||0;
+  if(amount<=0)return;
+  const type=cat.includes('収入')?'income':'expense';
+  const dup=p.transactions.find(t=>t.ym===ym&&t.amount===amount&&t.type===type&&t.desc===(result?.description||''));
+  if(!dup){
+    p.transactions.push({ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString()});
+    saveProps();
+    showToast(`収支記録：${ym} ${type==='income'?'収入':'支出'} ${amount.toLocaleString()}円`,'success');
+  }
+}
+
+async function classifyItem(idx){
+  const item=unclassifiedItems[idx];if(!item)return;
+  const propIdx=document.getElementById(`ucProp${idx}`).value;
+  const cat=document.getElementById(`ucCat${idx}`).value;
+  const date=document.getElementById(`ucDate${idx}`).value;
+  if(propIdx===''){showToast('物件を選択してください','error');return;}
+  const prop=properties[parseInt(propIdx)];
+  try{
+    showToast('アップロード中…','info');
+    const up=await ensurePropFolders(prop);
+    const targetId=up.subFolders[cat]||up.subFolders['05_その他'];
+    const finalName=item.name;
+    await uploadToDrive(item.file,targetId,finalName);
+    applyFileDataToApp(parseInt(propIdx),cat,item.result,date);
+    unclassifiedItems.splice(idx,1);
+    showToast(`${finalName} を振り分けました`,'success');
+    await loadDriveFiles();renderUpload();
+  }catch(e){showToast('エラー: '+e.message,'error');}
+}
+
+function updateProc(id,status,path,link){
+  const labels={analyzing:'解析中',uploading:'転送中',done:'完了',error:'エラー'};
+  const colors={analyzing:'bz',uploading:'bb',done:'bg',error:'br-b'};
+  const p=document.getElementById(id+'_p');if(p)p.textContent=path||'';
+  const badge=document.getElementById(id+'_badge');if(badge){badge.className='badge '+colors[status];badge.textContent=labels[status]||status;}
+  const bar=document.getElementById(id+'_b');if(bar)bar.className='pfill '+status;
+  const spin=document.getElementById(id+'_s');if(spin)spin.style.display=(status==='done'||status==='error')?'none':'';
+  if(status==='done'&&link){const a=document.createElement('a');a.href=link;a.target='_blank';a.textContent='開く';a.style.cssText='font-size:11px;color:#2563eb;margin-left:8px';document.getElementById(id)?.appendChild(a);}
+}
+
+async function extractTextFallback(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.onload=e=>{try{resolve((e.target.result||'').replace(/[^\u3000-\u9FFF\uFF00-\uFFEF\u0020-\u007E]/g,' ').slice(0,2000));}catch{resolve('');}};
+    reader.onerror=()=>resolve('');
+    file.type.includes('text')||file.name.endsWith('.csv')?reader.readAsText(file,'UTF-8'):reader.readAsBinaryString(file);
+  });
+}
+
+function detectProperty(name,text){const combined=(name+' '+(text||'')).toLowerCase();return[...properties].sort((a,b)=>b.name.length-a.name.length).find(p=>[p.name,p.name.replace(/[　 ]/g,'')].some(v=>combined.includes(v.toLowerCase())))||null;}
+function detectCategory(name,text){const c=(name+' '+(text||'')).toLowerCase();if(/家賃|賃料|収入|rent|income|送金|振込|入金/.test(c))return'02_収入';if(/固定資産税|税金|tax/.test(c))return'04_税金';if(/契約|重要事項|lease|contract/.test(c))return'01_契約書';if(/修繕|管理費|支出|費|ローン|保険/.test(c))return'03_支出';return'05_その他';}
+function extractDate(name,text){const c=name+' '+(text||'');const pats=[/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/,/令和(\d+)年(\d{1,2})月(\d{1,2})日/,/(\d{4})(\d{2})(\d{2})/];for(const pat of pats){const m=c.match(pat);if(m){try{if(pat.source.includes('令和'))return`${2018+parseInt(m[1])}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;if(parseInt(m[1])>1900)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;}catch{}}}return null;}
+
+function renderUpload(){
+  let html=`<div class="card">
+    <div class="flex-b" style="margin-bottom:10px">
+      <span class="ct">ファイルをアップロード</span>
+      <span style="font-size:10px;color:#2563eb">✨ AIが内容を自動解析してリネーム・振り分け</span>
+    </div>
+    <div class="upload-zone" id="dropZone">
+      <input type="file" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
+      <div style="font-size:28px;margin-bottom:10px">📂</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:4px">ファイルをドロップ、またはタップして選択</div>
+      <div style="font-size:11px;color:#888;margin-bottom:8px">AIが日付・発行者・カテゴリを判定してリネームします</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">${['PDF','Excel','CSV','Word','画像'].map(t=>`<span style="padding:2px 8px;border:0.5px solid #d0d0c8;border-radius:20px;font-size:11px;color:#666">${t}</span>`).join('')}</div>
+    </div>
+    <div id="procList"></div>
+  </div>`;
+  if(unclassifiedItems.length>0){
+    html+=`<div class="card"><div class="ct" style="color:#b45309;margin-bottom:10px">未分類トレイ（${unclassifiedItems.length}件）</div>`;
+    unclassifiedItems.forEach((item,idx)=>{
+      const propOptions=properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+      const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===item.cat?'selected':''}>${s}</option>`).join('');
+      html+=`<div class="unclassified-item">
+        <div style="font-size:12px;font-weight:500;margin-bottom:4px">${item.name}</div>
+        ${item.result?.summary?`<div style="font-size:11px;color:#888;margin-bottom:6px">${item.result.summary}</div>`:''}
+        <div class="uc-controls">
+          <select id="ucProp${idx}" style="flex:1"><option value="">物件を選択</option>${propOptions}</select>
+          <select id="ucCat${idx}">${catOptions}</select>
+          <input type="date" id="ucDate${idx}" value="${item.date||today()}" style="width:130px">
+          <button class="btn btn-b" onclick="classifyItem(${idx})">振り分け</button>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  document.getElementById('pages').innerHTML=html;
+}
+
+
+function renderFiles(){
+  const filtered=currentFileFilter==='all'?driveFiles:driveFiles.filter(f=>f.folderName===currentFileFilter);
+  document.getElementById('pages').innerHTML=`<div class="flex-b" style="margin-bottom:10px"><div class="file-cat-tabs">${['all',...SUB_FOLDERS].map(c=>`<button class="fct ${currentFileFilter===c?'active':''}" onclick="filterFiles('${c}',this)">${c==='all'?'すべて':c}</button>`).join('')}</div><button class="btn" onclick="loadDriveFiles().then(renderFiles)">更新</button></div>
+  <div class="card" style="padding:0"><div style="overflow-x:auto"><table style="min-width:440px"><thead><tr><th>ファイル名</th><th>物件</th><th>カテゴリ</th><th>日付</th><th>操作</th></tr></thead><tbody>${filtered.length===0?'<tr><td colspan="5" style="text-align:center;padding:24px;color:#888">ファイルがありません</td></tr>':filtered.map(f=>{const date=f.createdTime?new Date(f.createdTime).toLocaleDateString('ja-JP'):'—';return`<tr><td><a href="${f.webViewLink}" target="_blank" style="color:#2563eb;text-decoration:none;font-size:12px">${f.name.slice(0,24)}</a></td><td style="font-size:11px;color:#888">${f.propName.slice(0,10)}</td><td><span class="badge bz">${f.folderName}</span></td><td style="font-size:11px;color:#888">${date}</td><td><button class="btn" style="font-size:10px;padding:3px 8px" onclick="showMoveDialog('${f.id}','${f.propId}','${f.folderName}')">変更</button></td></tr>`;}).join('')}</tbody></table></div></div>`;
+}
+
+function filterFiles(cat,el){currentFileFilter=cat;document.querySelectorAll('.fct').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderFiles();}
+
+async function showMoveDialog(fileId,propId,currentFolder){
+  const prop=properties.find(p=>p.id===propId);if(!prop)return;
+  const newFolder=prompt(`振り分け先を変更します。\n現在: ${currentFolder}\n\n選択肢:\n${SUB_FOLDERS.join('\n')}`);
+  if(!newFolder||!SUB_FOLDERS.includes(newFolder)||newFolder===currentFolder)return;
+  if(!prop.subFolders[newFolder]){showToast('先に「分析」→「フォルダを作成／確認」を実行してください','error');return;}
+  try{showToast('移動中…','info');await moveFileToDrive(fileId,prop.subFolders[newFolder]);showToast(`${newFolder} に移動しました`,'success');await loadDriveFiles();renderFiles();}
+  catch(e){showToast('移動エラー: '+e.message,'error');}
+}
+
+function renderSettings(){
+  const months=Array.from({length:12},(_,i)=>i+1);
+  document.getElementById('pages').innerHTML=`<div class="card"><div class="ct" style="margin-bottom:10px">全般設定</div>
+    <table><tbody>
+      <tr><td style="color:#888;width:160px">決算月</td><td><select id="stFiscalMonth" onchange="fiscalMonth=parseInt(this.value);saveFiscal();showToast('決算月を変更しました','success')">${months.map(m=>`<option value="${m}" ${m===fiscalMonth?'selected':''}>${m}月（${m===12?1:m+1}月〜${m}月）</option>`).join('')}</select></td></tr>
+      <tr><td style="color:#888">年間期間の計算</td><td><select id="stYearMode" onchange="yearMode=this.value;saveFiscal();showToast('年間期間を変更しました','success')"><option value="fiscal" ${yearMode==='fiscal'?'selected':''}>決算年度（決算月基準）</option><option value="calendar" ${yearMode==='calendar'?'selected':''}>暦年（1月〜12月）</option></select></td></tr>
+      <tr><td style="color:#888">Google Drive</td><td><span class="badge ${accessToken?'bg':'br-b'}">${accessToken?'接続済':'未接続'}</span></td></tr>
+    </tbody></table></div>
+  <div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct">物件一覧</span><button class="btn btn-b" onclick="document.getElementById('addPropModal').classList.add('open')">+ 物件追加</button></div>
+    <table><thead><tr><th>物件名</th><th>種別</th><th>部屋数</th><th>Drive</th><th></th></tr></thead><tbody>
+      ${properties.map(p=>`<tr><td>${p.name}</td><td><span class="badge bb">${p.type}</span></td><td>${p.rooms.length}室</td><td><span class="badge ${p.folderId?'bg':'br-b'}">${p.folderId?'作成済':'未作成'}</span></td><td><button class="btn" style="font-size:10px" onclick="deleteProp('${p.id}')">削除</button></td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+async function addNewProperty(){
+  const name=document.getElementById('newPropName').value.trim();const type=document.getElementById('newPropType').value;
+  if(!name){showToast('物件名を入力してください','error');return;}
+  const units=parseInt(document.getElementById('newPropUnits').value)||1;
+  const price=parseInt(document.getElementById('newPropPrice').value)||0;
+  const selfInput=parseInt(document.getElementById('newPropSelf').value)||0;
+  const loan=parseInt(document.getElementById('newPropLoan').value)||0;
+  const rooms=Array.from({length:units},(_,i)=>({no:units===1?'全室':String(101+i),layout:'',area:null,status:'occupied',since:today(),note:'',items:[{label:'家賃',amt:0}]}));
+  const newProp={id:'p'+Date.now(),name,type,addr:document.getElementById('newPropAddr').value,builtYear:parseInt(document.getElementById('newPropBuilt').value)||null,builtMonth:null,floors:null,structure:document.getElementById('newPropStruct').value,area:null,units,acquireDate:today(),price,reform:0,miscCost:0,loan,debt:loan,loanSegs:[{id:0,startYM:nowYM(),rate:1.5,years:35,loan}],folderId:null,subFolders:{},origRent:0,origNet:0,rooms};
+  properties.push(newProp);saveProps();buildPropSelector();buildYearSel();closeModal('addPropModal');
+  showToast(`${name} を追加しました。フォルダを作成中…`,'info');
+  try{await ensurePropFolders(newProp);showToast(`${name} のフォルダをDriveに作成しました`,'success');}catch(e){showToast('フォルダ作成エラー: '+e.message,'error');}
+  showIconPage('settings');
+}
+
+function deleteProp(id){if(!confirm('この物件を削除しますか？\n（Driveのフォルダは削除されません）'))return;properties=properties.filter(p=>p.id!==id);saveProps();buildPropSelector();renderSettings();}
+
+function closeModal(id){const el=document.getElementById(id);el.classList.remove('open');el.style.display='';}
+
+function showToast(msg,type='info'){
+  const icons={success:'✓',error:'✕',info:'ℹ'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;document.getElementById('toastArea').appendChild(el);setTimeout(()=>el.remove(),4000);
+}
+// ═══ AI解析（Cloudflare Worker経由）═══
+const WORKER_URL = 'https://realestate-ai.elle-71-boc.workers.dev';
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function analyzeWithAI(file) {
+  showToast('AIが解析中...', 'info');
+  const base64 = await fileToBase64(file);
+  const response = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileBase64: base64,
+      mimeType: file.type,
+      fileName: file.name,
+      properties: properties
+    })
+  });
+  if (!response.ok) throw new Error('Worker応答エラー');
+  const result = await response.json();
+  showToast(`解析完了: ${result.description || result.category}`, 'success');
+  return result;
 }
 </script>
 </body>
