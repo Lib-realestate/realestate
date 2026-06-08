@@ -1082,6 +1082,13 @@ modal.style.display='flex';
 modal.classList.add('open');
 }
 async function confirmUpload(){
+  const exp=parseInt(localStorage.getItem('re_gtoken_exp')||'0');
+if(exp<Date.now()){
+  showToast('セッションが切れました。再ログインしてください','error');
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('appScreen').style.display='none';
+  pendingUpload=null;return;
+}
 closeModal('classifyModal');
 if(!pendingUpload)return;
 if(pendingUpload.isMoveOnly){
