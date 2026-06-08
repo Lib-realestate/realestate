@@ -1654,6 +1654,8 @@ modal.classList.add('open');
 }
 
 async function confirmUpload(){
+  // 重複バナーが残っている（ユーザーが選択していない）場合は何もしない
+  if(document.getElementById('dupWarningBanner')) return;
   closeModal('classifyModal');
   if(!pendingUpload)return;
   const{file,id}=pendingUpload;
