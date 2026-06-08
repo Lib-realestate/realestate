@@ -1407,7 +1407,26 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
   <div style="margin-top:12px"><div class="ct" style="margin-bottom:8px">売却価格別 手取り試算</div><div style="position:relative;height:150px"><canvas id="exitChart"></canvas></div></div></div>`;
   calcExit();
 }
+function calcTotalLoan(pi){
+  const p=properties[pi];
+  if(!p||!p.loanSegs||!p.loanSegs.length) return p?.loan||0;
+  const base=p.loanSegs[0].loan||0;
+  const additional=p.loanSegs
+    .filter(s=>s.segType==='additional')
+    .reduce((sum,s)=>sum+(s.loan||0),0);
+  return base+additional;
+}
 
+function syncSegToLoan(pi){
+  const p=properties[pi];
+  if(!p) return;
+  const total=calcTotalLoan(pi);
+  p.loan=total;
+  saveProps();
+  const loanInput=document.querySelector(`#loanseg_${pi}_0`)?.closest('.sec-body')?.querySelector('.nbox.ai[onchange*="loan"]');
+  if(loanInput) loanInput.value=total.toLocaleString();
+  calcAnalysis(pi);
+}
 function calcExit(){
   const pi=parseInt(currentProp),p=properties[pi];if(!p)return;
   const price=parseInt(document.getElementById('exitPrice').value)||0;
