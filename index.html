@@ -541,7 +541,15 @@ function getAnnualE(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthE(i,pi
 
 /* ── ナビ ── */
 function switchProp(){currentProp=document.getElementById('propSel').value;iconPageActive=null;updateIconBtns();buildNav();showTab('cashflow');}
-function renderCurrent(){if(iconPageActive)showIconPage(iconPageActive);else showTab(currentTabId);}
+async function renderCurrent(){
+  if(iconPageActive){showIconPage(iconPageActive);return;}
+  // Drive から最新データを取得してから表示
+  if(accessToken){
+    const refreshed=await loadPropsFromD();
+    if(refreshed){buildPropSelector();buildYearSel();}
+  }
+  showTab(currentTabId);
+}
 
 function buildNav(){
   const isAll=currentProp==='all';
