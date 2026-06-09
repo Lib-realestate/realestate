@@ -1809,7 +1809,114 @@ async function analyzeWithAI(file){
   if(!match) throw new Error('JSON not found');
   return JSON.parse(match[0]);
 }
+let multiPendingUploads=[];
 
+async function analyzeMultipleFiles(files){
+  multiPendingUploads=[];
+  showToast(`${files.length}件のファイルを解析中…`,'info');
+
+  // 全ファイルを並列でAI解析
+  const results=await Promise.all(files.map(async(file)=>{
+    const id='f_'+Date.now()+Math.random().toString(36).slice(2);
+    const list=document.getElementById('procList');
+    if(list){
+      const el=document.createElement('div');el.className='proc-item';el.id=id;
+      el.innerHTML=`<div class="proc-info"><div class="proc-name">${file.name}</div><div class="proc-path" id="${id}_p">AIが解析中…</div><div class="pbar"><div class="pfill analyzing" id="${id}_b"></div></div></div><div class="spinner" id="${id}_s"></div><span class="badge bz" id="${id}_badge">解析中</span>`;
+      list.prepend(el);
+    }
+    try{
+      const result=await analyzeWithAI(file);
+      updateProc(id,'done','解析完了');
+      const propName=result.propertyName||result.property||'';
+      const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propName&&p.name.includes(propName))):-1;
+      return{file,id,result,detectedPropIdx,error:null};
+    }catch(e){
+      updateProc(id,'error','解析エラー: '+e.message);
+      return{file,id,result:null,detectedPropIdx:-1,error:e.message};
+    }
+  }));
+
+  // エラーなしのもののみ確認モーダルへ
+  multiPendingUploads=results.filter(r=>!r.error);
+  if(multiPendingUploads.length===0){showToast('解析できたファイルがありません','error');return;}
+  showMultiClassifyModal();
+}
+
+function showMultiClassifyModal(){
+  const propOptions=properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+  const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('');
+
+  const rows=multiPendingUploads.map((item,idx)=>{
+    const r=item.result;
+    const dupBadge=r?.duplicate?`<span class="badge" style="background:#fef9c3;color:#854d0e">⚠重複疑い</span>`:'';
+    const detectedProp=item.detectedPropIdx>=0?item.detectedPropIdx:'';
+    const detectedCat=SUB_FOLDERS.find(s=>s.includes(r?.category||''))||SUB_FOLDERS[4];
+    return`<tr style="border-bottom:0.5px solid #f0f0e8">
+      <td style="padding:6px 8px;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.file.name}${dupBadge}</td>
+      <td style="padding:6px 4px;font-size:11px;color:#888">${r?.summary||'—'}</td>
+      <td style="padding:6px 4px"><select id="mpProp_${idx}" style="font-size:11px;width:100%"><option value="">— 未分類 —</option>${propOptions.replace(`value="${detectedProp}"`,`value="${detectedProp}" selected`)}</select></td>
+      <td style="padding:6px 4px"><select id="mpCat_${idx}" style="font-size:11px;width:100%">${catOptions.replace(`value="${detectedCat}"`,`value="${detectedCat}" selected`)}</select></td>
+      <td style="padding:6px 4px"><input type="date" id="mpDate_${idx}" value="${r?.date||today()}" style="font-size:11px;width:110px"></td>
+      <td style="padding:6px 4px;font-size:11px;text-align:right;color:${r?.category==='収入'?'#16a34a':'#dc2626'}">${r?.amount?r.amount.toLocaleString():'—'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:12px;color:#888;margin-bottom:10px">${multiPendingUploads.length}件のファイルを確認してください。物件・カテゴリを修正してからアップロードしてください。</div>
+    <div style="overflow-x:auto;margin-bottom:10px">
+      <table style="border-collapse:collapse;width:100%;min-width:600px">
+        <thead style="background:#fafaf8">
+          <tr>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">ファイル名</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:120px">物件</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">カテゴリ</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">日付</th>
+            <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">金額</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+
+  const modal=document.getElementById('classifyModal');
+  modal.style.display='flex';
+  modal.classList.add('open');
+
+  // モーダルのボタンを一括アップロード用に差し替え
+  document.querySelector('#classifyModal .modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal');multiPendingUploads=[];">キャンセル</button>
+    <button class="btn btn-primary" onclick="confirmMultiUpload()">一括アップロード（${multiPendingUploads.length}件）</button>`;
+}
+
+async function confirmMultiUpload(){
+  closeModal('classifyModal');
+  let successCount=0,errorCount=0;
+  for(let idx=0;idx<multiPendingUploads.length;idx++){
+    const item=multiPendingUploads[idx];
+    const propIdx=document.getElementById(`mpProp_${idx}`)?.value;
+    const cat=document.getElementById(`mpCat_${idx}`)?.value;
+    const date=document.getElementById(`mpDate_${idx}`)?.value;
+    if(!propIdx){errorCount++;continue;}
+    const prop=properties[parseInt(propIdx)];
+    updateProc(item.id,'uploading',`${prop.name} / ${cat} へアップロード中…`);
+    try{
+      const up=await ensurePropFolders(prop);
+      const targetId=up.subFolders[cat]||up.subFolders['05_その他'];
+      const finalName=buildRename(item.file,item.result);
+      const driveResult=await uploadToDrive(item.file,targetId,finalName);
+      updateProc(item.id,'done',`✓ ${prop.name} / ${cat} → ${finalName}`,driveResult.webViewLink);
+      applyFileDataToApp(parseInt(propIdx),cat,item.result,date,driveResult);
+      successCount++;
+    }catch(e){
+      updateProc(item.id,'error','エラー: '+e.message);
+      errorCount++;
+    }
+  }
+  await loadDriveFiles();
+  showToast(`完了：${successCount}件成功${errorCount>0?' / '+errorCount+'件失敗':''}`,successCount>0?'success':'error');
+  multiPendingUploads=[];
+}
 async function analyzeAndConfirm(file){
   const id='f_'+Date.now()+Math.random().toString(36).slice(2);
   const list=document.getElementById('procList');
