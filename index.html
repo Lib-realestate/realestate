@@ -613,7 +613,7 @@ function changeMonth(dir){
 
 function buildNav(){
   const isAll=currentProp==='all';
-  const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','ledger:明細','occupancy:入居状況','analysis:分析','exit:出口戦略'];
+  const tabs=isAll?['cashflow:収支','ledger:明細','occupancy:入居状況']:['cashflow:収支','ledger:明細','occupancy:入居状況','analysis:分析','exit:出口戦略'];
   document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
   document.getElementById('mainNav').firstChild.classList.add('active');
 }
@@ -1506,7 +1506,7 @@ function syncSegToLoan(pi){
 
   /* ── 明細タブ ── */
 function renderLedger(){
-  if(currentProp==='all'){document.getElementById('pages').innerHTML='<div class="card" style="text-align:center;padding:32px;color:#888">個別物件を選択してください</div>';return;}
+  if(currentProp==='all'){renderLedgerAll();return;}
   const pi=parseInt(currentProp);
   const p=properties[pi];if(!p)return;
 
@@ -1623,7 +1623,96 @@ function renderLedger(){
     </div>
   </div>`;
 }
+function renderLedgerAll(){
+  const yr=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
+  const mo=parseInt(document.getElementById('monthSel').value);
+  const ym=`${yr}-${String(mo).padStart(2,'0')}`;
+  const moLabel=`${yr}年${mo}月`;
 
+  const txs=(commonTransactions||[]).filter(t=>t.ym===ym);
+  const totalExpense=txs.reduce((s,t)=>s+t.amount,0);
+
+  const emptyRow=`<tr><td colspan="5" style="padding:20px;text-align:center;color:#ccc;font-size:12px">データなし</td></tr>`;
+
+  const rows=txs.map((t,i)=>{
+    const linked=t.driveLink?{webViewLink:t.driveLink}:null;
+    return`<tr>
+      <td style="padding:7px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
+      <td style="padding:7px 8px;font-size:12px">${t.desc||'—'}</td>
+      <td style="padding:7px 8px;font-size:11px;color:#888">${t.cat||'—'}</td>
+      <td style="padding:7px 8px;text-align:right;font-weight:500;font-size:13px;color:#dc2626;font-variant-numeric:tabular-nums">▲${t.amount.toLocaleString()}</td>
+      <td style="padding:7px 8px;text-align:center">
+        ${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:'<span style="font-size:10px;color:#ccc">—</span>'}
+      </td>
+      <td style="padding:7px 8px;text-align:center">
+        <button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteCommonTx(${i})">削除</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // 全物件収支サマリー
+  const allI=properties.reduce((s,_,i)=>s+getAnnualI(i),0);
+  const allE=properties.reduce((s,_,i)=>s+getAnnualE(i),0);
+  const allCommonYr=(commonTransactions||[]).reduce((s,t)=>{
+    const ty=parseInt(t.ym.slice(0,4));
+    return ty===yr?s+t.amount:s;
+  },0);
+
+  document.getElementById('pages').innerHTML=`
+  <div class="summary-grid" style="margin-bottom:10px">
+    <div class="col single">
+      <div class="ct" style="margin-bottom:8px">共通経費合計 <span style="font-size:9px;color:#aaa">${moLabel}</span></div>
+      <div style="font-size:20px;font-weight:500;color:#dc2626">${totalExpense.toLocaleString()}</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">${txs.length}件</div>
+    </div>
+    <div class="col single">
+      <div class="ct" style="margin-bottom:8px">年間共通経費 <span style="font-size:9px;color:#aaa">${yr}年</span></div>
+      <div style="font-size:20px;font-weight:500;color:#dc2626">${allCommonYr.toLocaleString()}</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">年間累計</div>
+    </div>
+    <div class="col single">
+      <div class="ct" style="margin-bottom:8px">全物件純利益（共通経費後）<span style="font-size:9px;color:#aaa">${yr}年</span></div>
+      <div style="font-size:20px;font-weight:500" class="${allI-allE-allCommonYr>=0?'g':'r'}">${(allI-allE-allCommonYr).toLocaleString()}</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">収入${fmt(allI)} - 支出${fmt(allE)} - 共通${fmt(allCommonYr)}</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
+      <span class="ct" style="color:#dc2626">共通経費明細</span>
+      <span style="font-size:11px;font-weight:500;color:#dc2626">${totalExpense.toLocaleString()} 円</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="border-collapse:collapse;width:100%;min-width:500px">
+        <thead style="background:#fafaf8">
+          <tr>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">年月</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
+            <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">金額</th>
+            <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
+            <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:50px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${txs.length?rows:emptyRow}
+          ${txs.length?`<tr style="background:#fafaf8;font-weight:500">
+            <td colspan="3" style="padding:7px 8px;font-size:11px;color:#888">合計</td>
+            <td style="padding:7px 8px;text-align:right;font-size:13px;color:#dc2626;font-variant-numeric:tabular-nums">▲${totalExpense.toLocaleString()}</td>
+            <td colspan="2"></td>
+          </tr>`:''}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function deleteCommonTx(idx){
+  if(!confirm('この共通経費を削除しますか？'))return;
+  commonTransactions.splice(idx,1);
+  saveProps();
+  renderLedgerAll();
+}
 function deleteTx(pi,txIdx){
   if(!confirm('この明細を削除しますか？'))return;
   properties[pi].transactions.splice(txIdx,1);
