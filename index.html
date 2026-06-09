@@ -1448,9 +1448,9 @@ function renderLedger(){
 
   const txRow=(t,i)=>{
     // 関連ファイルをdescriptionやcatで照合
-    const linked=relatedFiles.find(f=>
-      (t.desc&&f.name.includes(t.desc))||
-      (t.cat&&f.folderName===t.cat)
+    const linked=t.driveLink?{webViewLink:t.driveLink,name:t.driveFileName}:relatedFiles.find(f=>
+      (t.driveFileId&&f.id===t.driveFileId)||
+      (t.desc&&f.name.includes(t.desc))
     );
     return`<tr>
       <td style="padding:7px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
@@ -1860,7 +1860,7 @@ async function confirmUpload(){
     showToast(`${finalName} を格納しました`,'success');
 
     // ── アプリデータへの反映 ──
-    applyFileDataToApp(parseInt(propIdx),cat,pendingUpload.result,date);
+    applyFileDataToApp(parseInt(propIdx),cat,pendingUpload.result,date,driveResult);
     await loadDriveFiles();
   }catch(e){
     updateProc(id,'error','エラー: '+e.message);
@@ -1870,7 +1870,7 @@ async function confirmUpload(){
 }
 
 // ── ファイル内容をアプリデータに反映 ──
-function applyFileDataToApp(propIdx,cat,result,date){
+function applyFileDataToApp(propIdx,cat,result,date,driveResult){
   if(propIdx<0||propIdx>=properties.length)return;
   const p=properties[propIdx];
   if(!p.transactions)p.transactions=[];
@@ -1881,7 +1881,7 @@ function applyFileDataToApp(propIdx,cat,result,date){
   const type=cat.includes('収入')?'income':'expense';
   const dup=p.transactions.find(t=>t.ym===ym&&t.amount===amount&&t.type===type&&t.desc===(result?.description||''));
   if(!dup){
-    p.transactions.push({ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString()});
+   p.transactions.push({ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null});
     saveProps();
     showToast(`収支記録：${ym} ${type==='income'?'収入':'支出'} ${amount.toLocaleString()}円`,'success');
   }
