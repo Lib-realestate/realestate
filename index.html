@@ -1735,22 +1735,21 @@ function confirmSecurity(){
     localStorage.setItem('securityAgreed','true');
   }
   closeModal('securityModal');
-  if(pendingUpload?.file){
-    const file=pendingUpload.file;
+  if(pendingUpload?.files){
+    const files=pendingUpload.files;
     pendingUpload=null;
-    analyzeAndConfirm(file);
+    analyzeMultipleFiles(files);
   }
 }
   
 async function handleFiles(files){
   if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}
   if(files.length===0)return;
-  const file=files[0];
-  // セキュリティ注意喚起
+  const fileArray=Array.from(files);
   if(localStorage.getItem('securityAgreed')==='true'){
-    await analyzeAndConfirm(file);
+    await analyzeMultipleFiles(fileArray);
   } else {
-    pendingUpload={file};
+    pendingUpload={files:fileArray};
     const modal=document.getElementById('securityModal');
     modal.classList.add('open');
     modal.style.display='flex';
@@ -2012,7 +2011,7 @@ function renderUpload(){
       <span style="font-size:10px;color:#2563eb">✨ AIが内容を自動解析してリネーム・振り分け</span>
     </div>
     <div class="upload-zone" id="dropZone">
-      <input type="file" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
+      <input type="file" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.jpg,.jpeg,.png" multiple onchange="handleFiles(this.files)">
       <div style="font-size:28px;margin-bottom:10px">📂</div>
       <div style="font-size:13px;font-weight:500;margin-bottom:4px">ファイルをドロップ、またはタップして選択</div>
       <div style="font-size:11px;color:#888;margin-bottom:8px">AIが日付・発行者・カテゴリを判定してリネームします</div>
