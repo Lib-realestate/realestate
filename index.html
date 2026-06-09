@@ -383,36 +383,17 @@ async function tryAutoLogin(){
       document.getElementById('driveStatus').textContent='Drive 接続済';
       document.getElementById('authScreen').style.display='none';
       document.getElementById('appScreen').style.display='block';
-      const loaded2=await loadPropsFromD();
-      // Driveが空でローカルにデータがある場合はローカルを優先
+      // ローカルを最優先で読み込む
 const localRaw=localStorage.getItem('re_props');
-const localProps=localRaw?JSON.parse(localRaw):[];
-if(!loaded2||properties.length===0){
-  if(localProps.length>0){
-    properties=localProps;
-    // ローカルデータをDriveに書き戻す
-    savePropsToD().catch(()=>{});
-  }
+if(localRaw){
+  try{
+    const localProps=JSON.parse(localRaw);
+    if(localProps&&localProps.length>0) properties=localProps;
+  }catch{}
 }
-      if(!loaded2){
-        // Driveから読めなかった場合はローカルストレージを優先
-        const local=localStorage.getItem('re_props');
-        if(local){
-          try{
-            const parsed=JSON.parse(local);
-            // ローカルにデータがある場合はそれを使い、Driveに保存し直す
-            if(parsed&&parsed.length>0){
-              properties=parsed;
-              savePropsToD().catch(()=>{});
-            }else{
-              // ローカルも空の場合のみデフォルト
-              loadDefaultProperties();
-            }
-          }catch{loadDefaultProperties();}
-        }
-        // ローカルもない場合は何もしない（空のまま）
-      }
-      buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
+// Driveからも読み込んでローカルより新しければ上書き
+const loaded2=await loadPropsFromD();
+buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
       // 起動時に必ずDriveから最新データを取得
       
       await loadDriveFiles();
@@ -534,11 +515,14 @@ async function loadPropsFromD(){
     });
     const json=await resp.json();
    if(json.properties&&Array.isArray(json.properties)&&json.properties.length>0){
-      // ローカルより新しい場合のみ上書き
+      // ローカルより件数が多い場合のみDriveで上書き
       const localRaw=localStorage.getItem('re_props');
-      const local=localRaw?JSON.parse(localRaw):[];
-      if(local.length>0&&json.properties.length===0) return false;
-      properties=json.properties;
+      const localProps=localRaw?JSON.parse(localRaw):[];
+      if(json.properties.length>=localProps.length){
+        properties=json.properties;
+      } else {
+        properties=localProps;
+      }
       if(json.commonTransactions&&Array.isArray(json.commonTransactions)){
         commonTransactions=json.commonTransactions;
         localStorage.setItem('re_common',JSON.stringify(commonTransactions));
