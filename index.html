@@ -777,8 +777,8 @@ function renderOccupancy(){
 }
 
 function renderOccAll(){
-  const totOcc=MONTHLY.map((_,i)=>properties.reduce((s,p)=>s+(p.rooms.filter(r=>r.status==='occupied').length),0));
-  const totAll=MONTHLY.map((_,i)=>properties.reduce((s,p)=>s+p.rooms.length,0));
+  const totOcc=MONTH_BASE.map((_,i)=>properties.reduce((s,p)=>s+(p.rooms.filter(r=>r.status==='occupied').length),0));
+  const totAll=MONTH_BASE.map((_,i)=>properties.reduce((s,p)=>s+p.rooms.length,0));
   const totRate=totOcc.map((o,i)=>pct(o,totAll[i]));
   const colors=['#2563eb','#16a34a','#f59e0b'];
   const pillCls=r=>r>=80?'pill-hi':r>=60?'pill-mid':'pill-lo';
@@ -794,7 +794,7 @@ function renderOccAll(){
   const indices=getFiscalIndices();
 
   let body=indices.map((idx,pos)=>{
-    const m=MONTHLY[idx].m;
+    const m=MONTH_BASE[idx];
     const to=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
     const ta=properties.reduce((s,p)=>s+p.rooms.length,0);
     const r=pct(to,ta);
