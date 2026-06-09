@@ -382,9 +382,22 @@ async function tryAutoLogin(){
       document.getElementById('appScreen').style.display='block';
       const loaded2=await loadPropsFromD();
       if(!loaded2){
+        // Driveから読めなかった場合はローカルストレージを優先
         const local=localStorage.getItem('re_props');
-        if(local)try{properties=JSON.parse(local);}catch{}
-        if(!properties.length)loadDefaultProperties();
+        if(local){
+          try{
+            const parsed=JSON.parse(local);
+            // ローカルにデータがある場合はそれを使い、Driveに保存し直す
+            if(parsed&&parsed.length>0){
+              properties=parsed;
+              savePropsToD().catch(()=>{});
+            }else{
+              // ローカルも空の場合のみデフォルト
+              loadDefaultProperties();
+            }
+          }catch{loadDefaultProperties();}
+        }
+        // ローカルもない場合は何もしない（空のまま）
       }
       buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
       await loadDriveFiles();
@@ -420,9 +433,10 @@ async function onSignIn(){
 
 /* ── デフォルト物件 ── */
 function loadDefaultProperties(){
-  // 初期状態は空（サンプルデータなし）
+  // 既にデータがある場合は何もしない
+  if(properties&&properties.length>0)return;
   properties=[];
-  saveProps();
+  // 空データをDriveに保存しない（savePropsを呼ばない）
 }
 function saveProps(){
   localStorage.setItem('re_props',JSON.stringify(properties));
