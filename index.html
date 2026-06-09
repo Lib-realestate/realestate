@@ -249,6 +249,37 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- セキュリティ注意喚起モーダル -->
+<div class="modal-overlay" id="securityModal">
+  <div class="modal">
+    <div class="modal-title">📋 アップロード前にご確認ください</div>
+    <div style="font-size:13px;line-height:1.8;color:#444;margin-bottom:16px">
+      アップロードされたファイルはAIが内容を解析します。<br>
+      解析のため<strong>外部AI（Anthropic社）のAPIに送信</strong>されます。
+    </div>
+    <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#78350f">
+      <div style="font-weight:700;margin-bottom:6px">⚠️ 格納前に以下をマスクしてください</div>
+      <ul style="padding-left:16px;line-height:2">
+        <li>個人名・署名</li>
+        <li>住所・電話番号</li>
+        <li>口座番号・カード番号</li>
+        <li>マイナンバー・印鑑</li>
+      </ul>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:16px">
+      ※ AnthropicのAPIポリシー上、送信データは学習に使用されません。ログは最大30日保持される場合があります。
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <input type="checkbox" id="securityDontShow" style="width:16px;height:16px;cursor:pointer">
+      <label for="securityDontShow" style="font-size:12px;color:#666;cursor:pointer">今後このメッセージを表示しない</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('securityModal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="confirmSecurity()">理解してアップロードを続ける</button>
+    </div>
+  </div>
+</div>
+  
 <!-- 振り分け確認モーダル -->
 <div class="modal-overlay" id="classifyModal">
   <div class="modal">
@@ -1497,11 +1528,31 @@ function setupDragDrop(){
   newZone.addEventListener('drop',e=>{e.preventDefault();newZone.style.borderColor='';handleFiles(e.dataTransfer.files);});
 }
 
+function confirmSecurity(){
+  if(document.getElementById('securityDontShow').checked){
+    localStorage.setItem('securityAgreed','true');
+  }
+  closeModal('securityModal');
+  if(pendingUpload?.file){
+    const file=pendingUpload.file;
+    pendingUpload=null;
+    analyzeAndConfirm(file);
+  }
+}
+  
 async function handleFiles(files){
   if(!accessToken){showToast('先にGoogle Driveにログインしてください','error');return;}
   if(files.length===0)return;
   const file=files[0];
-  await analyzeAndConfirm(file);
+  // セキュリティ注意喚起
+  if(localStorage.getItem('securityAgreed')==='true'){
+    await analyzeAndConfirm(file);
+  } else {
+    pendingUpload={file};
+    const modal=document.getElementById('securityModal');
+    modal.classList.add('open');
+    modal.style.display='flex';
+  }
 }
 
 // ── AI解析（Anthropic API経由） ──
