@@ -454,8 +454,13 @@ function loadDefaultProperties(){
   // 空データをDriveに保存しない（savePropsを呼ばない）
 }
 function saveProps(){
+  // 空データは保存しない
+  if(!properties||properties.length===0) return;
   localStorage.setItem('re_props',JSON.stringify(properties));
   localStorage.setItem('re_common',JSON.stringify(commonTransactions));
+  // バックアップとしてタイムスタンプ付きで保存
+  localStorage.setItem('re_props_backup',JSON.stringify(properties));
+  localStorage.setItem('re_props_backup_at',new Date().toISOString());
   savePropsToD().catch(()=>{});
 }
 
