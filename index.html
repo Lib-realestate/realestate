@@ -1980,7 +1980,7 @@ function showClassifyModal(file,result,detectedPropIdx){
         <button class="btn btn-primary" onclick="document.getElementById('dupWarningBanner').style.display='none'" style="font-size:11px">それでもアップロード</button>
       </div>
     </div>`:'';
-  const propOptions=properties.map((p,i)=>`<option value="${i}" ${i===detectedPropIdx?'selected':''}>${p.name}</option>`).join('');
+  const propOptions=`<option value="common">📋 全物件共通（共通経費）</option>`+properties.map((p,i)=>`<option value="${i}" ${i===detectedPropIdx?'selected':''}>${p.name}</option>`).join('');
   const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s.includes(result.category||'')?'selected':''}>${s}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
     ${result.duplicate?`<div id="dupWarningBanner" style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px">
@@ -2035,6 +2035,34 @@ async function confirmUpload(){
     updateProc(id,'error','物件未選択 → 未分類トレイへ');
     unclassifiedItems.push({file,name:rename,cat,date,id,result:pendingUpload.result});
     showToast('未分類トレイに追加しました','info');
+    pendingUpload=null;return;
+  }
+  // 全物件共通の場合
+  if(propIdx==='common'){
+    const amount=parseInt(document.getElementById('classifyRename')?.dataset?.amount||pendingUpload.result?.amount||0);
+    commonTransactions.push({
+      ym:date?date.slice(0,7):'',
+      type:'expense',
+      amount:pendingUpload.result?.amount||0,
+      desc:pendingUpload.result?.description||'',
+      cat,
+      driveFileId:null,driveFileName:null,driveLink:null,
+      createdAt:new Date().toISOString()
+    });
+    saveProps();
+    updateProc(id,'uploading','共通経費フォルダへアップロード中…');
+    try{
+      const form=new FormData();
+      form.append('metadata',new Blob([JSON.stringify({name:rename,parents:[getDriveFolderId()]})],{type:'application/json'}));
+      form.append('file',file);
+      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
+      const dr=await r.json();
+      commonTransactions[commonTransactions.length-1].driveFileId=dr.id;
+      commonTransactions[commonTransactions.length-1].driveLink=dr.webViewLink;
+      saveProps();
+      updateProc(id,'done','✓ 全物件共通経費として記録',dr.webViewLink);
+      showToast('共通経費として記録しました','success');
+    }catch(e){updateProc(id,'error','エラー: '+e.message);}
     pendingUpload=null;return;
   }
   const prop=properties[parseInt(propIdx)];
