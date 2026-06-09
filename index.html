@@ -404,8 +404,7 @@ async function tryAutoLogin(){
       }
       buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
       // 起動時に必ずDriveから最新データを取得
-      const latestFromDrive=await loadPropsFromD();
-      if(latestFromDrive){buildPropSelector();buildYearSel();showTab('cashflow');}
+      
       await loadDriveFiles();
       return;
     }catch(e){}
