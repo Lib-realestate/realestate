@@ -454,7 +454,9 @@ let _savePending=false;
 
 async function savePropsToD(){
   if(!accessToken)return;
-  if(_savePending)return; // 連続保存を防ぐ
+  if(_savePending)return;
+  // 空データをDriveに保存しない
+  if(!properties||properties.length===0)return;
   _savePending=true;
   try{
     const data=JSON.stringify({properties,commonTransactions,savedAt:new Date().toISOString()});
@@ -505,7 +507,7 @@ async function loadPropsFromD(){
       headers:{Authorization:'Bearer '+accessToken}
     });
     const json=await resp.json();
-    if(json.properties&&Array.isArray(json.properties)){
+   if(json.properties&&Array.isArray(json.properties)&&json.properties.length>0){
       properties=json.properties;
       if(json.commonTransactions&&Array.isArray(json.commonTransactions)){
         commonTransactions=json.commonTransactions;
