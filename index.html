@@ -297,9 +297,9 @@ tr:last-child td{border-bottom:none}
 <script>
 const CLIENT_ID='467615685674-njvnd3fgio14jcqb4qobbif4jtiabogb.apps.googleusercontent.com';
 const API_KEY='AIzaSyA0xQ__9nR829v-HDJeH0gd6fSsg_9DDHk';
-const DEFAULT_getDriveFolderId()='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
+const DEFAULT_DRIVE_FOLDER_ID='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
 function getDriveFolderId(){
-  return localStorage.getItem('driveFolderId')||DEFAULT_getDriveFolderId();
+  return localStorage.getItem('driveFolderId')||DEFAULT_DRIVE_FOLDER_ID;
 }
   function extractFolderIdFromUrl(url){
   if(!url)return null;
