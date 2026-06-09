@@ -539,7 +539,7 @@ function showTab(id,el){
   iconPageActive=null;updateIconBtns();
   currentTabId=id;
   if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
-  else{const L={cashflow:'収支',occupancy:'入居状況',analysis:'分析',exit:'出口戦略'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
+  else{const L={cashflow:'収支',occupancy:'入居状況',analysis:'分析',exit:'出口戦略',ledger:'明細'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
   da();
   ({cashflow:renderCashflow,occupancy:renderOccupancy,analysis:renderAnalysis,exit:renderExit,ledger:renderLedger}[id]||renderCashflow)();
 }
