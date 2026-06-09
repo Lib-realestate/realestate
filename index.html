@@ -297,9 +297,9 @@ tr:last-child td{border-bottom:none}
 <script>
 const CLIENT_ID='467615685674-njvnd3fgio14jcqb4qobbif4jtiabogb.apps.googleusercontent.com';
 const API_KEY='AIzaSyA0xQ__9nR829v-HDJeH0gd6fSsg_9DDHk';
-const DEFAULT_DRIVE_FOLDER_ID='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
+const DEFAULT_getDriveFolderId()='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
 function getDriveFolderId(){
-  return localStorage.getItem('driveFolderId')||DEFAULT_DRIVE_FOLDER_ID;
+  return localStorage.getItem('driveFolderId')||DEFAULT_getDriveFolderId();
 }
 const SCOPES='https://www.googleapis.com/auth/drive';
 const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_その他'];
@@ -430,7 +430,7 @@ async function savePropsToD(){
     } else {
       // 新規作成
       const form=new FormData();
-      form.append('metadata',new Blob([JSON.stringify({name:'appdata.json',parents:[DRIVE_FOLDER_ID]})],{type:'application/json'}));
+      form.append('metadata',new Blob([JSON.stringify({name:'appdata.json',parents:[getDriveFolderId()]})],{type:'application/json'}));
       form.append('file',blob);
       const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{
         method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
@@ -446,7 +446,7 @@ async function loadPropsFromD(){
   try{
     // appdata.json を全件検索
     const r=await gapi.client.drive.files.list({
-      q:`name='appdata.json' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
+      q:`name='appdata.json' and '${getDriveFolderId()}' in parents and trashed=false`,
       fields:'files(id,modifiedTime)',orderBy:'modifiedTime desc',pageSize:10
     });
     if(!r.result.files.length)return false;
@@ -1633,7 +1633,7 @@ async function findOrCreateFolder(name,parentId){
 
 async function ensurePropFolders(prop){
   if(prop._creating)return prop;prop._creating=true;
-  try{prop.folderId=await findOrCreateFolder(prop.name,DRIVE_FOLDER_ID);prop.subFolders={};
+  try{prop.folderId=await findOrCreateFolder(prop.name,getDriveFolderId());prop.subFolders={};
     for(const sub of SUB_FOLDERS)prop.subFolders[sub]=await findOrCreateFolder(sub,prop.folderId);
     saveProps();return prop;
   }finally{prop._creating=false;}
