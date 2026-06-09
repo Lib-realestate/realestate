@@ -441,14 +441,26 @@ async function savePropsToD(){
 async function loadPropsFromD(){
   if(!accessToken)return false;
   try{
-    // appdata.json を検索
+    // appdata.json を全件検索
     const r=await gapi.client.drive.files.list({
       q:`name='appdata.json' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
-      fields:'files(id,modifiedTime)',orderBy:'modifiedTime desc',pageSize:1
+      fields:'files(id,modifiedTime)',orderBy:'modifiedTime desc',pageSize:10
     });
     if(!r.result.files.length)return false;
+
+    // 最新を正とし、古いものを削除
     _appdataFileId=r.result.files[0].id;
-    // ファイルをダウンロード
+    if(r.result.files.length>1){
+      for(let i=1;i<r.result.files.length;i++){
+        try{
+          await gapi.client.drive.files.delete({fileId:r.result.files[i].id});
+          console.log('重複appdata.json削除:',r.result.files[i].id);
+        }catch(e){console.warn('削除失敗:',e);}
+      }
+      showToast('重複データファイルを整理しました','info');
+    }
+
+    // 最新ファイルをダウンロード
     const resp=await fetch(`https://www.googleapis.com/drive/v3/files/${_appdataFileId}?alt=media`,{
       headers:{Authorization:'Bearer '+accessToken}
     });
