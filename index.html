@@ -384,6 +384,16 @@ async function tryAutoLogin(){
       document.getElementById('authScreen').style.display='none';
       document.getElementById('appScreen').style.display='block';
       const loaded2=await loadPropsFromD();
+      // Driveが空でローカルにデータがある場合はローカルを優先
+const localRaw=localStorage.getItem('re_props');
+const localProps=localRaw?JSON.parse(localRaw):[];
+if(!loaded2||properties.length===0){
+  if(localProps.length>0){
+    properties=localProps;
+    // ローカルデータをDriveに書き戻す
+    savePropsToD().catch(()=>{});
+  }
+}
       if(!loaded2){
         // Driveから読めなかった場合はローカルストレージを優先
         const local=localStorage.getItem('re_props');
@@ -519,6 +529,10 @@ async function loadPropsFromD(){
     });
     const json=await resp.json();
    if(json.properties&&Array.isArray(json.properties)&&json.properties.length>0){
+      // ローカルより新しい場合のみ上書き
+      const localRaw=localStorage.getItem('re_props');
+      const local=localRaw?JSON.parse(localRaw):[];
+      if(local.length>0&&json.properties.length===0) return false;
       properties=json.properties;
       if(json.commonTransactions&&Array.isArray(json.commonTransactions)){
         commonTransactions=json.commonTransactions;
