@@ -327,6 +327,7 @@ const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
 
 let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
 let properties=[];
+let commonTransactions=[];
 let driveFiles=[],unclassifiedItems=[];
 let currentProp='all',charts={},currentTabId='cashflow',currentFileFilter='all';
 let pendingUpload=null,folderCreatingLock={};
@@ -445,7 +446,7 @@ function loadDefaultProperties(){
 }
 function saveProps(){
   localStorage.setItem('re_props',JSON.stringify(properties));
-  // Drive にも非同期保存（エラーは無視）
+  localStorage.setItem('re_common',JSON.stringify(commonTransactions));
   savePropsToD().catch(()=>{});
 }
 
