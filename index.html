@@ -297,7 +297,10 @@ tr:last-child td{border-bottom:none}
 <script>
 const CLIENT_ID='467615685674-njvnd3fgio14jcqb4qobbif4jtiabogb.apps.googleusercontent.com';
 const API_KEY='AIzaSyA0xQ__9nR829v-HDJeH0gd6fSsg_9DDHk';
-const DRIVE_FOLDER_ID='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
+const DEFAULT_DRIVE_FOLDER_ID='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
+function getDriveFolderId(){
+  return localStorage.getItem('driveFolderId')||DEFAULT_DRIVE_FOLDER_ID;
+}
 const SCOPES='https://www.googleapis.com/auth/drive';
 const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_その他'];
 const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
