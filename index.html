@@ -1864,6 +1864,7 @@ function renderSettings(){
       <tr><td style="color:#888;width:160px">決算月</td><td><select id="stFiscalMonth" onchange="fiscalMonth=parseInt(this.value);saveFiscal();showToast('決算月を変更しました','success')">${months.map(m=>`<option value="${m}" ${m===fiscalMonth?'selected':''}>${m}月（${m===12?1:m+1}月〜${m}月）</option>`).join('')}</select></td></tr>
       <tr><td style="color:#888">年間期間の計算</td><td><select id="stYearMode" onchange="yearMode=this.value;saveFiscal();showToast('年間期間を変更しました','success')"><option value="fiscal" ${yearMode==='fiscal'?'selected':''}>決算年度（決算月基準）</option><option value="calendar" ${yearMode==='calendar'?'selected':''}>暦年（1月〜12月）</option></select></td></tr>
       <tr><td style="color:#888">Google Drive</td><td><span class="badge ${accessToken?'bg':'br-b'}">${accessToken?'接続済':'未接続'}</span></td></tr>
+  <tr><td style="color:#888">セキュリティ注意喚起</td><td><button class="btn" onclick="localStorage.removeItem('securityAgreed');showToast('次回アップロード時に再表示します','success')">再表示する</button></td></tr>
     </tbody></table></div>
   <div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct">物件一覧</span><button class="btn btn-b" onclick="document.getElementById('addPropModal').classList.add('open')">+ 物件追加</button></div>
     <table><thead><tr><th>物件名</th><th>種別</th><th>部屋数</th><th>Drive</th><th></th></tr></thead><tbody>
