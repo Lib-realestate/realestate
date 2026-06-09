@@ -2434,7 +2434,10 @@ async function analyzeWithAI(file) {
       existingFiles: driveFiles.slice(0,50).map(f=>({name:f.name,propName:f.propName,folderName:f.folderName}))
     })
   });
-  if (!response.ok) throw new Error('Worker応答エラー');
+  if (!response.ok){
+  const errText=await response.text();
+  throw new Error('Worker応答エラー: '+response.status+' '+errText);
+}
   const result = await response.json();
   showToast(`解析完了: ${result.description || result.category}`, 'success');
   return result;
