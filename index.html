@@ -458,7 +458,7 @@ async function savePropsToD(){
   if(_savePending)return; // 連続保存を防ぐ
   _savePending=true;
   try{
-    const data=JSON.stringify({properties,savedAt:new Date().toISOString()});
+    const data=JSON.stringify({properties,commonTransactions,savedAt:new Date().toISOString()});
     const blob=new Blob([data],{type:'application/json'});
     if(_appdataFileId){
       // 既存ファイルを上書き
@@ -508,6 +508,10 @@ async function loadPropsFromD(){
     const json=await resp.json();
     if(json.properties&&Array.isArray(json.properties)){
       properties=json.properties;
+      if(json.commonTransactions&&Array.isArray(json.commonTransactions)){
+        commonTransactions=json.commonTransactions;
+        localStorage.setItem('re_common',JSON.stringify(commonTransactions));
+      }
       localStorage.setItem('re_props',JSON.stringify(properties));
       return true;
     }
