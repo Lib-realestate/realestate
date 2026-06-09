@@ -530,7 +530,7 @@ function renderCurrent(){if(iconPageActive)showIconPage(iconPageActive);else sho
 
 function buildNav(){
   const isAll=currentProp==='all';
-  const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略'];
+  const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','ledger:明細','occupancy:入居状況','analysis:分析','exit:出口戦略'];
   document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
   document.getElementById('mainNav').firstChild.classList.add('active');
 }
@@ -541,7 +541,7 @@ function showTab(id,el){
   if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
   else{const L={cashflow:'収支',occupancy:'入居状況',analysis:'分析',exit:'出口戦略'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
   da();
-  ({cashflow:renderCashflow,occupancy:renderOccupancy,analysis:renderAnalysis,exit:renderExit}[id]||renderCashflow)();
+  ({cashflow:renderCashflow,occupancy:renderOccupancy,analysis:renderAnalysis,exit:renderExit,ledger:renderLedger}[id]||renderCashflow)();
 }
 
 function showIconPage(id){
