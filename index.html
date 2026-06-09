@@ -301,6 +301,24 @@ const DEFAULT_getDriveFolderId()='1_fLp-qGtguBbc35einkl4nLz_R-BG7dj';
 function getDriveFolderId(){
   return localStorage.getItem('driveFolderId')||DEFAULT_getDriveFolderId();
 }
+  function extractFolderIdFromUrl(url){
+  if(!url)return null;
+  // https://drive.google.com/drive/folders/FOLDER_ID 形式
+  const m=url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  if(m)return m[1];
+  // IDのみの場合はそのまま返す
+  if(/^[a-zA-Z0-9_-]{20,}$/.test(url.trim()))return url.trim();
+  return null;
+}
+
+function saveDriveFolderUrl(url){
+  const id=extractFolderIdFromUrl(url);
+  if(!id){showToast('有効なGoogle DriveフォルダURLを入力してください','error');return;}
+  localStorage.setItem('driveFolderId',id);
+  localStorage.setItem('driveFolderUrl',url);
+  showToast('保存先フォルダを更新しました','success');
+  renderSettings();
+}
 const SCOPES='https://www.googleapis.com/auth/drive';
 const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_その他'];
 const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
