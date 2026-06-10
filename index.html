@@ -417,6 +417,9 @@ if(localRaw){
 }
 // Driveからも読み込んでローカルより新しければ上書き
 const loaded2=await loadPropsFromD();
+      if(json?.savedAt) _driveSavedAt=new Date(json.savedAt);
+_localSavedAt=new Date();
+updateSyncTime();
 buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
       // 起動時に必ずDriveから最新データを取得
       
