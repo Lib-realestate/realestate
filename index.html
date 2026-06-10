@@ -671,7 +671,7 @@ function buildYearSel(){
     sel.appendChild(opt);
   }
   // 現在の選択値が範囲外なら今年を選択
-  if(!sel.value) sel.value=thisYear;
+  if(!sel.value||sel.value==='undefined') sel.value=thisYear;
 }
 function buildPropSelector(){
   const sel=document.getElementById('propSel');
