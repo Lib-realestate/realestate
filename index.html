@@ -812,7 +812,9 @@ function renderCashflow(){
     summaryHTML=`<div class="summary-grid"><div class="col">${colAnn}</div><div class="col">${colMon}</div><div class="col">${colOcc}</div></div>`;
   } else {
     const p=properties[pi];
-    const occR=pct(p.rooms.filter(r=>r.status==='occupied').length,p.rooms.length);
+    const _today=new Date().toISOString().slice(0,10);
+const _getStatus=r=>{if(!r.since)return'vacant';if(r.moveOutDate){if(r.since<=_today&&r.moveOutDate>=_today)return'occupied';if(r.moveOutDate<_today)return'vacant';}return r.status||'occupied';};
+const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.length);
     summaryHTML=`<div class="summary-grid">
       <div class="col single"><div class="ct" style="margin-bottom:8px">年間収支 <span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
         <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="g">${fmt(annNet)}</span></div>
