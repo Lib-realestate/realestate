@@ -2372,25 +2372,36 @@ async function confirmUpload(){
   }
   pendingUpload=null;
 }
-function applyRoomsToProperty(propIdx, rooms){
+function applyRoomsToProperty(propIdx, rooms, ym){
   if(!rooms||!rooms.length)return false;
   const p=properties[propIdx];
   if(!p)return false;
 
+  if(!p.monthlySnapshots) p.monthlySnapshots={};
+
   let updatedCount=0;
   const skipped=[];
 
-  console.log('applyRooms呼ばれた rooms数:', rooms.length, '既存部屋数:', p.rooms.length);
-  
+  // スナップショットとして保存
+  const snapshot={};
   rooms.forEach(roomData=>{
-    // 既存の部屋のみ更新（新規追加しない）
     const existing=p.rooms.find(r=>r.no===String(roomData.no));
     if(!existing){
       skipped.push(roomData.no);
       return;
     }
-
-    // 家賃・管理費・駐車場・その他のみ更新
+    // スナップショットに保存
+    snapshot[roomData.no]={
+      status:roomData.status||'occupied',
+      since:roomData.since||existing.since||'',
+      items:[
+        {label:'家賃',amt:roomData.items?.find(x=>x.label==='家賃')?.amount||0},
+        {label:'管理費',amt:roomData.items?.find(x=>x.label==='管理費')?.amount||0},
+        {label:'駐車場',amt:roomData.items?.find(x=>x.label==='駐車場')?.amount||0},
+        {label:'その他',amt:roomData.items?.find(x=>x.label==='その他')?.amount||0},
+      ]
+    };
+    // 現在の部屋データも更新
     if(roomData.items&&roomData.items.length){
       const labels=['家賃','管理費','駐車場','その他'];
       labels.forEach(lbl=>{
@@ -2398,30 +2409,27 @@ function applyRoomsToProperty(propIdx, rooms){
         if(src&&src.amount>0){
           const dst=existing.items.find(x=>x.label===lbl);
           if(dst){dst.amt=src.amount;dst.amount=src.amount;}
-            else existing.items.push({label:lbl,amt:src.amount,amount:src.amount});
+          else existing.items.push({label:lbl,amt:src.amount,amount:src.amount});
         }
       });
     }
-    // 間取り・面積は値がある場合のみ更新
     if(roomData.layout) existing.layout=roomData.layout;
     if(roomData.area) existing.area=roomData.area;
-    // 入居日は未設定の場合のみ更新
-    if(roomData.since&&!existing.since) existing.since=roomData.since;
-    // 入居状況を反映（空室への変更も含む）
     existing.status=roomData.status||existing.status;
-    // 入居中で入居日がない場合は今日の日付を設定
     if(roomData.status==='occupied'&&!existing.since){
       existing.since=new Date().toISOString().slice(0,10);
     }
-
     updatedCount++;
   });
 
-  // スキップした部屋を通知
+  // スナップショットを保存
+  if(ym&&Object.keys(snapshot).length>0){
+    p.monthlySnapshots[ym]=snapshot;
+  }
+
   if(skipped.length>0){
     showToast(`未登録の部屋をスキップ: ${skipped.join('、')}号室`,'error');
   }
-
   if(updatedCount>0){
     saveProps();
     showToast(`${updatedCount}室の情報を更新しました`,'success');
