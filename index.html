@@ -459,9 +459,10 @@ function loadDefaultProperties(){
   // 空データをDriveに保存しない（savePropsを呼ばない）
 }
 
-  let _localSavedAt=null;
+let _localSavedAt=null;
 let _driveSavedAt=null;
 let _conflictDriveData=null;
+let _lastTabSyncTime=0;
 
 function updateSyncTime(){
   const el=document.getElementById('lastSyncTime');
