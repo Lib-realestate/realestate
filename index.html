@@ -2070,6 +2070,7 @@ async function analyzeMultipleFiles(files){
       console.log('AI解析結果rooms:', JSON.stringify(result.rooms));
       const propName=result.propertyName||result.property||'';
       const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propName&&p.name.includes(propName))):-1;
+      console.log('multiResult rooms:', result?.rooms?.length);
       return{file,id,result,detectedPropIdx,error:null};
     }catch(e){
       updateProc(id,'error','解析エラー: '+e.message);
