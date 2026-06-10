@@ -660,7 +660,7 @@ function buildYearSel(){
       if(y>2000&&y<minYear) minYear=y;
     }
   });
-  const current=sel.value?parseInt(sel.value):thisYear;
+  const current=sel.value&&sel.value!=='undefined'?parseInt(sel.value):thisYear;
   sel.innerHTML='';
   for(let y=thisYear;y>=minYear;y--){
     const opt=document.createElement('option');
