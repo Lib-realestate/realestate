@@ -1115,15 +1115,14 @@ function renderOccProp(){
         }
         const total=snap.items.reduce((s,it)=>s+(it.amt||0),0);
         const isVacant=snap.status==='vacant';
-        const isNewEntry=snap.status==='new'||(snap.status==='occupied'&&total===0&&snap.since&&snap.since!=='2026-06-09');
-        const isLate=snap.status==='late'||(snap.status==='occupied'&&total===0&&!snap.since);
+        const isNewEntry=snap.status==='new';
+        const isLate=snap.status==='late';
         const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分</div>`:'';
 
         let bg,color,label;
         if(isVacant){bg='#F7C1C1';color='#501313';label='空室';}
         else if(isNewEntry){
-          const d=snap.since&&snap.since!=='2026-06-09'?snap.since.slice(5).replace('-','/'):'';
-          bg='#E1F5EE';color='#0F6E56';label=d?`${d}入居`:'新規入居';
+          bg='#E1F5EE';color='#0F6E56';label='新規入居';
         }
         else if(isLate){bg='#FAC775';color='#412402';label='滞納';}
         else{bg='#9FE1CB';color='#085041';label=total>0?total.toLocaleString():'入居';}
@@ -2465,7 +2464,7 @@ function applyRoomsToProperty(propIdx, rooms, ym){
     const prevSnap=p.monthlySnapshots?.[ym]?.[roomData.no];
     snapshot[roomData.no]={
       status:prevSnap?.status||'occupied',
-      since:roomData.since||existingSnap?.since||'',
+      since:'',
       items:labels.map(lbl=>{
         const newAmt=roomData.items?.find(x=>x.label===lbl)?.amount||0;
         const oldAmt=existingSnap?.items?.find(x=>x.label===lbl)?.amt||0;
