@@ -2364,8 +2364,12 @@ function applyRoomsToProperty(propIdx, rooms){
     if(roomData.area) existing.area=roomData.area;
     // 入居日は未設定の場合のみ更新
     if(roomData.since&&!existing.since) existing.since=roomData.since;
-    // 入居状況は入居中の場合のみ更新（空室への変更は手動）
-    if(roomData.status==='occupied') existing.status='occupied';
+    // 入居状況を反映（空室への変更も含む）
+    existing.status=roomData.status||existing.status;
+    // 入居中で入居日がない場合は今日の日付を設定
+    if(roomData.status==='occupied'&&!existing.since){
+      existing.since=new Date().toISOString().slice(0,10);
+    }
 
     updatedCount++;
   });
