@@ -2329,46 +2329,51 @@ function applyRoomsToProperty(propIdx, rooms){
   const p=properties[propIdx];
   if(!p)return false;
 
-  // 既存の部屋と照合・更新
+  let updatedCount=0;
+  const skipped=[];
+
   rooms.forEach(roomData=>{
-    const existing=p.rooms.find(r=>r.no===roomData.no);
-    if(existing){
-      // 既存部屋を更新
-      if(roomData.layout) existing.layout=roomData.layout;
-      if(roomData.area) existing.area=roomData.area;
-      if(roomData.status) existing.status=roomData.status;
-      if(roomData.since) existing.since=roomData.since;
-      if(roomData.items&&roomData.items.length){
-        const labels=['家賃','管理費','駐車場','その他'];
-        labels.forEach(lbl=>{
-          const src=roomData.items.find(x=>x.label===lbl);
-          if(src){
-            const dst=existing.items.find(x=>x.label===lbl);
-            if(dst) dst.amount=src.amount;
-            else existing.items.push({label:lbl,amount:src.amount});
-          }
-        });
-      }
-    } else {
-      // 新規部屋を追加
-      p.rooms.push({
-        no:roomData.no||'—',
-        layout:roomData.layout||'',
-        area:roomData.area||null,
-        status:roomData.status||'occupied',
-        since:roomData.since||'',
-        note:'',
-        items:[
-          {label:'家賃',amount:roomData.items?.find(x=>x.label==='家賃')?.amount||0},
-          {label:'管理費',amount:roomData.items?.find(x=>x.label==='管理費')?.amount||0},
-          {label:'駐車場',amount:roomData.items?.find(x=>x.label==='駐車場')?.amount||0},
-          {label:'その他',amount:roomData.items?.find(x=>x.label==='その他')?.amount||0},
-        ]
+    // 既存の部屋のみ更新（新規追加しない）
+    const existing=p.rooms.find(r=>r.no===String(roomData.no));
+    if(!existing){
+      skipped.push(roomData.no);
+      return;
+    }
+
+    // 家賃・管理費・駐車場・その他のみ更新
+    if(roomData.items&&roomData.items.length){
+      const labels=['家賃','管理費','駐車場','その他'];
+      labels.forEach(lbl=>{
+        const src=roomData.items.find(x=>x.label===lbl);
+        if(src&&src.amount>0){
+          const dst=existing.items.find(x=>x.label===lbl);
+          if(dst) dst.amt=src.amount;
+          else existing.items.push({label:lbl,amt:src.amount});
+        }
       });
     }
+    // 間取り・面積は値がある場合のみ更新
+    if(roomData.layout) existing.layout=roomData.layout;
+    if(roomData.area) existing.area=roomData.area;
+    // 入居日は未設定の場合のみ更新
+    if(roomData.since&&!existing.since) existing.since=roomData.since;
+    // 入居状況は入居中の場合のみ更新（空室への変更は手動）
+    if(roomData.status==='occupied') existing.status='occupied';
+
+    updatedCount++;
   });
-  saveProps();
-  return true;
+
+  // スキップした部屋を通知
+  if(skipped.length>0){
+    showToast(`未登録の部屋をスキップ: ${skipped.join('、')}号室`,'error');
+  }
+
+  if(updatedCount>0){
+    saveProps();
+    showToast(`${updatedCount}室の情報を更新しました`,'success');
+    return updatedCount;
+  }
+  return false;
 }
   
 // ── ファイル内容をアプリデータに反映 ──
