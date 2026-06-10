@@ -801,7 +801,9 @@ function renderCashflow(){
       <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(moI,moI+moE)}%"></div><div class="bar-e" style="width:${pct(moE,moI+moE)}%"></div></div>
       <div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(moI)}</span><span class="r">${fmt(moE)}</span></div></div><div class="col-sep"></div>`;
     properties.forEach((p,i)=>{const pI=getMonthI(mi,i),pE=getMonthE(mi,i);colMon+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="g" style="font-size:11px;font-weight:500">${fmt(pI-pE)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(pI,pI+pE)}%"></div><div class="bar-e" style="width:${pct(pE,pI+pE)}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(pI)}</span><span class="r">${fmt(pE)}</span></div></div>`;});
-    const totOcc=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
+    const _today2=new Date().toISOString().slice(0,10);
+const _gs=r=>{if(!r.since)return'vacant';if(r.moveOutDate){if(r.since<=_today2&&r.moveOutDate>=_today2)return'occupied';if(r.moveOutDate<_today2)return'vacant';}return r.status||'occupied';};
+const totOcc=properties.reduce((s,p)=>s+p.rooms.filter(r=>_gs(r)==='occupied').length,0);
     const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
     const occR=pct(totOcc,totRooms);
     let colOcc=`<div class="col-header"><span class="ct">入居率 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
