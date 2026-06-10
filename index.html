@@ -1252,6 +1252,27 @@ function renderOccProp(){
   saveProps();
   renderOccProp();
 }
+
+  function cycleRoomStatus(pi,roomNo,ym){
+  const p=properties[pi];
+  if(!p.monthlySnapshots) p.monthlySnapshots={};
+  if(!p.monthlySnapshots[ym]) p.monthlySnapshots[ym]={};
+  const snap=p.monthlySnapshots[ym][roomNo];
+  const current=snap?.status||'vacant';
+  const next={occupied:'vacant',vacant:'late',late:'occupied'}[current]||'occupied';
+  if(!snap){
+    const r=p.rooms.find(x=>x.no===roomNo);
+    p.monthlySnapshots[ym][roomNo]={
+      status:next,
+      since:r?.since||'',
+      items:r?.items?.map(it=>({label:it.label,amt:it.amt||0}))||[]
+    };
+  } else {
+    snap.status=next;
+  }
+  saveProps();
+  renderOccProp();
+}
   
 function toggleOccDetail(pi){
   window._occShowDetail=!window._occShowDetail;
