@@ -2149,6 +2149,7 @@ async function confirmMultiUpload(){
       updateProc(item.id,'done',`✓ ${prop.name} / ${cat} → ${finalName}`,driveResult.webViewLink);
       applyFileDataToApp(parseInt(propIdx),cat,item.result,date,driveResult);
       if(item.result?.rooms&&item.result.rooms.length>0){
+        console.log('multiUpload rooms反映開始 rooms数:', item.result.rooms.length, 'propIdx:', propIdx);
         applyRoomsToProperty(parseInt(propIdx),item.result.rooms);
       }
       successCount++;
