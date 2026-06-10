@@ -1071,6 +1071,10 @@ function renderOccAll(){
 
 function renderOccProp(){
   const pi=parseInt(currentProp);
+  const yr=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
+const mo=parseInt(document.getElementById('monthSel').value);
+const currentYM=`${yr}-${String(mo).padStart(2,'0')}`;
+const snapshot=p.monthlySnapshots?.[currentYM];
   const p=properties[pi];if(!p)return;
   const moLabel=document.getElementById('monthSel').options[document.getElementById('monthSel').selectedIndex].text;
   const today=new Date().toISOString().slice(0,10);
@@ -1132,8 +1136,11 @@ function renderOccProp(){
 
   const rows=p.rooms.map((r,ri)=>{
     const status=getRoomStatus(r);
-    const isOcc=status==='occupied';
-    const total=r.items.reduce((s,it)=>s+it.amt,0);
+    const isOcc=displayStatus==='occupied';
+    const snapRoom=snapshot?.[r.no];
+    const displayItems=snapRoom?snapRoom.items:r.items;
+    const displayStatus=snapRoom?snapRoom.status:getRoomOccStatus(r);
+    const total=displayItems.reduce((s,it)=>s+(it.amt||0),0);
     const uid=`r${pi}_${ri}`;
     const gantt=getRoomGantt(r);
     const occMonths=gantt.filter(Boolean).length;
@@ -1190,7 +1197,14 @@ function renderOccProp(){
   }).join('');
 
   // 合計行：statusに退去予定日を反映した値を使う
-  const occTotal=p.rooms.filter(r=>getRoomStatus(r)==='occupied').reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  const occTotal=p.rooms.filter(r=>{
+    const sr=snapshot?.[r.no];
+    return sr?sr.status==='occupied':getRoomStatus(r)==='occupied';
+  }).reduce((s,r)=>{
+    const sr=snapshot?.[r.no];
+    const items=sr?sr.items:r.items;
+    return s+items.reduce((ss,it)=>ss+(it.amt||0),0);
+  },0);
   const fullTotal=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
   const occCount=p.rooms.filter(r=>getRoomStatus(r)==='occupied').length;
   const overallRate=pct(occCount,p.rooms.length);
@@ -2193,8 +2207,8 @@ async function confirmMultiUpload(){
       updateProc(item.id,'done',`✓ ${prop.name} / ${cat} → ${finalName}`,driveResult.webViewLink);
       applyFileDataToApp(parseInt(propIdx),cat,item.result,date,driveResult);
       if(item.result?.rooms&&item.result.rooms.length>0){
-        console.log('multiUpload rooms反映開始 rooms数:', item.result.rooms.length, 'propIdx:', propIdx);
-        applyRoomsToProperty(parseInt(propIdx),item.result.rooms);
+        const ym=date?date.slice(0,7):'';
+        applyRoomsToProperty(parseInt(propIdx),item.result.rooms,ym);
       }
       successCount++;
     }catch(e){
@@ -2361,7 +2375,8 @@ async function confirmUpload(){
     applyFileDataToApp(parseInt(propIdx),cat,pendingUpload.result,date,driveResult);
     // 家賃明細の場合は入居状況に反映
     if(pendingUpload.result?.rooms&&pendingUpload.result.rooms.length>0){
-      console.log('rooms反映開始 rooms数:', pendingUpload.result.rooms.length, 'propIdx:', propIdx);
+        const ym=date?date.slice(0,7):'';
+      const applied=applyRoomsToProperty(parseInt(propIdx),pendingUpload.result.rooms,ym);
       const applied=applyRoomsToProperty(parseInt(propIdx),pendingUpload.result.rooms);
       if(applied) showToast(`入居状況を更新しました（${pendingUpload.result.rooms.length}室）`,'success');
     }
