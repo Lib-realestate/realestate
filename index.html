@@ -458,6 +458,92 @@ function loadDefaultProperties(){
   properties=[];
   // 空データをDriveに保存しない（savePropsを呼ばない）
 }
+
+  let _localSavedAt=null;
+let _driveSavedAt=null;
+let _conflictDriveData=null;
+
+function updateSyncTime(){
+  const el=document.getElementById('lastSyncTime');
+  if(el) el.textContent='最終更新: '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+}
+
+async function manualSync(){
+  const btn=document.getElementById('syncBtn');
+  if(btn){btn.textContent='↻ 更新中…';btn.disabled=true;}
+  await syncFromDrive();
+  if(btn){btn.textContent='↻ 更新';btn.disabled=false;}
+}
+
+async function syncFromDrive(){
+  if(!accessToken)return;
+  try{
+    const r=await gapi.client.drive.files.list({
+      q:`name='appdata.json' and '${getDriveFolderId()}' in parents and trashed=false`,
+      fields:'files(id,modifiedTime)',orderBy:'modifiedTime desc',pageSize:1
+    });
+    if(!r.result.files.length)return;
+    _appdataFileId=r.result.files[0].id;
+    const resp=await fetch(`https://www.googleapis.com/drive/v3/files/${_appdataFileId}?alt=media`,{
+      headers:{Authorization:'Bearer '+accessToken}
+    });
+    const json=await resp.json();
+    if(!json.properties||!Array.isArray(json.properties)||json.properties.length===0)return;
+
+    const driveSavedAt=json.savedAt?new Date(json.savedAt):null;
+    const localSavedAt=_localSavedAt;
+
+    // 競合検知：両方に更新がある場合
+    if(localSavedAt&&driveSavedAt){
+      const localTime=localSavedAt.getTime();
+      const driveTime=driveSavedAt.getTime();
+      const diff=Math.abs(localTime-driveTime);
+      // 1分以上の差があり、どちらが新しいか不明な場合は競合
+      if(diff>60000&&localTime>_driveSavedAt?.getTime()&&driveTime>_driveSavedAt?.getTime()){
+        _conflictDriveData=json;
+        document.getElementById('conflictLocal').textContent=
+          `保存日時: ${localSavedAt.toLocaleString('ja-JP')}\n物件数: ${properties.length}件`;
+        document.getElementById('conflictDrive').textContent=
+          `保存日時: ${driveSavedAt.toLocaleString('ja-JP')}\n物件数: ${json.properties.length}件`;
+        const modal=document.getElementById('conflictModal');
+        modal.classList.add('open');modal.style.display='flex';
+        return;
+      }
+    }
+
+    // 競合なし：Driveが新しければ更新
+    if(!localSavedAt||!driveSavedAt||(driveSavedAt>localSavedAt)){
+      properties=json.properties;
+      if(json.commonTransactions)commonTransactions=json.commonTransactions;
+      localStorage.setItem('re_props',JSON.stringify(properties));
+      localStorage.setItem('re_common',JSON.stringify(commonTransactions));
+      _driveSavedAt=driveSavedAt;
+      buildPropSelector();buildYearSel();
+      showTab(currentTabId);
+      updateSyncTime();
+    }
+  }catch(e){console.warn('sync error:',e);}
+}
+
+function resolveConflict(choice){
+  closeModal('conflictModal');
+  if(choice==='drive'&&_conflictDriveData){
+    properties=_conflictDriveData.properties;
+    if(_conflictDriveData.commonTransactions)commonTransactions=_conflictDriveData.commonTransactions;
+    localStorage.setItem('re_props',JSON.stringify(properties));
+    _driveSavedAt=new Date(_conflictDriveData.savedAt);
+    _localSavedAt=_driveSavedAt;
+    buildPropSelector();buildYearSel();showTab(currentTabId);
+    showToast('Driveのデータを適用しました','success');
+  } else {
+    // ローカルをDriveに書き戻す
+    savePropsToD();
+    showToast('このデバイスのデータを維持しました','success');
+  }
+  _conflictDriveData=null;
+  updateSyncTime();
+}
+  
 function saveProps(){
   // 空データは保存しない
   if(!properties||properties.length===0) return;
