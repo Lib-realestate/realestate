@@ -1257,7 +1257,7 @@ function renderOccProp(){
   if(!p.monthlySnapshots) p.monthlySnapshots={};
   if(!p.monthlySnapshots[ym]) p.monthlySnapshots[ym]={};
   const snap=p.monthlySnapshots[ym][roomNo];
-  const current=snap?.status||'vacant';
+  const current=snap?.status||'occupied';
   const next={occupied:'vacant',vacant:'late',late:'new',new:'occupied'}[current]||'occupied';
   if(!snap){
     const r=p.rooms.find(x=>x.no===roomNo);
@@ -2463,13 +2463,11 @@ function applyRoomsToProperty(propIdx, rooms, ym){
     const labels=['家賃','管理費','駐車場','その他'];
     const prevSnap=p.monthlySnapshots?.[ym]?.[roomData.no];
     snapshot[roomData.no]={
-      status:prevSnap?.status||'occupied',
+      status:prevSnap?.status||null,
       since:'',
       items:labels.map(lbl=>{
         const newAmt=roomData.items?.find(x=>x.label===lbl)?.amount||0;
-        const oldAmt=existingSnap?.items?.find(x=>x.label===lbl)?.amt||0;
-        // 既存スナップショットがある場合は加算（滞納分合算）
-        return{label:lbl,amt:existingSnap?oldAmt+newAmt:newAmt};
+        return{label:lbl,amt:newAmt};
       }),
       lateFrom:existingSnap?.lateFrom||null
     };
