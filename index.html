@@ -2334,6 +2334,8 @@ function applyRoomsToProperty(propIdx, rooms){
   let updatedCount=0;
   const skipped=[];
 
+  console.log('applyRooms呼ばれた rooms数:', rooms.length, '既存部屋数:', p.rooms.length);
+  
   rooms.forEach(roomData=>{
     // 既存の部屋のみ更新（新規追加しない）
     const existing=p.rooms.find(r=>r.no===String(roomData.no));
