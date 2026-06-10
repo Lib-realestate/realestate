@@ -1182,6 +1182,9 @@ function renderOccProp(){
       <td style="padding:6px 4px;white-space:nowrap;min-width:60px" id="${uid}n" onclick="editNote(event,'${uid}',${pi},${ri})">
         <span style="font-size:11px;color:${r.note?'#dc2626':'#aaa'}">${r.note||'備考…'}</span>
       </td>
+      <td style="padding:6px 4px;text-align:center">
+        <button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteRoom(event,${pi},${ri})">削除</button>
+      </td>
     </tr>
     ${detailRow}`;
   }).join('');
@@ -1209,7 +1212,10 @@ function renderOccProp(){
   </div>
   <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:8px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
-      <span class="ct">部屋別 入居状況</span>
+     <span class="ct">部屋別 入居状況</span>
+<div style="display:flex;gap:6px">
+  <button class="btn-add" onclick="addRoom(${pi})">＋ 部屋追加</button>
+</div>
       <div style="display:flex;gap:10px;font-size:10px;color:#888">
         <span>▼で内訳表示・金額編集</span>
         <span style="display:flex;gap:4px;align-items:center"><span style="width:10px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>入居中</span>
@@ -1230,6 +1236,7 @@ function renderOccProp(){
           <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap;width:40px">入居率</th>
           ${mhdrs}
           <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:60px">備考</th>
+<th style="padding:6px 8px;width:40px;border-bottom:0.5px solid #e0e0d8"></th>
         </tr>
       </thead>
       <tbody>
@@ -1326,7 +1333,43 @@ function updateMoveOut(pi,ri,val){
 
 function editNote(e,uid,pi,ri){e.stopPropagation();const el=document.getElementById(uid+'n');const cur=properties[pi].rooms[ri].note||'';el.innerHTML=`<input type="text" value="${cur}" placeholder="備考を入力" style="width:100%;font-size:11px;border:none;background:transparent;outline:none;border-bottom:1px solid #93c5fd" onblur="saveNote('${uid}',${pi},${ri},this.value)" onkeydown="if(event.key==='Enter')this.blur()" onclick="event.stopPropagation()">`;setTimeout(()=>el.querySelector('input')?.focus(),10);}
 function saveNote(uid,pi,ri,val){properties[pi].rooms[ri].note=val;saveProps();const el=document.getElementById(uid+'n');if(el){el.innerHTML=`<span style="font-size:11px;color:${val?'#dc2626':'#aaa'}">${val||'備考…'}</span>`;}}
-function updateRoomField(pi,ri,key,val){properties[pi].rooms[ri][key]=val;saveProps();}
+function addRoom(pi){
+  const p=properties[pi];
+  const no=prompt('部屋番号を入力してください（例: 205）');
+  if(!no)return;
+  if(p.rooms.find(r=>r.no===no)){
+    showToast(`${no}号室はすでに登録されています`,'error');
+    return;
+  }
+  p.rooms.push({
+    no,layout:'',area:null,status:'vacant',
+    since:'',note:'',moveOutDate:'',
+    items:[
+      {label:'家賃',amt:0},
+      {label:'管理費',amt:0},
+      {label:'駐車場',amt:0},
+      {label:'その他',amt:0}
+    ]
+  });
+  p.units=p.rooms.length;
+  saveProps();
+  renderOccProp();
+  showToast(`${no}号室を追加しました`,'success');
+}
+
+function deleteRoom(e,pi,ri){
+  e.stopPropagation();
+  const p=properties[pi];
+  const r=p.rooms[ri];
+  if(!confirm(`${r.no}号室を削除しますか？\n※この操作は取り消せません`))return;
+  p.rooms.splice(ri,1);
+  p.units=p.rooms.length;
+  saveProps();
+  renderOccProp();
+  showToast(`${r.no}号室を削除しました`,'success');
+}
+  
+  function updateRoomField(pi,ri,key,val){properties[pi].rooms[ri][key]=val;saveProps();}
 
 /* ── 分析タブ（物件概要統合） ── */
 function renderAnalysis(){
