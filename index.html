@@ -352,7 +352,7 @@ const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
 let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
 let properties=[];
   const _todayStr=()=>new Date().toISOString().slice(0,10);
-const getRoomOccStatus=r=>{const t=_todayStr();if(!r.since)return'vacant';if(r.moveOutDate){if(r.since<=t&&r.moveOutDate>=t)return'occupied';if(r.moveOutDate<t)return'vacant';}return r.status||'occupied';};
+const getRoomOccStatus=r=>{const t=_todayStr();if(!r.since)return r.status||'vacant';if(r.moveOutDate){if(r.since<=t&&r.moveOutDate>=t)return'occupied';if(r.moveOutDate<t)return'vacant';}return r.status||'occupied';};
 let commonTransactions=[];
 let driveFiles=[],unclassifiedItems=[];
 let currentProp='all',charts={},currentTabId='cashflow',currentFileFilter='all';
