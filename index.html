@@ -2347,8 +2347,8 @@ function applyRoomsToProperty(propIdx, rooms){
         const src=roomData.items.find(x=>x.label===lbl);
         if(src&&src.amount>0){
           const dst=existing.items.find(x=>x.label===lbl);
-          if(dst) dst.amt=src.amount;
-          else existing.items.push({label:lbl,amt:src.amount});
+          if(dst){dst.amt=src.amount;dst.amount=src.amount;}
+            else existing.items.push({label:lbl,amt:src.amount,amount:src.amount});
         }
       });
     }
