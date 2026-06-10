@@ -10,9 +10,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans JP',sans-serif;font-size:14px;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
-.topbar{background:#fff;border-bottom:0.5px solid #e0e0d8;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-.topbar-left{display:flex;align-items:center;gap:6px}
-.topbar-right{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden}
+.topbar{background:#fff;border-bottom:0.5px solid #e0e0d8;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:4px}
+.topbar-left{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+.topbar-right{display:flex;align-items:center;gap:4px;flex-shrink:0}
 select,input[type=number],input[type=text],input[type=date],input[type=month]{border:0.5px solid #d0d0c8;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif}
 .icon-btn{width:32px;height:32px;border-radius:6px;border:0.5px solid #d0d0c8;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#666;transition:all .15s}
 .icon-btn:hover{background:#f5f5f0;color:#333}
@@ -208,7 +208,7 @@ tr:last-child td{border-bottom:none}
 <div id="appScreen" style="display:none">
   <div class="topbar">
     <div class="topbar-left">
-      <select id="propSel" onchange="switchProp()" style="min-width:140px"></select>
+      <select id="propSel" onchange="switchProp()" style="min-width:80px;max-width:120px"></select>
       <select id="yearSel" onchange="renderCurrent()" style="min-width:74px"></select>
       <button class="icon-btn" onclick="changeMonth(-1)" style="width:24px;height:24px;font-size:12px">＜</button>
 <select id="monthSel" onchange="renderCurrent()" style="min-width:60px">
