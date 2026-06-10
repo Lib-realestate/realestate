@@ -1115,12 +1115,16 @@ function renderOccProp(){
         }
         const total=snap.items.reduce((s,it)=>s+(it.amt||0),0);
         const isVacant=snap.status==='vacant';
+        const isNewEntry=snap.status==='occupied'&&total===0&&snap.since;
         const isLate=snap.status==='occupied'&&total===0&&!snap.since;
-        // 滞納分の入金チェック
         const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分</div>`:'';
 
         let bg,color,label;
         if(isVacant){bg='#F7C1C1';color='#501313';label='空室';}
+        else if(isNewEntry){
+          const d=snap.since.slice(5).replace('-','/');
+          bg='#E1F5EE';color='#0F6E56';label=`${d}入居`;
+        }
         else if(isLate){bg='#FAC775';color='#412402';label='滞納';}
         else{bg='#9FE1CB';color='#085041';label=total>0?total.toLocaleString():'入居';}
 
