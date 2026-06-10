@@ -1135,7 +1135,7 @@ function renderOccProp(){
         }).join(''):'';
 
         return`<td style="padding:3px 4px">
-          <div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center">
+          <div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">
             ${label}${latePayment}
             ${detailRows}
           </div>
@@ -1256,7 +1256,12 @@ function toggleOccDetail(pi){
         else if(isLate){bg='#FAC775';color='#412402';label='滞納';}
         else{bg='#9FE1CB';color='#085041';label=total>0?total.toLocaleString():'入居';}
         const detailRows=showDetail?detailLabels.map(lbl=>{const it=snap.items.find(x=>x.label===lbl);const amt=it?.amt||0;return`<div style="font-size:9px;color:${color};opacity:0.85">${lbl}:${amt>0?amt.toLocaleString():'—'}</div>`;}).join(''):'';
-        return`<td style="padding:3px 4px"><div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center">${label}${latePayment}${detailRows}</div></td>`;
+        return`<td style="padding:3px 4px">
+          <div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">
+            ${label}${latePayment}
+            ${detailRows}
+          </div>
+        </td>`;
       }).join('');
       return`<tr style="border-bottom:0.5px solid var(--color-border-tertiary)">
         <td style="padding:6px 8px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
@@ -2415,8 +2420,9 @@ function applyRoomsToProperty(propIdx, rooms, ym){
     // スナップショットに保存
     const existingSnap=p.monthlySnapshots?.[ym]?.[roomData.no];
     const labels=['家賃','管理費','駐車場','その他'];
+    const prevSnap=p.monthlySnapshots?.[ym]?.[roomData.no];
     snapshot[roomData.no]={
-      status:roomData.status||'occupied',
+      status:prevSnap?.status||'occupied',
       since:roomData.since||existingSnap?.since||'',
       items:labels.map(lbl=>{
         const newAmt=roomData.items?.find(x=>x.label===lbl)?.amount||0;
@@ -2440,10 +2446,7 @@ function applyRoomsToProperty(propIdx, rooms, ym){
     }
     if(roomData.layout) existing.layout=roomData.layout;
     if(roomData.area) existing.area=roomData.area;
-    existing.status=roomData.status||existing.status;
-    if(roomData.status==='occupied'&&!existing.since){
-      existing.since=new Date().toISOString().slice(0,10);
-    }
+    // 入居状況は自動更新しない（手動管理）
     updatedCount++;
   });
 
