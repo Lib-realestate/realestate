@@ -1018,11 +1018,13 @@ function renderOccAll(){
 
   let body=indices.map((idx,pos)=>{
     const m=MONTH_BASE[idx];
-    const to=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0);
+    const _tod=new Date().toISOString().slice(0,10);
+const _gst=r=>{if(!r.since)return'vacant';if(r.moveOutDate){if(r.since<=_tod&&r.moveOutDate>=_tod)return'occupied';if(r.moveOutDate<_tod)return'vacant';}return r.status||'occupied';};
+const to=properties.reduce((s,p)=>s+p.rooms.filter(r=>_gst(r)==='occupied').length,0);
     const ta=properties.reduce((s,p)=>s+p.rooms.length,0);
     const r=pct(to,ta);
     let row=`<tr><td class="lbl">${labels[pos]}</td><td class="gsep">${to}/${ta}</td><td><span class="pill ${pillCls(r)}">${r}%</span></td>`;
-    properties.forEach(p=>{const po=p.rooms.filter(r=>r.status==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);row+=`<td class="gsep">${po}/${pt}</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
+    properties.forEach(p=>{const po=p.rooms.filter(r=>_gst(r)==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);row+=`<td class="gsep">${po}/${pt}</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
     return row+'</tr>';
   }).join('');
 
@@ -1030,7 +1032,7 @@ function renderOccAll(){
   const annTa=properties.reduce((s,p)=>s+p.rooms.length*12,0);
   const annR=pct(annTo,annTa);
   let yrow=`<tr class="yr-row"><td class="lbl">年間平均</td><td class="gsep">—</td><td><span class="pill ${pillCls(annR)}">${annR}%</span></td>`;
-  properties.forEach(p=>{const po=p.rooms.filter(r=>r.status==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);yrow+=`<td class="gsep">—</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
+  properties.forEach(p=>{const po=p.rooms.filter(r=>_gst(r)==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);yrow+=`<td class="gsep">—</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
   yrow+=`</tr>`;
 
   document.getElementById('pages').innerHTML=`
