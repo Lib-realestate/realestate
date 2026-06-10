@@ -2379,8 +2379,8 @@ async function confirmUpload(){
     applyFileDataToApp(parseInt(propIdx),cat,pendingUpload.result,date,driveResult);
     // 家賃明細の場合は入居状況に反映
     if(pendingUpload.result?.rooms&&pendingUpload.result.rooms.length>0){
-        const ym=date?date.slice(0,7):'';
-      const applied=applyRoomsToProperty(parseInt(propIdx),pendingUpload.result.rooms,ym);
+        const ymRooms=date?date.slice(0,7):'';
+      const applied=applyRoomsToProperty(parseInt(propIdx),pendingUpload.result.rooms,ymRooms);
       const applied=applyRoomsToProperty(parseInt(propIdx),pendingUpload.result.rooms);
       if(applied) showToast(`入居状況を更新しました（${pendingUpload.result.rooms.length}室）`,'success');
     }
