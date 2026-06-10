@@ -2066,6 +2066,7 @@ async function analyzeMultipleFiles(files){
     try{
       const result=await analyzeWithAI(file);
       updateProc(id,'done','解析完了');
+      console.log('AI解析結果rooms:', JSON.stringify(result.rooms));
       const propName=result.propertyName||result.property||'';
       const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propName&&p.name.includes(propName))):-1;
       return{file,id,result,detectedPropIdx,error:null};
