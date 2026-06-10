@@ -1115,7 +1115,7 @@ function renderOccProp(){
         }
         const total=snap.items.reduce((s,it)=>s+(it.amt||0),0);
         const isVacant=snap.status==='vacant';
-        const isLate=snap.status==='occupied'&&total===0;
+        const isLate=snap.status==='occupied'&&total===0&&!snap.since;
         // 滞納分の入金チェック
         const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分</div>`:'';
 
@@ -1245,7 +1245,7 @@ function toggleOccDetail(pi){
         if(!snap)return`<td><span style="display:inline-block;width:52px;height:24px;border-radius:4px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary)"></span></td>`;
         const total=snap.items.reduce((s,it)=>s+(it.amt||0),0);
         const isVacant=snap.status==='vacant';
-        const isLate=snap.status==='occupied'&&total===0;
+        const isLate=snap.status==='occupied'&&total===0&&!snap.since;
         const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分</div>`:'';
         let bg,color,label;
         if(isVacant){bg='#F7C1C1';color='#501313';label='空室';}
@@ -2409,15 +2409,18 @@ function applyRoomsToProperty(propIdx, rooms, ym){
       return;
     }
     // スナップショットに保存
+    const existingSnap=p.monthlySnapshots?.[ym]?.[roomData.no];
+    const labels=['家賃','管理費','駐車場','その他'];
     snapshot[roomData.no]={
       status:roomData.status||'occupied',
-      since:roomData.since||existing.since||'',
-      items:[
-        {label:'家賃',amt:roomData.items?.find(x=>x.label==='家賃')?.amount||0},
-        {label:'管理費',amt:roomData.items?.find(x=>x.label==='管理費')?.amount||0},
-        {label:'駐車場',amt:roomData.items?.find(x=>x.label==='駐車場')?.amount||0},
-        {label:'その他',amt:roomData.items?.find(x=>x.label==='その他')?.amount||0},
-      ]
+      since:roomData.since||existing.since||existingSnap?.since||'',
+      items:labels.map(lbl=>{
+        const newAmt=roomData.items?.find(x=>x.label===lbl)?.amount||0;
+        const oldAmt=existingSnap?.items?.find(x=>x.label===lbl)?.amt||0;
+        // 既存スナップショットがある場合は加算（滞納分合算）
+        return{label:lbl,amt:existingSnap?oldAmt+newAmt:newAmt};
+      }),
+      lateFrom:existingSnap?.lateFrom||null
     };
     // 現在の部屋データも更新
     if(roomData.items&&roomData.items.length){
