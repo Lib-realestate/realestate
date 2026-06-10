@@ -2413,7 +2413,7 @@ function applyRoomsToProperty(propIdx, rooms, ym){
     const labels=['家賃','管理費','駐車場','その他'];
     snapshot[roomData.no]={
       status:roomData.status||'occupied',
-      since:roomData.since||existing.since||existingSnap?.since||'',
+      since:roomData.since||existingSnap?.since||'',
       items:labels.map(lbl=>{
         const newAmt=roomData.items?.find(x=>x.label===lbl)?.amount||0;
         const oldAmt=existingSnap?.items?.find(x=>x.label===lbl)?.amt||0;
