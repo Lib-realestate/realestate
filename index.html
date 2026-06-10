@@ -1227,6 +1227,32 @@ function renderOccProp(){
   window._occRenderTable=renderTable;
 }
 
+  function cycleRoomStatus(pi,roomNo,ym){
+  const p=properties[pi];
+  if(!p.monthlySnapshots) p.monthlySnapshots={};
+  if(!p.monthlySnapshots[ym]) p.monthlySnapshots[ym]={};
+  
+  const snap=p.monthlySnapshots[ym][roomNo];
+  const current=snap?.status||'vacant';
+  
+  // occupied → vacant → late（滞納）→ occupied の順で切り替え
+  const next={occupied:'vacant',vacant:'late',late:'occupied'}[current]||'occupied';
+  
+  if(!snap){
+    // スナップショットがない場合は新規作成
+    const r=p.rooms.find(x=>x.no===roomNo);
+    p.monthlySnapshots[ym][roomNo]={
+      status:next,
+      since:r?.since||'',
+      items:r?.items?.map(it=>({label:it.label,amt:it.amt||0}))||[]
+    };
+  } else {
+    snap.status=next;
+  }
+  saveProps();
+  renderOccProp();
+}
+  
 function toggleOccDetail(pi){
   window._occShowDetail=!window._occShowDetail;
   const btn=document.getElementById('detailToggleBtn');
@@ -1256,12 +1282,7 @@ function toggleOccDetail(pi){
         else if(isLate){bg='#FAC775';color='#412402';label='滞納';}
         else{bg='#9FE1CB';color='#085041';label=total>0?total.toLocaleString():'入居';}
         const detailRows=showDetail?detailLabels.map(lbl=>{const it=snap.items.find(x=>x.label===lbl);const amt=it?.amt||0;return`<div style="font-size:9px;color:${color};opacity:0.85">${lbl}:${amt>0?amt.toLocaleString():'—'}</div>`;}).join(''):'';
-        return`<td style="padding:3px 4px">
-          <div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">
-            ${label}${latePayment}
-            ${detailRows}
-          </div>
-        </td>`;
+       return`<td style="padding:3px 4px"><div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">${label}${latePayment}${detailRows}</div></td>`;
       }).join('');
       return`<tr style="border-bottom:0.5px solid var(--color-border-tertiary)">
         <td style="padding:6px 8px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
