@@ -715,8 +715,9 @@ function switchProp(){currentProp=document.getElementById('propSel').value;iconP
 function changeMonth(dir){
   const mSel=document.getElementById('monthSel');
   const ySel=document.getElementById('yearSel');
-  let mo=parseInt(mSel.value);
-  let yr=parseInt(ySel.value);
+  if(!mSel||!ySel)return;
+  let mo=parseInt(mSel.value)||new Date().getMonth()+1;
+  let yr=parseInt(ySel.value)||new Date().getFullYear();
   mo+=dir;
   if(mo>12){mo=1;yr++;}
   if(mo<1){mo=12;yr--;}
