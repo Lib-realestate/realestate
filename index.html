@@ -448,7 +448,7 @@ buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
   }
   // トークン期限切れの場合は自動再取得試みる
   if(saved&&gisInited){
-    tokenClient.requestAccessToken({prompt:''});
+    tokenClient.requestAccessToken({prompt:'none'});
   }
 }
 
