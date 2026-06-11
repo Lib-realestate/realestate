@@ -1075,122 +1075,138 @@ function renderOccProp(){
 
   const yr=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
   const MONTHS=Array.from({length:12},(_,i)=>({mo:i+1,ym:`${yr}-${String(i+1).padStart(2,'0')}`}));
-  const moLabel=m=>`${m}月`;
 
-  // スナップショットから月別データを取得
   const getSnap=(no,ym)=>p.monthlySnapshots?.[ym]?.[no]||null;
+  const getContract=(r)=>r.contractItems||r.items||[];
+  const contractTotal=(r)=>getContract(r).reduce((s,it)=>s+(it.amt||0),0);
+  const snapTotal=(snap)=>snap?snap.items.reduce((s,it)=>s+(it.amt||0),0):null;
 
-  // 入金合計（月別）
-  const monthlyTotal=MONTHS.map(({ym})=>{
-    return p.rooms.reduce((s,r)=>{
+  // 月別合計
+  const monthlyTotal=MONTHS.map(({ym})=>
+    p.rooms.reduce((s,r)=>{
       const snap=getSnap(r.no,ym);
-      if(!snap)return s;
-      return s+snap.items.reduce((ss,it)=>ss+(it.amt||0),0);
-    },0);
-  });
-
-  // 月別入居率（入居ステータスベース）
+      return s+(snap?snapTotal(snap):0);
+    },0)
+  );
   const monthlyOccRate=MONTHS.map(({ym})=>{
     let occ=0,total=0;
     p.rooms.forEach(r=>{
       const snap=getSnap(r.no,ym);
       if(!snap)return;
       total++;
-      if(snap.status==='occupied')occ++;
+      if(snap.status==='occupied'||snap.status==='new')occ++;
     });
     return total>0?Math.round(occ/total*100):null;
   });
 
-  // 内訳表示フラグ
-  let showDetail=false;
+  const annualTotal=monthlyTotal.reduce((s,v)=>s+v,0);
+  const avgOccRate=monthlyOccRate.filter(r=>r!==null);
+  const avgOcc=avgOccRate.length>0?Math.round(avgOccRate.reduce((s,v)=>s+v,0)/avgOccRate.length):0;
+  const snapMonths=MONTHS.filter(({ym})=>p.rooms.some(r=>getSnap(r.no,ym))).length;
 
-  const renderTable=()=>{
-    const detailLabels=['家賃','管理費','駐車場','その他'];
+  const renderTable=(showDetail)=>{
+    const detailLabels=['家賃','管理費','共益費','駐車場','その他'];
 
-    const rows=p.rooms.map(r=>{
-      const cells=MONTHS.map(({ym,mo})=>{
+    const rows=p.rooms.map((r,ri)=>{
+      const ct=contractTotal(r);
+      const cells=MONTHS.map(({ym})=>{
         const snap=getSnap(r.no,ym);
         if(!snap){
-          return`<td><span style="display:inline-block;width:52px;height:24px;border-radius:4px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary)"></span></td>`;
+          return`<td style="padding:2px 3px"><div style="width:72px;height:${showDetail?'80px':'52px'};border-radius:4px;background:#f3f4f6;border:0.5px solid #e0e0d8"></div></td>`;
         }
-        const total=snap.items.reduce((s,it)=>s+(it.amt||0),0);
+        const actual=snapTotal(snap);
+        const diff=actual-ct;
         const isVacant=snap.status==='vacant';
-        const isNewEntry=snap.status==='new';
         const isLate=snap.status==='late';
-        const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分 ${snap.lateAmt?snap.lateAmt.toLocaleString()+'円':''}入金</div>`:'';
+        const isNew=snap.status==='new';
 
-        let bg,color,label;
-        if(isVacant){bg='#F7C1C1';color='#501313';label='空室';}
-        else if(isNewEntry){
-          bg='#E1F5EE';color='#0F6E56';label='新規入居';
-        }
-        else if(isLate){bg='#FAC775';color='#412402';label='滞納';}
-        else{bg='#9FE1CB';color='#085041';label=total>0?total.toLocaleString():'入居';}
+        let actualBg,actualColor,actualLabel;
+        if(isVacant){actualBg='#F7C1C1';actualColor='#501313';actualLabel='空室';}
+        else if(isLate){actualBg='#FAC775';actualColor='#412402';actualLabel=actual>0?actual.toLocaleString():'0';}
+        else if(isNew){actualBg='#E1F5EE';actualColor='#0F6E56';actualLabel='新規入居';}
+        else{actualBg='#9FE1CB';actualColor='#085041';actualLabel=actual>0?actual.toLocaleString():'入居';}
+
+        const diffColor=diff===0?'#888':diff>0?'#16a34a':'#dc2626';
+        const diffLabel=isVacant||isNew?'—':diff===0?'±0':diff>0?'+'+diff.toLocaleString():'▲'+Math.abs(diff).toLocaleString();
+
+        const lateNote=snap.lateFrom?`<div style="font-size:8px;color:#633806">滞納分${snap.lateAmt?snap.lateAmt.toLocaleString()+'円':''}</div>`:'';
 
         const detailRows=showDetail?detailLabels.map(lbl=>{
-          const it=snap.items.find(x=>x.label===lbl);
-          const amt=it?.amt||0;
-          return`<div style="font-size:9px;color:${color};opacity:0.85">${lbl}:${amt>0?amt.toLocaleString():'—'}</div>`;
+          const cit=getContract(r).find(x=>x.label===lbl);
+          const sit=snap.items.find(x=>x.label===lbl);
+          const camt=cit?.amt||0;
+          const samt=sit?.amt||0;
+          return`<div style="display:flex;justify-content:space-between;font-size:8px;color:#666;padding:0 3px">
+            <span>${lbl}</span><span>${camt>0||samt>0?(samt||'—').toLocaleString?.()??samt:'—'}</span>
+          </div>`;
         }).join(''):'';
 
-        return`<td style="padding:3px 4px">
-          <div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">
-            ${label}${latePayment}
+        return`<td style="padding:2px 3px">
+          <div style="width:72px;border-radius:4px;overflow:hidden;border:0.5px solid #e0e0d8;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">
+            <div style="background:#f3f4f6;color:#888;padding:2px 4px;font-size:9px;text-align:right;border-bottom:0.5px solid #e0e0d8">${isVacant?'—':ct>0?ct.toLocaleString():'—'}</div>
+            <div style="background:${actualBg};color:${actualColor};padding:2px 4px;font-size:9px;font-weight:500;text-align:right;border-bottom:0.5px solid #e0e0d8">${actualLabel}${lateNote}</div>
+            <div style="padding:2px 4px;font-size:8px;text-align:right;color:${diffColor}">${diffLabel}</div>
             ${detailRows}
           </div>
         </td>`;
       }).join('');
 
-      return`<tr style="border-bottom:0.5px solid var(--color-border-tertiary)">
-        <td style="padding:6px 8px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
-        <td style="padding:6px 8px;font-size:11px;color:var(--color-text-secondary)">${r.layout||'—'}</td>
-        <td style="padding:6px 8px;font-size:11px;color:var(--color-text-secondary);text-align:right">${r.area||'—'}㎡</td>
+      return`<tr style="border-bottom:0.5px solid #f0f0e8">
+        <td style="padding:4px 6px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
+        <td style="padding:4px 6px">
+          <input type="text" value="${r.layout||''}" placeholder="1K" style="width:44px;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateRoomField(${pi},${ri},'layout',this.value)">
+        </td>
+        <td style="padding:4px 6px">
+          <input type="number" value="${r.area||''}" placeholder="25" style="width:44px;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;text-align:right" onchange="updateRoomField(${pi},${ri},'area',parseFloat(this.value))">
+        </td>
+        <td style="padding:4px 6px">
+          <div style="font-size:11px;font-weight:500;color:#1a1a1a;cursor:pointer" onclick="editContractItems(${pi},${ri})">${ct>0?ct.toLocaleString():'—'} <span style="font-size:9px;color:#2563eb">編集</span></div>
+        </td>
         ${cells}
+        <td style="padding:4px 6px;text-align:center">
+          <button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteRoom(event,${pi},${ri})">削除</button>
+        </td>
       </tr>`;
     }).join('');
 
-    // 月間入金合計行
-    const totalRow=`<tr style="background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-tertiary)">
-      <td colspan="3" style="padding:6px 8px;font-size:10px;color:var(--color-text-secondary)">月間入金合計</td>
-      ${MONTHS.map((_,i)=>`<td style="padding:6px 4px;text-align:center;font-size:10px;font-weight:500;color:${monthlyTotal[i]>0?'#1D9E75':'var(--color-text-secondary)'}">${monthlyTotal[i]>0?monthlyTotal[i].toLocaleString():'—'}</td>`).join('')}
+    const totalRow=`<tr style="background:#fafaf8;border-top:0.5px solid #e0e0d8">
+      <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">月間入金合計</td>
+      ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;font-weight:500;color:${monthlyTotal[i]>0?'#1D9E75':'#ccc'}">${monthlyTotal[i]>0?monthlyTotal[i].toLocaleString():'—'}</td>`).join('')}
+      <td></td>
     </tr>`;
 
-    // 月別入居率行
-    const occRow=`<tr style="background:var(--color-background-secondary);font-weight:500;border-top:1px solid var(--color-border-tertiary)">
-      <td colspan="3" style="padding:6px 8px;font-size:11px">月別入居率</td>
+    const occRow=`<tr style="background:#fafaf8;font-weight:500;border-top:1px solid #d0d0c8">
+      <td colspan="4" style="padding:5px 8px;font-size:11px">月別入居率</td>
       ${MONTHS.map((_,i)=>{
         const r=monthlyOccRate[i];
-        if(r===null)return`<td style="padding:6px 4px;text-align:center;font-size:11px;color:var(--color-text-secondary)">—</td>`;
+        if(r===null)return`<td style="padding:5px 3px;text-align:center;font-size:11px;color:#ccc">—</td>`;
         const color=r>=80?'#1D9E75':r>=60?'#BA7517':'#A32D2D';
-        return`<td style="padding:6px 4px;text-align:center;font-size:11px;font-weight:500;color:${color}">${r}%</td>`;
+        return`<td style="padding:5px 3px;text-align:center;font-size:11px;font-weight:500;color:${color}">${r}%</td>`;
       }).join('')}
+      <td></td>
     </tr>`;
 
-    return`<table style="border-collapse:collapse;width:100%;min-width:800px;font-size:12px">
-      <thead style="background:var(--color-background-secondary)">
+    return`<table style="border-collapse:collapse;width:100%;min-width:900px;font-size:12px">
+      <thead style="background:#fafaf8">
         <tr>
-          <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap;min-width:52px">部屋</th>
-          <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap;min-width:44px">間取り</th>
-          <th style="padding:6px 8px;text-align:right;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap;min-width:44px">面積</th>
-          ${MONTHS.map(({mo})=>`<th style="padding:6px 4px;text-align:center;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);min-width:60px">${moLabel(mo)}</th>`).join('')}
+          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:52px">部屋</th>
+          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:52px">間取り</th>
+          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:52px">面積㎡</th>
+          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:72px">契約家賃</th>
+          ${MONTHS.map(({mo})=>`<th style="padding:5px 3px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:78px">${mo}月</th>`).join('')}
+          <th style="border-bottom:0.5px solid #e0e0d8;width:40px"></th>
         </tr>
       </thead>
       <tbody>${rows}${totalRow}${occRow}</tbody>
     </table>`;
   };
 
-  // サマリー
-  const snapMonths=MONTHS.filter(({ym})=>p.rooms.some(r=>getSnap(r.no,ym)));
-  const annualTotal=monthlyTotal.reduce((s,v)=>s+v,0);
-  const avgOccRate=monthlyOccRate.filter(r=>r!==null);
-  const avgOcc=avgOccRate.length>0?Math.round(avgOccRate.reduce((s,v)=>s+v,0)/avgOccRate.length):0;
-
   document.getElementById('pages').innerHTML=`
   <div class="summary-grid" style="margin-bottom:10px">
     <div class="col single">
       <div class="ct" style="margin-bottom:8px">年間入金合計 <span style="font-size:9px;color:#aaa">${yr}年</span></div>
       <div style="font-size:20px;font-weight:500;color:#16a34a">${annualTotal.toLocaleString()}</div>
-      <div style="font-size:11px;color:#888;margin-top:4px">${snapMonths.length}ヶ月分のデータ</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">${snapMonths}ヶ月分のデータ</div>
     </div>
     <div class="col single">
       <div class="ct" style="margin-bottom:8px">平均入居率 <span style="font-size:9px;color:#aaa">${yr}年</span></div>
@@ -1205,25 +1221,35 @@ function renderOccProp(){
   </div>
 
   <div class="card" style="padding:0;overflow:hidden">
-    <div style="padding:8px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
+    <div style="padding:8px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
       <span class="ct">部屋別 月次入居・入金状況 ${yr}年</span>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="display:flex;gap:8px;font-size:10px;color:#888">
-          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#9FE1CB;display:inline-block"></span>入居中・入金済</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#9FE1CB;display:inline-block"></span>入金済</span>
           <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#FAC775;display:inline-block"></span>滞納</span>
           <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#F7C1C1;display:inline-block"></span>空室</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#E1F5EE;display:inline-block"></span>新規</span>
         </div>
-        <button class="btn-sm" id="detailToggleBtn" onclick="toggleOccDetail(${pi})" style="font-size:10px">▼ 内訳表示</button>
+        <button class="btn-sm" id="detailToggleBtn" onclick="toggleOccDetail2(${pi})" style="font-size:10px">▼ 内訳</button>
         <button class="btn-add" onclick="addRoom(${pi})">＋ 部屋追加</button>
       </div>
     </div>
     <div style="overflow-x:auto" id="occTableWrap">
-      ${renderTable()}
+      ${renderTable(false)}
     </div>
   </div>`;
 
   window._occShowDetail=false;
-  window._occRenderTable=renderTable;
+  window._occRenderFn=renderTable;
+  window._occPi=pi;
+}
+
+function toggleOccDetail2(pi){
+  window._occShowDetail=!window._occShowDetail;
+  const btn=document.getElementById('detailToggleBtn');
+  if(btn)btn.textContent=window._occShowDetail?'▲ 内訳非表示':'▼ 内訳';
+  const wrap=document.getElementById('occTableWrap');
+  if(wrap&&window._occRenderFn) wrap.innerHTML=window._occRenderFn(window._occShowDetail);
 }
 
   function cycleRoomStatus(pi,roomNo,ym){
@@ -1271,60 +1297,6 @@ function renderOccProp(){
   }
   saveProps();
   renderOccProp();
-}
-  
-function toggleOccDetail(pi){
-  window._occShowDetail=!window._occShowDetail;
-  const btn=document.getElementById('detailToggleBtn');
-  if(btn)btn.textContent=window._occShowDetail?'▲ 内訳非表示':'▼ 内訳表示';
-  const wrap=document.getElementById('occTableWrap');
-  if(wrap){
-    const p=properties[pi];
-    const yr=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
-    const MONTHS=Array.from({length:12},(_,i)=>({mo:i+1,ym:`${yr}-${String(i+1).padStart(2,'0')}`}));
-    const getSnap=(no,ym)=>p.monthlySnapshots?.[ym]?.[no]||null;
-    const detailLabels=['家賃','管理費','駐車場','その他'];
-    const showDetail=window._occShowDetail;
-
-    const monthlyTotal=MONTHS.map(({ym})=>p.rooms.reduce((s,r)=>{const snap=getSnap(r.no,ym);if(!snap)return s;return s+snap.items.reduce((ss,it)=>ss+(it.amt||0),0);},0));
-    const monthlyOccRate=MONTHS.map(({ym})=>{let occ=0,total=0;p.rooms.forEach(r=>{const snap=getSnap(r.no,ym);if(!snap)return;total++;if(snap.status==='occupied')occ++;});return total>0?Math.round(occ/total*100):null;});
-
-    const rows=p.rooms.map(r=>{
-      const cells=MONTHS.map(({ym})=>{
-        const snap=getSnap(r.no,ym);
-        if(!snap)return`<td><span style="display:inline-block;width:52px;height:24px;border-radius:4px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary)"></span></td>`;
-        const total=snap.items.reduce((s,it)=>s+(it.amt||0),0);
-        const isVacant=snap.status==='vacant';
-        const isLate=snap.status==='late'||(snap.status==='occupied'&&total===0&&!snap.since);
-        const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分 ${snap.lateAmt?snap.lateAmt.toLocaleString()+'円':''}入金</div>`:'';
-        let bg,color,label;
-        if(isVacant){bg='#F7C1C1';color='#501313';label='空室';}
-        else if(isLate){bg='#FAC775';color='#412402';label='滞納';}
-        else{bg='#9FE1CB';color='#085041';label=total>0?total.toLocaleString():'入居';}
-        const detailRows=showDetail?detailLabels.map(lbl=>{const it=snap.items.find(x=>x.label===lbl);const amt=it?.amt||0;return`<div style="font-size:9px;color:${color};opacity:0.85">${lbl}:${amt>0?amt.toLocaleString():'—'}</div>`;}).join(''):'';
-       return`<td style="padding:3px 4px"><div style="background:${bg};color:${color};border-radius:4px;padding:3px 4px;min-width:52px;font-size:10px;font-weight:500;text-align:center;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">${label}${latePayment}${detailRows}</div></td>`;
-      }).join('');
-      return`<tr style="border-bottom:0.5px solid var(--color-border-tertiary)">
-        <td style="padding:6px 8px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
-        <td style="padding:6px 8px;font-size:11px;color:var(--color-text-secondary)">${r.layout||'—'}</td>
-        <td style="padding:6px 8px;font-size:11px;color:var(--color-text-secondary);text-align:right">${r.area||'—'}㎡</td>
-        ${cells}
-      </tr>`;
-    }).join('');
-
-    const totalRow=`<tr style="background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-tertiary)"><td colspan="3" style="padding:6px 8px;font-size:10px;color:var(--color-text-secondary)">月間入金合計</td>${MONTHS.map((_,i)=>`<td style="padding:6px 4px;text-align:center;font-size:10px;font-weight:500;color:${monthlyTotal[i]>0?'#1D9E75':'var(--color-text-secondary)'}">${monthlyTotal[i]>0?monthlyTotal[i].toLocaleString():'—'}</td>`).join('')}</tr>`;
-    const occRow=`<tr style="background:var(--color-background-secondary);font-weight:500;border-top:1px solid var(--color-border-tertiary)"><td colspan="3" style="padding:6px 8px;font-size:11px">月別入居率</td>${MONTHS.map((_,i)=>{const r=monthlyOccRate[i];if(r===null)return`<td style="padding:6px 4px;text-align:center;font-size:11px;color:var(--color-text-secondary)">—</td>`;const color=r>=80?'#1D9E75':r>=60?'#BA7517':'#A32D2D';return`<td style="padding:6px 4px;text-align:center;font-size:11px;font-weight:500;color:${color}">${r}%</td>`;}).join('')}</tr>`;
-
-    wrap.innerHTML=`<table style="border-collapse:collapse;width:100%;min-width:800px;font-size:12px">
-      <thead style="background:var(--color-background-secondary)"><tr>
-        <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);min-width:52px">部屋</th>
-        <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);min-width:44px">間取り</th>
-        <th style="padding:6px 8px;text-align:right;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);min-width:44px">面積</th>
-        ${MONTHS.map(({mo})=>`<th style="padding:6px 4px;text-align:center;font-size:10px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);min-width:60px">${mo}月</th>`).join('')}
-      </tr></thead>
-      <tbody>${rows}${totalRow}${occRow}</tbody>
-    </table>`;
-  }
 }
 
 function togRoom(uid){
@@ -1401,7 +1373,45 @@ function updateMoveOut(pi,ri,val){
 
 function editNote(e,uid,pi,ri){e.stopPropagation();const el=document.getElementById(uid+'n');const cur=properties[pi].rooms[ri].note||'';el.innerHTML=`<input type="text" value="${cur}" placeholder="備考を入力" style="width:100%;font-size:11px;border:none;background:transparent;outline:none;border-bottom:1px solid #93c5fd" onblur="saveNote('${uid}',${pi},${ri},this.value)" onkeydown="if(event.key==='Enter')this.blur()" onclick="event.stopPropagation()">`;setTimeout(()=>el.querySelector('input')?.focus(),10);}
 function saveNote(uid,pi,ri,val){properties[pi].rooms[ri].note=val;saveProps();const el=document.getElementById(uid+'n');if(el){el.innerHTML=`<span style="font-size:11px;color:${val?'#dc2626':'#aaa'}">${val||'備考…'}</span>`;}}
-function addRoom(pi){
+function editContractItems(pi,ri){
+  const p=properties[pi];
+  const r=p.rooms[ri];
+  if(!r.contractItems) r.contractItems=r.items.map(it=>({label:it.label,amt:it.amt||0}));
+  const labels=['家賃','管理費','共益費','駐車場','その他'];
+  // 不足ラベルを補完
+  labels.forEach(lbl=>{
+    if(!r.contractItems.find(x=>x.label===lbl)) r.contractItems.push({label:lbl,amt:0});
+  });
+  const fields=labels.map(lbl=>{
+    const it=r.contractItems.find(x=>x.label===lbl)||{label:lbl,amt:0};
+    return`<div class="form-group">
+      <label class="form-label">${lbl}（円）</label>
+      <input type="number" id="ci_${lbl}" value="${it.amt||0}" style="width:100%">
+    </div>`;
+  }).join('');
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">${r.no}号室 契約家賃編集</div>
+    ${fields}`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='契約家賃を編集';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
+    <button class="btn btn-primary" onclick="saveContractItems(${pi},${ri})">保存</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+function saveContractItems(pi,ri){
+  const labels=['家賃','管理費','共益費','駐車場','その他'];
+  properties[pi].rooms[ri].contractItems=labels.map(lbl=>({
+    label:lbl,
+    amt:parseInt(document.getElementById('ci_'+lbl)?.value)||0
+  }));
+  saveProps();
+  closeModal('classifyModal');
+  renderOccProp();
+  showToast('契約家賃を保存しました','success');
+}
+  function addRoom(pi){
   const p=properties[pi];
   const no=prompt('部屋番号を入力してください（例: 205）');
   if(!no)return;
