@@ -1160,7 +1160,7 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
 
         return`<td style="padding:2px 3px">
           <div style="width:72px;border-radius:4px;overflow:hidden;border:0.5px solid #e0e0d8;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">
-            <div style="background:#f3f4f6;color:#888;padding:2px 4px;font-size:9px;text-align:right;border-bottom:0.5px solid #e0e0d8">${isVacant?'—':ct>0?ct.toLocaleString():'—'}</div>
+            <div style="background:#f3f4f6;color:#888;padding:2px 4px;font-size:9px;text-align:right;border-bottom:0.5px solid #e0e0d8;cursor:pointer" onclick="event.stopPropagation();editContractItems(${pi},${ri},'${ym}')">${isVacant?'—':ct>0?ct.toLocaleString():'—'} <span style="color:#2563eb">✎</span></div>
             <div style="background:${actualBg};color:${actualColor};padding:2px 4px;font-size:9px;font-weight:500;text-align:right;border-bottom:0.5px solid #e0e0d8">${actualLabel}${lateNote}</div>
             <div style="padding:2px 4px;font-size:8px;text-align:right;color:${diffColor}">${diffLabel}</div>
             ${detailRows}
@@ -1177,7 +1177,7 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
           <input type="number" value="${r.area||''}" placeholder="25" style="width:44px;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;text-align:right" onchange="updateRoomField(${pi},${ri},'area',parseFloat(this.value))">
         </td>
         <td style="padding:4px 6px">
-          <div style="font-size:11px;font-weight:500;color:#1a1a1a;cursor:pointer" onclick="editContractItems(${pi},${ri},null)">${contractTotal(r,nowYM())>0?contractTotal(r,nowYM()).toLocaleString():'—'} <span style="font-size:9px;color:#2563eb">編集</span></div>
+          <div style="font-size:11px;font-weight:500;color:#1a1a1a">${contractTotal(r,nowYM())>0?contractTotal(r,nowYM()).toLocaleString():'—'}</div>
         </td>
         ${cells}
         <td style="padding:4px 6px;text-align:center">
