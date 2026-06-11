@@ -21,7 +21,7 @@ select,input[type=number],input[type=text],input[type=date],input[type=month]{bo
 .nb{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:12px;color:#666;margin-bottom:-1px;font-family:'Noto Sans JP',sans-serif;white-space:nowrap}
 .nb.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:500}
 .nb:hover:not(.active){color:#333}
-.content{padding:12px;max-width:960px;margin:0 auto}
+.content{padding:12px;max-width:100%;margin:0 auto}
 
 /* サブグリッド3列 */
 .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
@@ -1179,11 +1179,9 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
 
       return`<tr style="border-bottom:0.5px solid #f0f0e8">
         <td style="position:sticky;left:0;z-index:2;background:#fff;padding:4px 6px;font-weight:500;font-size:11px;white-space:nowrap;min-width:44px;border-right:1px solid #d0d0c8">${r.no}${p.type==='1棟'?'号':''}</td>
-        <td style="padding:4px 4px;min-width:64px;border-right:0.5px solid #e0e0d8">
-          <div style="display:flex;align-items:center;gap:3px">
-            <input type="text" value="${r.layout||''}" placeholder="1K" style="width:32px;font-size:10px;border:0.5px solid #d0d0c8;border-radius:3px;padding:2px 3px" onchange="updateRoomField(${pi},${ri},'layout',this.value)">
-            <span style="font-size:9px;color:${annualDiffColor};font-weight:500;white-space:nowrap">${annualDiffLabel}</span>
-          </div>
+        <td style="padding:4px 4px;min-width:52px;border-right:0.5px solid #e0e0d8">
+          <input type="text" value="${r.layout||''}" placeholder="1K" style="width:38px;font-size:10px;border:0.5px solid #d0d0c8;border-radius:3px;padding:2px 3px" onchange="updateRoomField(${pi},${ri},'layout',this.value)">
+          <div style="font-size:9px;color:${annualDiffColor};font-weight:500;margin-top:1px;white-space:nowrap">${annualDiffLabel}</div>
         </td>
         <td style="padding:4px 4px;min-width:44px;border-right:1px solid #d0d0c8">
           <input type="number" value="${r.area||''}" placeholder="㎡" style="width:38px;font-size:10px;border:0.5px solid #d0d0c8;border-radius:3px;padding:2px 3px;text-align:right" onchange="updateRoomField(${pi},${ri},'area',parseFloat(this.value))">
