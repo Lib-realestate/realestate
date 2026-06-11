@@ -465,8 +465,13 @@ async function onSignIn(){
     document.getElementById('driveStatus').textContent='Drive 接続済';
     document.getElementById('authScreen').style.display='none';
     document.getElementById('appScreen').style.display='block';
+    // ローカルを先に読む
+const localRaw=localStorage.getItem('re_props');
+    if(localRaw){try{const lp=JSON.parse(localRaw);if(lp&&lp.length>0)properties=lp;}catch{}}
+    // Driveからも読み込む
+    await loadPropsFromD();
     if(properties.length===0)loadDefaultProperties();
-    buildPropSelector();buildNav();showTab('cashflow');
+    buildPropSelector();buildYearSel();buildNav();showTab('cashflow');
     await loadDriveFiles();
     showToast('Google Drive に接続しました','success');
   }catch(e){showToast('接続エラー: '+e.message,'error');}
