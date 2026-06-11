@@ -1117,7 +1117,7 @@ function renderOccProp(){
         const isVacant=snap.status==='vacant';
         const isNewEntry=snap.status==='new';
         const isLate=snap.status==='late';
-        const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分</div>`:'';
+        const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分 ${snap.lateAmt?snap.lateAmt.toLocaleString()+'円':''}入金</div>`:'';
 
         let bg,color,label;
         if(isVacant){bg='#F7C1C1';color='#501313';label='空室';}
@@ -1296,7 +1296,7 @@ function toggleOccDetail(pi){
         const total=snap.items.reduce((s,it)=>s+(it.amt||0),0);
         const isVacant=snap.status==='vacant';
         const isLate=snap.status==='late'||(snap.status==='occupied'&&total===0&&!snap.since);
-        const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分</div>`:'';
+        const latePayment=snap.lateFrom?`<div style="font-size:9px;color:#633806;margin-top:1px">滞納分 ${snap.lateAmt?snap.lateAmt.toLocaleString()+'円':''}入金</div>`:'';
         let bg,color,label;
         if(isVacant){bg='#F7C1C1';color='#501313';label='空室';}
         else if(isLate){bg='#FAC775';color='#412402';label='滞納';}
