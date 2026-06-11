@@ -1111,9 +1111,10 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
       const snap=getSnap(r.no,ym);
       if(!snap)return;
       total++;
-      if(snap.status==='occupied'||snap.status==='new')occ++;
+      if(snap.status==='occupied'||snap.status==='new'||snap.status==='late')occ++;
     });
-    return total>0?Math.round(occ/total*100):null;
+    // 全室データがある月のみ計算
+    return total===p.rooms.length?Math.round(occ/total*100):total>0?Math.round(occ/total*100):null;
   });
 
   const annualTotal=monthlyTotal.reduce((s,v)=>s+v,0);
