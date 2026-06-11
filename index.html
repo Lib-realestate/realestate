@@ -1248,9 +1248,16 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
       <thead style="background:#fafaf8">
         <tr>
           <th style="position:sticky;left:0;z-index:3;background:#fafaf8;padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;border-right:1px solid #d0d0c8">部屋</th>
-          <th style="padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">間取</th>
+          <th style="padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">
+            間取<br><span style="color:#aaa;font-size:8px">差額計</span>
+          </th>
           <th style="padding:5px 4px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;border-right:1px solid #d0d0c8">面積</th>
-          ${MONTHS.map(({mo})=>`<th style="padding:5px 2px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">${mo}月</th>`).join('')}
+          ${MONTHS.map(({mo})=>`<th style="padding:5px 2px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">
+            ${mo}月<br>
+            <span style="font-size:7px;color:#aaa;font-weight:400;display:flex;flex-direction:column;align-items:flex-end;gap:0px">
+              <span>契約</span><span>入金</span><span>差額</span>
+            </span>
+          </th>`).join('')}
         </tr>
       </thead>
       <tbody>${rows}${totalRow}${occRow}</tbody>
