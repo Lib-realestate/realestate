@@ -353,7 +353,24 @@ let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
 let properties=[];
   const _todayStr=()=>new Date().toISOString().slice(0,10);
 const getRoomOccStatus=r=>{const t=_todayStr();if(!r.since)return r.status||'vacant';if(r.moveOutDate){if(r.since<=t&&r.moveOutDate>=t)return'occupied';if(r.moveOutDate<t)return'vacant';}return r.status||'occupied';};
-let commonTransactions=[];
+function getContractItems(r, ym, pi){
+  // その月限定のoverride（スナップショット内）を優先
+  if(pi!==undefined){
+    const override=properties[pi]?.monthlySnapshots?.[ym]?.[r.no]?.contractOverride;
+    if(override) return override;
+  }
+  // 変更履歴から最も近い月を探す
+  if(r.contractHistory){
+    const keys=Object.keys(r.contractHistory).filter(k=>k<=ym).sort();
+    if(keys.length>0) return r.contractHistory[keys[keys.length-1]];
+  }
+  return r.contractItems||r.items||[];
+}
+
+function getContractTotal(r, ym){
+  return getContractItems(r,ym).reduce((s,it)=>s+(it.amt||0),0);
+}
+  let commonTransactions=[];
 let driveFiles=[],unclassifiedItems=[];
 let currentProp='all',charts={},currentTabId='cashflow',currentFileFilter='all';
 let pendingUpload=null,folderCreatingLock={};
@@ -1077,8 +1094,8 @@ function renderOccProp(){
   const MONTHS=Array.from({length:12},(_,i)=>({mo:i+1,ym:`${yr}-${String(i+1).padStart(2,'0')}`}));
 
   const getSnap=(no,ym)=>p.monthlySnapshots?.[ym]?.[no]||null;
-  const getContract=(r)=>r.contractItems||r.items||[];
-  const contractTotal=(r)=>getContract(r).reduce((s,it)=>s+(it.amt||0),0);
+  const getContract=(r,ym)=>getContractItems(r,ym,pi);
+const contractTotal=(r,ym)=>getContractTotal(r,ym);
   const snapTotal=(snap)=>snap?snap.items.reduce((s,it)=>s+(it.amt||0),0):null;
 
   // 月別合計
@@ -1160,7 +1177,7 @@ function renderOccProp(){
           <input type="number" value="${r.area||''}" placeholder="25" style="width:44px;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;text-align:right" onchange="updateRoomField(${pi},${ri},'area',parseFloat(this.value))">
         </td>
         <td style="padding:4px 6px">
-          <div style="font-size:11px;font-weight:500;color:#1a1a1a;cursor:pointer" onclick="editContractItems(${pi},${ri})">${ct>0?ct.toLocaleString():'—'} <span style="font-size:9px;color:#2563eb">編集</span></div>
+          <div style="font-size:11px;font-weight:500;color:#1a1a1a;cursor:pointer" onclick="editContractItems(${pi},${ri},null)">${contractTotal(r,nowYM())>0?contractTotal(r,nowYM()).toLocaleString():'—'} <span style="font-size:9px;color:#2563eb">編集</span></div>
         </td>
         ${cells}
         <td style="padding:4px 6px;text-align:center">
@@ -1169,11 +1186,34 @@ function renderOccProp(){
       </tr>`;
     }).join('');
 
-    const totalRow=`<tr style="background:#fafaf8;border-top:0.5px solid #e0e0d8">
-      <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">月間入金合計</td>
-      ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;font-weight:500;color:${monthlyTotal[i]>0?'#1D9E75':'#ccc'}">${monthlyTotal[i]>0?monthlyTotal[i].toLocaleString():'—'}</td>`).join('')}
-      <td></td>
-    </tr>`;
+    // 現況家賃収入（空室以外の契約家賃合計）
+const monthlyOccIncome=MONTHS.map(({ym})=>
+  p.rooms.reduce((s,r)=>{
+    const snap=getSnap(r.no,ym);
+    if(!snap||snap.status==='vacant')return s;
+    return s+contractTotal(r,ym);
+  },0)
+);
+// 満室想定家賃収入（全室契約家賃合計）
+const monthlyFullIncome=MONTHS.map(({ym})=>
+  p.rooms.reduce((s,r)=>s+contractTotal(r,ym),0)
+);
+
+const totalRow=`<tr style="background:#fafaf8;border-top:0.5px solid #e0e0d8">
+  <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">月間入金合計</td>
+  ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;font-weight:500;color:${monthlyTotal[i]>0?'#1D9E75':'#ccc'}">${monthlyTotal[i]>0?monthlyTotal[i].toLocaleString():'—'}</td>`).join('')}
+  <td></td>
+</tr>
+<tr style="background:#fafaf8;border-top:0.5px dashed #e0e0d8">
+  <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">現況家賃収入</td>
+  ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;color:${monthlyOccIncome[i]>0?'#2563eb':'#ccc'}">${monthlyOccIncome[i]>0?monthlyOccIncome[i].toLocaleString():'—'}</td>`).join('')}
+  <td></td>
+</tr>
+<tr style="background:#fafaf8;border-top:0.5px dashed #e0e0d8">
+  <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">満室想定収入</td>
+  ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;color:#888">${monthlyFullIncome[i]>0?monthlyFullIncome[i].toLocaleString():'—'}</td>`).join('')}
+  <td></td>
+</tr>`;
 
     const occRow=`<tr style="background:#fafaf8;font-weight:500;border-top:1px solid #d0d0c8">
       <td colspan="4" style="padding:5px 8px;font-size:11px">月別入居率</td>
@@ -1373,31 +1413,71 @@ function updateMoveOut(pi,ri,val){
 
 function editNote(e,uid,pi,ri){e.stopPropagation();const el=document.getElementById(uid+'n');const cur=properties[pi].rooms[ri].note||'';el.innerHTML=`<input type="text" value="${cur}" placeholder="備考を入力" style="width:100%;font-size:11px;border:none;background:transparent;outline:none;border-bottom:1px solid #93c5fd" onblur="saveNote('${uid}',${pi},${ri},this.value)" onkeydown="if(event.key==='Enter')this.blur()" onclick="event.stopPropagation()">`;setTimeout(()=>el.querySelector('input')?.focus(),10);}
 function saveNote(uid,pi,ri,val){properties[pi].rooms[ri].note=val;saveProps();const el=document.getElementById(uid+'n');if(el){el.innerHTML=`<span style="font-size:11px;color:${val?'#dc2626':'#aaa'}">${val||'備考…'}</span>`;}}
-function editContractItems(pi,ri){
+function editContractItems(pi,ri,ym){
   const p=properties[pi];
   const r=p.rooms[ri];
-  if(!r.contractItems) r.contractItems=r.items.map(it=>({label:it.label,amt:it.amt||0}));
+  const targetYM=ym||nowYM();
   const labels=['家賃','管理費','共益費','駐車場','その他'];
-  // 不足ラベルを補完
+  if(!r.contractItems) r.contractItems=r.items.map(it=>({label:it.label,amt:it.amt||0}));
   labels.forEach(lbl=>{
     if(!r.contractItems.find(x=>x.label===lbl)) r.contractItems.push({label:lbl,amt:0});
   });
+  const current=getContractItems(r,targetYM);
   const fields=labels.map(lbl=>{
-    const it=r.contractItems.find(x=>x.label===lbl)||{label:lbl,amt:0};
+    const it=current.find(x=>x.label===lbl)||{label:lbl,amt:0};
     return`<div class="form-group">
       <label class="form-label">${lbl}（円）</label>
       <input type="number" id="ci_${lbl}" value="${it.amt||0}" style="width:100%">
     </div>`;
   }).join('');
+
   document.getElementById('classifyContent').innerHTML=`
-    <div style="font-size:13px;font-weight:500;margin-bottom:12px">${r.no}号室 契約家賃編集</div>
-    ${fields}`;
+    <div style="font-size:13px;font-weight:500;margin-bottom:4px">${r.no}号室 契約家賃編集</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px">${targetYM.replace('-','年')}月分</div>
+    ${fields}
+    <div style="margin-top:12px;padding:10px;background:#fafaf8;border-radius:8px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+        <input type="checkbox" id="ci_applyForward" style="width:16px;height:16px">
+        翌月以降も同じ金額を適用
+      </label>
+      <div style="font-size:10px;color:#888;margin-top:4px;margin-left:24px">${targetYM.replace('-','年')}月以降の未変更月に一括適用されます</div>
+    </div>`;
+
   const modal=document.getElementById('classifyModal');
   modal.querySelector('.modal-title').textContent='契約家賃を編集';
   modal.querySelector('.modal-actions').innerHTML=`
     <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
-    <button class="btn btn-primary" onclick="saveContractItems(${pi},${ri})">保存</button>`;
+    <button class="btn btn-primary" onclick="saveContractItems(${pi},${ri},'${targetYM}')">保存</button>`;
   modal.classList.add('open');modal.style.display='flex';
+}
+
+function saveContractItems(pi,ri,targetYM){
+  const labels=['家賃','管理費','共益費','駐車場','その他'];
+  const newItems=labels.map(lbl=>({
+    label:lbl,
+    amt:parseInt(document.getElementById('ci_'+lbl)?.value)||0
+  }));
+  const applyForward=document.getElementById('ci_applyForward')?.checked;
+  const r=properties[pi].rooms[ri];
+
+  if(applyForward){
+    // 翌月以降も適用：contractHistoryに記録
+    if(!r.contractHistory) r.contractHistory={};
+    r.contractHistory[targetYM]=newItems;
+    // デフォルト（contractItems）も更新
+    r.contractItems=newItems;
+  } else {
+    // この月のみ：スナップショットのcontractOverrideに記録
+    if(!properties[pi].monthlySnapshots) properties[pi].monthlySnapshots={};
+    if(!properties[pi].monthlySnapshots[targetYM]) properties[pi].monthlySnapshots[targetYM]={};
+    if(!properties[pi].monthlySnapshots[targetYM][r.no]) properties[pi].monthlySnapshots[targetYM][r.no]={status:'occupied',since:'',items:[]};
+    properties[pi].monthlySnapshots[targetYM][r.no].contractOverride=newItems;
+  }
+
+  saveProps();
+  closeModal('classifyModal');
+  renderOccProp();
+  showToast('契約家賃を保存しました','success');
 }
 
 function saveContractItems(pi,ri){
