@@ -1125,12 +1125,21 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
     const detailLabels=['家賃','管理費','共益費','駐車場','その他'];
 
     const rows=p.rooms.map((r,ri)=>{
-      const ct=contractTotal(r);
       const cells=MONTHS.map(({ym})=>{
         const snap=getSnap(r.no,ym);
+        const ct=contractTotal(r,ym);
+
         if(!snap){
-          return`<td style="padding:2px 3px"><div style="width:72px;height:${showDetail?'80px':'52px'};border-radius:4px;background:#f3f4f6;border:0.5px solid #e0e0d8"></div></td>`;
+          return`<td style="padding:1px 2px;min-width:56px">
+            <div style="border-radius:4px;overflow:hidden;border:0.5px solid #e0e0d8;cursor:pointer;opacity:0.5" onclick="event.stopPropagation();editContractItems(${pi},${ri},'${ym}')">
+              <div style="background:#f3f4f6;color:#aaa;padding:2px 3px;font-size:8px;text-align:right;border-bottom:0.5px solid #e0e0d8">${ct>0?ct.toLocaleString():'—'} ✎</div>
+              <div style="background:#f3f4f6;color:#aaa;padding:2px 3px;font-size:9px;text-align:right;border-bottom:0.5px solid #e0e0d8">—</div>
+              <div style="padding:2px 3px;font-size:8px;text-align:right;color:#ccc">—</div>
+              ${showDetail?detailLabels.map(lbl=>`<div style="font-size:7px;color:#ccc;padding:0 3px;text-align:right">—</div>`).join(''):''}
+            </div>
+          </td>`;
         }
+
         const actual=snapTotal(snap);
         const diff=actual-ct;
         const isVacant=snap.status==='vacant';
@@ -1140,101 +1149,105 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
         let actualBg,actualColor,actualLabel;
         if(isVacant){actualBg='#F7C1C1';actualColor='#501313';actualLabel='空室';}
         else if(isLate){actualBg='#FAC775';actualColor='#412402';actualLabel=actual>0?actual.toLocaleString():'0';}
-        else if(isNew){actualBg='#E1F5EE';actualColor='#0F6E56';actualLabel='新規入居';}
+        else if(isNew){actualBg='#E1F5EE';actualColor='#0F6E56';actualLabel='新規';}
         else{actualBg='#9FE1CB';actualColor='#085041';actualLabel=actual>0?actual.toLocaleString():'入居';}
 
-        const diffColor=diff===0?'#888':diff>0?'#16a34a':'#dc2626';
+        const diffColor=isVacant||isNew?'#aaa':diff===0?'#888':diff>0?'#16a34a':'#dc2626';
         const diffLabel=isVacant||isNew?'—':diff===0?'±0':diff>0?'+'+diff.toLocaleString():'▲'+Math.abs(diff).toLocaleString();
 
-        const lateNote=snap.lateFrom?`<div style="font-size:8px;color:#633806">滞納分${snap.lateAmt?snap.lateAmt.toLocaleString()+'円':''}</div>`:'';
-
         const detailRows=showDetail?detailLabels.map(lbl=>{
-          const cit=getContract(r).find(x=>x.label===lbl);
           const sit=snap.items.find(x=>x.label===lbl);
-          const camt=cit?.amt||0;
           const samt=sit?.amt||0;
-          return`<div style="display:flex;justify-content:space-between;font-size:8px;color:#666;padding:0 3px">
-            <span>${lbl}</span><span>${camt>0||samt>0?(samt||'—').toLocaleString?.()??samt:'—'}</span>
-          </div>`;
+          return`<div style="font-size:7px;color:${actualColor};opacity:0.85;padding:0 3px;text-align:right">${lbl}:${samt>0?samt.toLocaleString():'—'}</div>`;
         }).join(''):'';
 
-        return`<td style="padding:2px 3px">
-          <div style="width:72px;border-radius:4px;overflow:hidden;border:0.5px solid #e0e0d8;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">
-            <div style="background:#f3f4f6;color:#888;padding:2px 4px;font-size:9px;text-align:right;border-bottom:0.5px solid #e0e0d8;cursor:pointer" onclick="event.stopPropagation();editContractItems(${pi},${ri},'${ym}')">${isVacant?'—':ct>0?ct.toLocaleString():'—'} <span style="color:#2563eb">✎</span></div>
-            <div style="background:${actualBg};color:${actualColor};padding:2px 4px;font-size:9px;font-weight:500;text-align:right;border-bottom:0.5px solid #e0e0d8">${actualLabel}${lateNote}</div>
-            <div style="padding:2px 4px;font-size:8px;text-align:right;color:${diffColor}">${diffLabel}</div>
+        return`<td style="padding:1px 2px;min-width:56px">
+          <div style="border-radius:4px;overflow:hidden;border:0.5px solid #e0e0d8">
+            <div style="background:#f3f4f6;color:#888;padding:2px 3px;font-size:8px;text-align:right;border-bottom:0.5px solid #e0e0d8;cursor:pointer" onclick="event.stopPropagation();editContractItems(${pi},${ri},'${ym}')">${isVacant?'—':ct>0?ct.toLocaleString():'—'} ✎</div>
+            <div style="background:${actualBg};color:${actualColor};padding:2px 3px;font-size:9px;font-weight:500;text-align:right;border-bottom:0.5px solid #e0e0d8;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">${actualLabel}</div>
+            <div style="padding:2px 3px;font-size:8px;text-align:right;color:${diffColor}">${diffLabel}</div>
             ${detailRows}
           </div>
         </td>`;
       }).join('');
 
+      // 年間差額合計
+      const annualDiff=MONTHS.reduce((s,{ym})=>{
+        const snap=getSnap(r.no,ym);
+        if(!snap||snap.status==='vacant'||snap.status==='new')return s;
+        return s+(snapTotal(snap)-contractTotal(r,ym));
+      },0);
+      const annualDiffColor=annualDiff===0?'#888':annualDiff>0?'#16a34a':'#dc2626';
+      const annualDiffLabel=annualDiff===0?'±0':annualDiff>0?'+'+annualDiff.toLocaleString():'▲'+Math.abs(annualDiff).toLocaleString();
+
       return`<tr style="border-bottom:0.5px solid #f0f0e8">
-        <td style="padding:4px 6px;font-weight:500;font-size:12px;white-space:nowrap">${r.no}${p.type==='1棟'?'号':''}</td>
-        <td style="padding:4px 6px">
-          <input type="text" value="${r.layout||''}" placeholder="1K" style="width:44px;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateRoomField(${pi},${ri},'layout',this.value)">
+        <td style="position:sticky;left:0;z-index:2;background:#fff;padding:4px 6px;font-weight:500;font-size:11px;white-space:nowrap;min-width:44px;border-right:1px solid #d0d0c8">${r.no}${p.type==='1棟'?'号':''}</td>
+        <td style="padding:4px 4px;min-width:44px;border-right:0.5px solid #e0e0d8">
+          <input type="text" value="${r.layout||''}" placeholder="1K" style="width:38px;font-size:10px;border:0.5px solid #d0d0c8;border-radius:3px;padding:2px 3px" onchange="updateRoomField(${pi},${ri},'layout',this.value)">
         </td>
-        <td style="padding:4px 6px">
-          <input type="number" value="${r.area||''}" placeholder="25" style="width:44px;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;text-align:right" onchange="updateRoomField(${pi},${ri},'area',parseFloat(this.value))">
-        </td>
-        <td style="padding:4px 6px">
-          <div style="font-size:11px;font-weight:500;color:#1a1a1a">${contractTotal(r,nowYM())>0?contractTotal(r,nowYM()).toLocaleString():'—'}</div>
+        <td style="padding:4px 4px;min-width:44px;border-right:1px solid #d0d0c8">
+          <input type="number" value="${r.area||''}" placeholder="㎡" style="width:38px;font-size:10px;border:0.5px solid #d0d0c8;border-radius:3px;padding:2px 3px;text-align:right" onchange="updateRoomField(${pi},${ri},'area',parseFloat(this.value))">
         </td>
         ${cells}
-        <td style="padding:4px 6px;text-align:center">
-          <button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteRoom(event,${pi},${ri})">削除</button>
-        </td>
+        <td style="position:sticky;right:0;z-index:2;background:#fff;padding:4px 6px;text-align:right;white-space:nowrap;font-size:10px;font-weight:500;color:${annualDiffColor};border-left:1px solid #d0d0c8;min-width:60px">${annualDiffLabel}</td>
       </tr>`;
     }).join('');
 
-    // 現況家賃収入（空室以外の契約家賃合計）
-const monthlyOccIncome=MONTHS.map(({ym})=>
-  p.rooms.reduce((s,r)=>{
-    const snap=getSnap(r.no,ym);
-    if(!snap||snap.status==='vacant')return s;
-    return s+contractTotal(r,ym);
-  },0)
-);
-// 満室想定家賃収入（全室契約家賃合計）
-const monthlyFullIncome=MONTHS.map(({ym})=>
-  p.rooms.reduce((s,r)=>s+contractTotal(r,ym),0)
-);
+    // 月間合計行
+    const monthlyOccIncome=MONTHS.map(({ym})=>
+      p.rooms.reduce((s,r)=>{
+        const snap=getSnap(r.no,ym);
+        if(!snap||snap.status==='vacant')return s;
+        return s+contractTotal(r,ym);
+      },0)
+    );
+    const monthlyFullIncome=MONTHS.map(({ym})=>
+      p.rooms.reduce((s,r)=>s+contractTotal(r,ym),0)
+    );
 
-const totalRow=`<tr style="background:#fafaf8;border-top:0.5px solid #e0e0d8">
-  <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">月間入金合計</td>
-  ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;font-weight:500;color:${monthlyTotal[i]>0?'#1D9E75':'#ccc'}">${monthlyTotal[i]>0?monthlyTotal[i].toLocaleString():'—'}</td>`).join('')}
-  <td></td>
-</tr>
-<tr style="background:#fafaf8;border-top:0.5px dashed #e0e0d8">
-  <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">現況家賃収入</td>
-  ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;color:${monthlyOccIncome[i]>0?'#2563eb':'#ccc'}">${monthlyOccIncome[i]>0?monthlyOccIncome[i].toLocaleString():'—'}</td>`).join('')}
-  <td></td>
-</tr>
-<tr style="background:#fafaf8;border-top:0.5px dashed #e0e0d8">
-  <td colspan="4" style="padding:5px 8px;font-size:10px;color:#888">満室想定収入</td>
-  ${MONTHS.map((_,i)=>`<td style="padding:5px 3px;text-align:center;font-size:10px;color:#888">${monthlyFullIncome[i]>0?monthlyFullIncome[i].toLocaleString():'—'}</td>`).join('')}
-  <td></td>
-</tr>`;
-
-    const occRow=`<tr style="background:#fafaf8;font-weight:500;border-top:1px solid #d0d0c8">
-      <td colspan="4" style="padding:5px 8px;font-size:11px">月別入居率</td>
-      ${MONTHS.map((_,i)=>{
-        const r=monthlyOccRate[i];
-        if(r===null)return`<td style="padding:5px 3px;text-align:center;font-size:11px;color:#ccc">—</td>`;
-        const color=r>=80?'#1D9E75':r>=60?'#BA7517':'#A32D2D';
-        return`<td style="padding:5px 3px;text-align:center;font-size:11px;font-weight:500;color:${color}">${r}%</td>`;
-      }).join('')}
-      <td></td>
+    const totalRow=`
+    <tr style="background:#fafaf8;border-top:0.5px solid #e0e0d8">
+      <td colspan="3" style="position:sticky;left:0;z-index:2;background:#fafaf8;padding:5px 8px;font-size:10px;color:#888;border-right:1px solid #d0d0c8">月間入金合計</td>
+      ${MONTHS.map((_,i)=>`<td style="padding:5px 2px;text-align:right;font-size:10px;font-weight:500;color:${monthlyTotal[i]>0?'#1D9E75':'#ccc'}">${monthlyTotal[i]>0?monthlyTotal[i].toLocaleString():'—'}</td>`).join('')}
+      <td style="position:sticky;right:0;background:#fafaf8;border-left:1px solid #d0d0c8"></td>
+    </tr>
+    <tr style="background:#fafaf8;border-top:0.5px dashed #e0e0d8">
+      <td colspan="3" style="position:sticky;left:0;z-index:2;background:#fafaf8;padding:5px 8px;font-size:10px;color:#888;border-right:1px solid #d0d0c8">現況家賃収入</td>
+      ${MONTHS.map((_,i)=>`<td style="padding:5px 2px;text-align:right;font-size:10px;color:${monthlyOccIncome[i]>0?'#2563eb':'#ccc'}">${monthlyOccIncome[i]>0?monthlyOccIncome[i].toLocaleString():'—'}</td>`).join('')}
+      <td style="position:sticky;right:0;background:#fafaf8;border-left:1px solid #d0d0c8"></td>
+    </tr>
+    <tr style="background:#fafaf8;border-top:0.5px dashed #e0e0d8">
+      <td colspan="3" style="position:sticky;left:0;z-index:2;background:#fafaf8;padding:5px 8px;font-size:10px;color:#888;border-right:1px solid #d0d0c8">満室想定収入</td>
+      ${MONTHS.map((_,i)=>`<td style="padding:5px 2px;text-align:right;font-size:10px;color:#888">${monthlyFullIncome[i]>0?monthlyFullIncome[i].toLocaleString():'—'}</td>`).join('')}
+      <td style="position:sticky;right:0;background:#fafaf8;border-left:1px solid #d0d0c8"></td>
     </tr>`;
 
-    return`<table style="border-collapse:collapse;width:100%;min-width:900px;font-size:12px">
+    const occRow=`<tr style="background:#fafaf8;font-weight:500;border-top:1px solid #d0d0c8">
+      <td colspan="3" style="position:sticky;left:0;z-index:2;background:#fafaf8;padding:5px 8px;font-size:11px;border-right:1px solid #d0d0c8">月別入居率</td>
+      ${MONTHS.map((_,i)=>{
+        const r=monthlyOccRate[i];
+        if(r===null)return`<td style="padding:5px 2px;text-align:right;font-size:11px;color:#ccc">—</td>`;
+        const color=r>=80?'#1D9E75':r>=60?'#BA7517':'#A32D2D';
+        return`<td style="padding:5px 2px;text-align:right;font-size:11px;font-weight:500;color:${color}">${r}%</td>`;
+      }).join('')}
+      <td style="position:sticky;right:0;background:#fafaf8;border-left:1px solid #d0d0c8"></td>
+    </tr>`;
+
+    return`<table style="border-collapse:collapse;width:100%;font-size:12px;table-layout:fixed">
+      <colgroup>
+        <col style="width:44px">
+        <col style="width:48px">
+        <col style="width:48px">
+        ${MONTHS.map(()=>`<col style="width:58px">`).join('')}
+        <col style="width:64px">
+      </colgroup>
       <thead style="background:#fafaf8">
         <tr>
-          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:52px">部屋</th>
-          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:52px">間取り</th>
-          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:52px">面積㎡</th>
-          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:72px">契約家賃</th>
-          ${MONTHS.map(({mo})=>`<th style="padding:5px 3px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:78px">${mo}月</th>`).join('')}
-          <th style="border-bottom:0.5px solid #e0e0d8;width:40px"></th>
+          <th style="position:sticky;left:0;z-index:3;background:#fafaf8;padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;border-right:1px solid #d0d0c8">部屋</th>
+          <th style="padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">間取</th>
+          <th style="padding:5px 4px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;border-right:1px solid #d0d0c8">面積</th>
+          ${MONTHS.map(({mo})=>`<th style="padding:5px 2px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">${mo}月</th>`).join('')}
+          <th style="position:sticky;right:0;z-index:3;background:#fafaf8;padding:5px 4px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;border-left:1px solid #d0d0c8">年間差額</th>
         </tr>
       </thead>
       <tbody>${rows}${totalRow}${occRow}</tbody>
