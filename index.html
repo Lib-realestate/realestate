@@ -1147,6 +1147,7 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
         const isVacant=snap.status==='vacant';
         const isLate=snap.status==='late';
         const isNew=snap.status==='new';
+        const lateNote=snap.lateFrom?`<div style="font-size:7px;color:#633806">${snap.lateAmt?snap.lateAmt.toLocaleString()+'円':''}入金済</div>`:'';
 
         let actualBg,actualColor,actualLabel;
         if(isVacant){actualBg='#F7C1C1';actualColor='#501313';actualLabel='空室';}
