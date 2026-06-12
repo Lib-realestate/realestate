@@ -496,14 +496,16 @@ function updateSyncTime(){
 }
 
 async function manualSync(){
+  if(!accessToken){showToast('再ログインしてください','error');return;}
   const btn=document.getElementById('syncBtn');
   if(btn){btn.textContent='↻ 更新中…';btn.disabled=true;}
-  await syncFromDrive();
+  try{await syncFromDrive();}catch(e){showToast('同期エラー: '+e.message,'error');}
   if(btn){btn.textContent='↻ 更新';btn.disabled=false;}
 }
 
 async function syncFromDrive(){
   if(!accessToken)return;
+  if(!_appdataFileId&&!accessToken)return;
   try{
     const r=await gapi.client.drive.files.list({
       q:`name='appdata.json' and '${getDriveFolderId()}' in parents and trashed=false`,
