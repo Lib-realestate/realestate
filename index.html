@@ -1482,6 +1482,7 @@ function saveContractItems(pi,ri,targetYM){
     amt:parseInt(document.getElementById('ci_'+lbl)?.value)||0
   }));
   const applyForward=document.getElementById('ci_applyForward')?.checked;
+  console.log('applyForward:', applyForward, 'targetYM:', targetYM);
   const r=properties[pi].rooms[ri];
 
   if(applyForward){
