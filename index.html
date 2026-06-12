@@ -1504,17 +1504,6 @@ function saveContractItems(pi,ri,targetYM){
   showToast('契約家賃を保存しました','success');
 }
 
-function saveContractItems(pi,ri){
-  const labels=['家賃','管理費','共益費','駐車場','その他'];
-  properties[pi].rooms[ri].contractItems=labels.map(lbl=>({
-    label:lbl,
-    amt:parseInt(document.getElementById('ci_'+lbl)?.value)||0
-  }));
-  saveProps();
-  closeModal('classifyModal');
-  renderOccProp();
-  showToast('契約家賃を保存しました','success');
-}
   function addRoom(pi){
   const p=properties[pi];
   const no=prompt('部屋番号を入力してください（例: 205）');
