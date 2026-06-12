@@ -1488,9 +1488,8 @@ function saveContractItems(pi,ri,targetYM){
     // 翌月以降も適用：contractHistoryに記録
     if(!r.contractHistory) r.contractHistory={};
     r.contractHistory[targetYM]=newItems;
-    // デフォルト（contractItems）も更新
-    r.contractItems=newItems;
-  } else {
+  }
+  else {
     // この月のみ：スナップショットのcontractOverrideに記録
     if(!properties[pi].monthlySnapshots) properties[pi].monthlySnapshots={};
     if(!properties[pi].monthlySnapshots[targetYM]) properties[pi].monthlySnapshots[targetYM]={};
