@@ -1166,7 +1166,7 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
         return`<td style="padding:1px 2px;min-width:56px">
           <div style="border-radius:4px;overflow:hidden;border:0.5px solid #e0e0d8">
             <div style="background:#f3f4f6;color:#888;padding:2px 3px;font-size:8px;text-align:right;border-bottom:0.5px solid #e0e0d8;cursor:pointer" onclick="event.stopPropagation();editContractItems(${pi},${ri},'${ym}')">${ct>0?ct.toLocaleString():'—'} ✎</div>
-            <div style="background:${actualBg};color:${actualColor};padding:2px 3px;font-size:9px;font-weight:500;text-align:right;border-bottom:0.5px solid #e0e0d8;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">${actualLabel}${lateNote}</div>
+            <div style="background:${actualBg};color:${actualColor};padding:2px 3px;font-size:9px;font-weight:500;text-align:right;border-bottom:0.5px solid #e0e0d8;cursor:pointer" onclick="cycleRoomStatus(${pi},'${r.no}','${ym}')">${actualLabel}</div>
             <div style="padding:2px 3px;font-size:8px;text-align:right;color:${diffColor}">${diffLabel}</div>
             ${detailRows}
           </div>
