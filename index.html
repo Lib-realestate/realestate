@@ -1651,11 +1651,11 @@ ${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfc
 </div>
 <div class="sec-body" id="body_misc${pi}" style="max-height:0;overflow:hidden;transition:max-height .3s ease">
   <div style="padding:8px 12px;background:#fafaf8;border-radius:6px;margin:4px 0 8px">
-    ${['売買仲介手数料','司法書士費用（抵当権設定・所有権移転）','融資手数料','固都税精算金','その他諸費用'].map(lbl=>{
+    ${['売買仲介手数料','司法書士費用','融資手数料','固都税精算金','その他諸費用'].map(lbl=>{
       const key='misc_'+lbl;
       const val=(p.miscItems||{})[lbl]||0;
       return`<div class="ir" style="border-bottom:0.5px solid #f0f0e8">
-        <div class="ic lbl" style="font-size:11px">${lbl}</div>
+        <div class="ic lbl" style="font-size:11px;white-space:nowrap;min-width:160px">${lbl}</div>
         <div class="ic amt">
           <input class="nbox" type="text" value="${fmt(val)}" onblur="fi(this)" 
             onchange="updateMiscItem(${pi},'${lbl}',pa(this.value))" style="width:110px">
@@ -1948,6 +1948,12 @@ function renderLedger(){
       <td style="padding:7px 8px;font-size:12px">${t.desc||'—'}</td>
       <td style="padding:7px 8px;font-size:11px;color:#888">${t.cat||'—'}</td>
       <td style="padding:7px 8px;text-align:right;font-weight:500;font-size:13px;font-variant-numeric:tabular-nums" class="${t.type==='income'?'g':'r'}">${t.type==='income'?'':' ▲'}${t.amount.toLocaleString()}</td>
+      ${t.type==='expense'?`<td style="padding:7px 8px;text-align:center">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;white-space:nowrap">
+          <input type="checkbox" ${t.isMiscCost?'checked':''} onchange="toggleMiscCost(${pi},${i},this.checked)" style="width:14px;height:14px">
+          諸費用
+        </label>
+      </td>`:'<td></td>'}
       <td style="padding:7px 8px;text-align:center">
         ${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:3px">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -1968,7 +1974,8 @@ function renderLedger(){
 <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
       <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">金額</th>
-      <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
+      <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">諸費用</th>
+<th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
       <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:50px"></th>
     </tr>
   </thead>`;
@@ -2100,7 +2107,8 @@ function renderLedgerAll(){
 <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
             <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">金額</th>
-            <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
+            <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">諸費用</th>
+<th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
             <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:50px"></th>
           </tr>
         </thead>
@@ -2122,6 +2130,19 @@ function deleteCommonTx(idx){
   commonTransactions.splice(idx,1);
   saveProps();
   renderLedgerAll();
+}
+  function toggleMiscCost(pi,txIdx,checked){
+  properties[pi].transactions[txIdx].isMiscCost=checked;
+  // 諸費用合計を自動更新
+  const p=properties[pi];
+  const miscTotal=p.transactions
+    .filter(t=>t.isMiscCost&&t.type==='expense')
+    .reduce((s,t)=>s+t.amount,0);
+  p.miscCost=miscTotal;
+  if(!p.miscItems) p.miscItems={};
+  p.miscItems['明細から自動集計']=miscTotal;
+  saveProps();
+  showToast(`諸費用合計を更新しました: ${miscTotal.toLocaleString()}円`,'success');
 }
 function deleteTx(pi,txIdx){
   if(!confirm('この明細を削除しますか？'))return;
@@ -2681,7 +2702,12 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
   const type=cat.includes('収入')?'income':'expense';
   const dup=p.transactions.find(t=>t.ym===ym&&t.amount===amount&&t.type===type&&t.desc===(result?.description||''));
   if(!dup){
-   p.transactions.push({ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null});
+   // 取得月から6ヶ月以内の支出は諸費用候補として自動フラグ
+const acqYM=(p.acquireDate||'').slice(0,7);
+const isNearAcq=acqYM&&ym&&Math.abs(mdiff(acqYM,ym))<=6;
+const isMiscCost=type==='expense'&&isNearAcq;
+p.transactions.push({ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null,isMiscCost});
+  
     saveProps();
     showToast(`収支記録：${ym} ${type==='income'?'収入':'支出'} ${amount.toLocaleString()}円`,'success');
   }
