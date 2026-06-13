@@ -1678,8 +1678,6 @@ ${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfc
       <div class="ct" style="margin-bottom:10px">CCR（Cash on Cash Return）</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div>
           <div class="col-head">購入時想定</div>
           <div class="info-rows">
             <div class="ir"><div class="ic lbl" style="width:160px">設定家賃（満室）<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" id="origRentMon_${pi}" value="${fmt(origRent)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value));document.getElementById('origRentAnn_${pi}').value=fmt(pa(this.value)*12)"><span class="nunit">/月</span></div></div>
