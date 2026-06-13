@@ -1580,7 +1580,7 @@ const currRentFull=p.rooms.reduce((s,r)=>s+getContractTotal(r,nowYM()),0);
     const mp=cm(seg.loan,seg.rate,seg.years);
     const mi=seg.loan*(seg.rate/100/12);
     const mk=mp-mi,ap=mp*12,tp=mp*seg.years*12,ti=tp-seg.loan;
-    const ratio=(ap+(origNet||0))>0?ap/(ap+(origNet||0))*100:0;
+    const ratio=currRentFull>0?ap/(currRentFull*12)*100:0;
     const rc=ratio<=40?'#16a34a':ratio<=50?'#f59e0b':'#dc2626';
     return`<div class="loan-seg" id="loanseg_${pi}_${i}">
       <div class="flex-b" style="margin-bottom:6px">
