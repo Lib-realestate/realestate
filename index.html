@@ -1558,8 +1558,12 @@ function renderAnalysis(){
   const acq=p.acquireDate?p.acquireDate.slice(0,7):nowYM();
   const elapsed=Math.max(1,mdiff(acq,nowYM()));
   const annI=getAnnualI(pi),annE=getAnnualE(pi);
-  const cumNet=Math.round((annI-annE)/12*elapsed);
-  const avgNet=Math.round(cumNet/elapsed*12);
+  // 入力済み月のtransactionsから実際の累計を計算
+const allTx=p.transactions||[];
+const txMonths=[...new Set(allTx.map(t=>t.ym))].filter(ym=>ym);
+const txMonthCount=txMonths.length||1;
+const cumNet=allTx.reduce((s,t)=>t.type==='income'?s+t.amount:s-t.amount,0);
+const avgNet=Math.round(cumNet/txMonthCount*12);
   const origRent=p.origRent||0;
   // 入金済み月の現況家賃収入の月平均
 const snapMonthsData=Object.entries(p.monthlySnapshots||{});
@@ -1827,8 +1831,12 @@ const currRentFull=occMonths.length>0
   const acq=p.acquireDate?p.acquireDate.slice(0,7):nowYM();
   const elapsed=Math.max(1,mdiff(acq,nowYM()));
   const annI=getAnnualI(pi),annE=getAnnualE(pi);
-  const cumNet=Math.round((annI-annE)/12*elapsed);
-  const avgNet=Math.round(cumNet/elapsed*12);
+  // 入力済み月のtransactionsから実際の累計を計算
+const allTx=p.transactions||[];
+const txMonths=[...new Set(allTx.map(t=>t.ym))].filter(ym=>ym);
+const txMonthCount=txMonths.length||1;
+const cumNet=allTx.reduce((s,t)=>t.type==='income'?s+t.amount:s-t.amount,0);
+const avgNet=Math.round(cumNet/txMonthCount*12);
   const currRentAnnEl=document.getElementById('an_currRentAnn');if(currRentAnnEl)currRentAnnEl.textContent=(currRentFull*12).toLocaleString();
   const avgNetEl=document.getElementById('an_avgNet');if(avgNetEl)avgNetEl.textContent=avgNet.toLocaleString();
   const avgNoteEl=document.getElementById('an_avgNote');if(avgNoteEl)avgNoteEl.textContent=`累計${cumNet.toLocaleString()}÷${elapsed}ヶ月×12`;
