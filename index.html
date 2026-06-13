@@ -1914,7 +1914,8 @@ function renderLedger(){
   const tableHead=`<thead style="background:#fafaf8">
     <tr>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">年月</th>
-      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">発行者</th>
+<th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
       <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">金額</th>
       <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
@@ -2045,7 +2046,8 @@ function renderLedgerAll(){
         <thead style="background:#fafaf8">
           <tr>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">年月</th>
-            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">発行者</th>
+<th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
             <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">金額</th>
             <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
@@ -2311,7 +2313,8 @@ function showMultiClassifyModal(){
     const detectedCat=SUB_FOLDERS.find(s=>s.includes(r?.category||''))||SUB_FOLDERS[4];
     return`<tr style="border-bottom:0.5px solid #f0f0e8">
       <td style="padding:6px 8px;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.file.name}${dupBadge}</td>
-      <td style="padding:6px 4px;font-size:11px;color:#888">${r?.summary||'—'}</td>
+      <td style="padding:6px 4px;font-size:11px;color:#888">${r?.issuer||'—'}</td>
+<td style="padding:6px 4px;font-size:11px;color:#888">${r?.summary||'—'}</td>
       <td style="padding:6px 4px"><select id="mpProp_${idx}" style="font-size:11px;width:100%"><option value="">— 未分類 —</option>${propOptions.replace(`value="${detectedProp}"`,`value="${detectedProp}" selected`)}</select></td>
       <td style="padding:6px 4px"><select id="mpCat_${idx}" style="font-size:11px;width:100%">${catOptions.replace(`value="${detectedCat}"`,`value="${detectedCat}" selected`)}</select></td>
       <td style="padding:6px 4px"><input type="date" id="mpDate_${idx}" value="${r?.date||today()}" style="font-size:11px;width:110px"></td>
@@ -2331,7 +2334,8 @@ function showMultiClassifyModal(){
         <thead style="background:#fafaf8">
           <tr>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">ファイル名</th>
-            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
+            <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">発行者</th>
+<th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:120px">物件</th>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">カテゴリ</th>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">日付</th>
