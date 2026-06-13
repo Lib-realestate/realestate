@@ -1561,7 +1561,21 @@ function renderAnalysis(){
   const cumNet=Math.round((annI-annE)/12*elapsed);
   const avgNet=Math.round(cumNet/elapsed*12);
   const origRent=p.origRent||0;
-  const currRentFull=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+  // 入金済み月の現況家賃収入の月平均
+const snapMonthsData=Object.entries(p.monthlySnapshots||{});
+const occMonths=snapMonthsData.filter(([ym,snap])=>
+  p.rooms.some(r=>snap[r.no]&&snap[r.no].status!=='vacant')
+);
+const currRentFull=occMonths.length>0
+  ?Math.round(occMonths.reduce((s,[ym,snap])=>
+    s+p.rooms.reduce((ss,r)=>{
+      const snapRoom=snap[r.no];
+      if(!snapRoom||snapRoom.status==='vacant')return ss;
+      return ss+getContractTotal(r,ym);
+    },0)
+  ,0)/occMonths.length)
+  :p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+(it.amt||0),0),0);
+
   const gy=(r,b)=>b>0?(r*12/b*100).toFixed(2)+'%':'—';
   const origNet=p.origNet||0;
 
@@ -1780,7 +1794,21 @@ function calcAnalysis(pi){
   // 表面利回り
   const gy=(r,b)=>b>0?(r*12/b*100).toFixed(2)+'%':'—';
   const origRent=p.origRent||0;
-  const currRentFull=p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+it.amt,0),0);
+// 入金済み月の現況家賃収入の月平均
+const snapMonthsData=Object.entries(p.monthlySnapshots||{});
+const occMonths=snapMonthsData.filter(([ym,snap])=>
+  p.rooms.some(r=>snap[r.no]&&snap[r.no].status!=='vacant')
+);
+const currRentFull=occMonths.length>0
+  ?Math.round(occMonths.reduce((s,[ym,snap])=>
+    s+p.rooms.reduce((ss,r)=>{
+      const snapRoom=snap[r.no];
+      if(!snapRoom||snapRoom.status==='vacant')return ss;
+      return ss+getContractTotal(r,ym);
+    },0)
+  ,0)/occMonths.length)
+  :p.rooms.reduce((s,r)=>s+r.items.reduce((ss,it)=>ss+(it.amt||0),0),0);
+  
   ['an_y1orig','an_y1curr','an_y2orig','an_y2curr'].forEach((id,i)=>{
     const rent=[origRent,currRentFull,origRent,currRentFull][i];
     const base=[price,price,pr,pr][i];
