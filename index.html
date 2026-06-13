@@ -1639,7 +1639,32 @@ ${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfc
       <div class="info-rows">
         <div class="ir"><div class="ic lbl">取得価格 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.price)}" onblur="fi(this)" onchange="updatePropField(${pi},'price',pa(this.value))"><span class="nunit">円</span></div></div>
         <div class="ir"><div class="ic lbl">リフォーム費用 <span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.reform||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'reform',pa(this.value))"><span class="nunit">円</span></div></div>
-        <div class="ir"><div class="ic lbl">諸費用合計 <span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(p.miscCost||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'miscCost',pa(this.value))"><span class="nunit">円</span><span class="nnote" id="an_miscPct">${p.price?`取得価格の ${((p.miscCost||0)/p.price*100).toFixed(1)}%`:''}</span></div></div>
+        <div class="ir">
+  <div class="ic lbl">諸費用合計 <span class="badge bz" style="font-size:9px">手入力</span>
+    <button class="btn-sm" style="font-size:10px;margin-left:6px" onclick="togSec('misc${pi}')">▼ 内訳</button>
+  </div>
+  <div class="ic amt">
+    <input class="nbox" type="text" value="${fmt(p.miscCost||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'miscCost',pa(this.value));calcAnalysis(${pi})">
+    <span class="nunit">円</span>
+    <span class="nnote" id="an_miscPct">${p.price?`取得価格の ${((p.miscCost||0)/p.price*100).toFixed(1)}%`:''}</span>
+  </div>
+</div>
+<div class="sec-body" id="body_misc${pi}" style="max-height:0;overflow:hidden;transition:max-height .3s ease">
+  <div style="padding:8px 12px;background:#fafaf8;border-radius:6px;margin:4px 0 8px">
+    ${['売買仲介手数料','司法書士費用（抵当権設定・所有権移転）','融資手数料','固都税精算金','その他諸費用'].map(lbl=>{
+      const key='misc_'+lbl;
+      const val=(p.miscItems||{})[lbl]||0;
+      return`<div class="ir" style="border-bottom:0.5px solid #f0f0e8">
+        <div class="ic lbl" style="font-size:11px">${lbl}</div>
+        <div class="ic amt">
+          <input class="nbox" type="text" value="${fmt(val)}" onblur="fi(this)" 
+            onchange="updateMiscItem(${pi},'${lbl}',pa(this.value))" style="width:110px">
+          <span class="nunit">円</span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+</div>
         <div class="ir"><div class="ic lbl">取得コスト合計 <span class="badge ba-b">自動</span><br><span style="font-size:10px">(取得価格＋リフォーム＋諸費用)</span></div><div class="ic amt"><span class="nbox auto" id="an_totalCost">${fmt(tc)}</span><span class="nunit">円</span></div></div>
         <div class="ir"><div class="ic lbl">借入額 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" value="${fmt(p.loan||0)}" onblur="fi(this)" onchange="updatePropField(${pi},'loan',pa(this.value));calcAnalysis(${pi})"><span class="nunit">円</span><span class="nnote" id="an_loanPct">${p.price?`取得価格の ${((p.loan||0)/p.price*100).toFixed(1)}%`:''}</span></div></div>
         <div class="ir"><div class="ic lbl">自己資金 <span class="badge ba-b">自動</span><br><span style="font-size:10px">(取得コスト合計−借入額)</span></div><div class="ic amt"><span class="nbox auto" id="an_selfFund">${fmt(sf)}</span><span class="nunit">円</span><span class="nnote" id="an_selfPct">${tc?`取得コストの ${(sf/tc*100).toFixed(1)}%`:''}</span></div></div>
