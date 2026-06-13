@@ -2739,8 +2739,7 @@ const newTx={ym,type,amount,desc:result?.description||'',cat,createdAt:new Date(
 p.transactions.push(newTx);
 if(autoMiscCost){
   const txIdx=p.transactions.length-1;
-  const propIdx=properties.indexOf(p);
-  if(propIdx>=0) toggleMiscCost(propIdx,txIdx,true);
+  toggleMiscCost(propIdx,txIdx,true);
 }
   
     saveProps();
