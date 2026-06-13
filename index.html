@@ -2131,18 +2131,31 @@ function deleteCommonTx(idx){
   saveProps();
   renderLedgerAll();
 }
-  function toggleMiscCost(pi,txIdx,checked){
+  function classifyMiscItem(desc){
+  const d=(desc||'').toLowerCase();
+  if(/仲介|仲介手数料/.test(d)) return '売買仲介手数料';
+  if(/司法書士|登記|所有権|抵当権/.test(d)) return '司法書士費用';
+  if(/融資手数料|事務手数料|ローン手数料/.test(d)) return '融資手数料';
+  if(/固都税|固定資産税|都市計画税|精算/.test(d)) return '固都税精算金';
+  return 'その他諸費用';
+}
+
+function toggleMiscCost(pi,txIdx,checked){
   properties[pi].transactions[txIdx].isMiscCost=checked;
-  // 諸費用合計を自動更新
   const p=properties[pi];
-  const miscTotal=p.transactions
-    .filter(t=>t.isMiscCost&&t.type==='expense')
-    .reduce((s,t)=>s+t.amount,0);
-  p.miscCost=miscTotal;
   if(!p.miscItems) p.miscItems={};
-  p.miscItems['明細から自動集計']=miscTotal;
+  // 全内訳をリセット
+  ['売買仲介手数料','司法書士費用','融資手数料','固都税精算金','その他諸費用'].forEach(k=>p.miscItems[k]=0);
+  // チェック済みtransactionを内訳に振り分け
+  p.transactions.filter(t=>t.isMiscCost&&t.type==='expense').forEach(t=>{
+    const category=classifyMiscItem(t.desc);
+    p.miscItems[category]=(p.miscItems[category]||0)+t.amount;
+  });
+  // 諸費用合計を更新
+  p.miscCost=Object.values(p.miscItems).reduce((s,v)=>s+v,0);
   saveProps();
-  showToast(`諸費用合計を更新しました: ${miscTotal.toLocaleString()}円`,'success');
+  calcAnalysis(pi);
+  showToast(`諸費用合計を更新しました: ${p.miscCost.toLocaleString()}円`,'success');
 }
 function deleteTx(pi,txIdx){
   if(!confirm('この明細を削除しますか？'))return;
