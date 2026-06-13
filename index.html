@@ -2154,7 +2154,6 @@ function toggleMiscCost(pi,txIdx,checked){
   // 諸費用合計を更新
   p.miscCost=Object.values(p.miscItems).reduce((s,v)=>s+v,0);
   saveProps();
-  calcAnalysis(pi);
   showToast(`諸費用合計を更新しました: ${p.miscCost.toLocaleString()}円`,'success');
 }
 function deleteTx(pi,txIdx){
