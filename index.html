@@ -719,14 +719,17 @@ function getFiscalLabels(){return getFiscalIndices().map(i=>MONTH_LABELS_ALL[i])
 function getMonthlyIdx(){const mo=parseInt(document.getElementById('monthSel').value);return MONTH_BASE.indexOf(mo);}
 function getMonthI(mi,pi){
 const mo=MONTH_BASE[mi];
-const yr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+// 決算年度モードで1〜fiscalMonth月は翌年
+const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;
 const ym=`${yr}-${String(mo).padStart(2,'0')}`;
 if(pi===null)return properties.reduce((s,p)=>s+getTx(p,ym,'income'),0);
 return getTx(properties[pi],ym,'income');
 }
 function getMonthE(mi,pi){
 const mo=MONTH_BASE[mi];
-const yr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;
 const ym=`${yr}-${String(mo).padStart(2,'0')}`;
 if(pi===null)return properties.reduce((s,p)=>s+getTx(p,ym,'expense'),0);
 return getTx(properties[pi],ym,'expense');
