@@ -2319,8 +2319,13 @@ function showMultiClassifyModal(){
     </tr>`;
   }).join('');
 
+  const hasDup=multiPendingUploads.some(item=>item.result?.duplicate);
   document.getElementById('classifyContent').innerHTML=`
-    <div style="font-size:12px;color:#888;margin-bottom:10px">${multiPendingUploads.length}件のファイルを確認してください。物件・カテゴリを修正してからアップロードしてください。</div>
+    ${hasDup?`<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#78350f">
+      <div style="font-weight:700;margin-bottom:4px">⚠️ 重複の可能性があるファイルがあります</div>
+      <div>${multiPendingUploads.filter(item=>item.result?.duplicate).map(item=>`・${item.file.name}：${item.result.duplicateReason||''}`).join('<br>')}</div>
+    </div>`:''}
+    <div style="font-size:12px;color:#888;margin-bottom:10px">${multiPendingUploads.length}件のファイルを確認してください。
     <div style="overflow-x:auto;margin-bottom:10px">
       <table style="border-collapse:collapse;width:100%;min-width:600px">
         <thead style="background:#fafaf8">
