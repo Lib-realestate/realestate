@@ -2402,6 +2402,12 @@ function showMultiClassifyModal(){
       <td style="padding:6px 4px"><select id="mpCat_${idx}" style="font-size:11px;width:100%">${catOptions.replace(`value="${detectedCat}"`,`value="${detectedCat}" selected`)}</select></td>
       <td style="padding:6px 4px"><input type="date" id="mpDate_${idx}" value="${r?.date||today()}" style="font-size:11px;width:110px"></td>
       <td style="padding:6px 4px;font-size:11px;text-align:right;color:${r?.category==='収入'?'#16a34a':'#dc2626'}">${r?.amount?r.amount.toLocaleString():'—'}</td>
+      <td style="padding:6px 4px;text-align:center">
+        ${r?.category!=='収入'?`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px">
+          <input type="checkbox" id="mpMisc_${idx}" style="width:14px;height:14px">
+          諸費用
+        </label>`:''}
+      </td>
     </tr>`;
   }).join('');
 
@@ -2423,7 +2429,8 @@ function showMultiClassifyModal(){
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">カテゴリ</th>
             <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">日付</th>
             <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">金額</th>
-          </tr>
+            <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">諸費用</th>
+            </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
@@ -2457,6 +2464,16 @@ async function confirmMultiUpload(){
       const driveResult=await uploadToDrive(item.file,targetId,finalName);
       updateProc(item.id,'done',`✓ ${prop.name} / ${cat} → ${finalName}`,driveResult.webViewLink);
       applyFileDataToApp(parseInt(propIdx),cat,item.result,date,driveResult);
+      // 諸費用チェックの処理
+      const isMiscChecked=document.getElementById(`mpMisc_${idx}`)?.checked;
+      if(isMiscChecked){
+        const p=properties[parseInt(propIdx)];
+        const txIdx=p.transactions.length-1;
+        if(txIdx>=0){
+          p.transactions[txIdx].isMiscCost=true;
+          toggleMiscCost(parseInt(propIdx),txIdx,true);
+        }
+      }
       if(item.result?.rooms&&item.result.rooms.length>0){
         const ym=date?date.slice(0,7):'';
         applyRoomsToProperty(parseInt(propIdx),item.result.rooms,ym);
