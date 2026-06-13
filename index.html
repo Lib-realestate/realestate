@@ -2734,9 +2734,6 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
    // 取得月から6ヶ月以内の支出は諸費用候補として自動フラグ
 const acqYM=(p.acquireDate||'').slice(0,7);
 const isNearAcq=acqYM&&ym&&Math.abs(mdiff(acqYM,ym))<=6;
-const isMiscCost=type==='expense'&&isNearAcq;
-const acqYM=(p.acquireDate||'').slice(0,7);
-const isNearAcq=acqYM&&ym&&Math.abs(mdiff(acqYM,ym))<=6;
 const autoMiscCost=type==='expense'&&isNearAcq;
 const newTx={ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null,isMiscCost:autoMiscCost};
 p.transactions.push(newTx);
