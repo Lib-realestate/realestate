@@ -1676,31 +1676,45 @@ ${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfc
       </table>
       <div style="height:1px;background:#e0e0d8;margin:10px 0"></div>
       <div class="ct" style="margin-bottom:10px">CCR（Cash on Cash Return）</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div>
-          <div class="col-head">購入時満室想定</div>
-          <div class="info-rows">
-            <div class="ir"><div class="ic lbl" style="width:160px">設定家賃<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt"><input class="nbox ai" type="text" id="origRentMon_${pi}" value="${fmt(origRent)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value));document.getElementById('origRentAnn_${pi}').value=fmt(pa(this.value)*12)"><span class="nunit">/月</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">年間収入<span class="badge ba-b">自動</span></div><div class="ic amt"><input class="nbox" type="text" id="origRentAnn_${pi}" value="${fmt(origRent*12)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',Math.round(pa(this.value)/12));document.getElementById('origRentMon_${pi}').value=fmt(Math.round(pa(this.value)/12))"><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">想定年間純利益<span class="badge bz" style="font-size:9px">手入力</span></div><div class="ic amt"><input class="nbox" type="text" value="${fmt(origNet)}" onblur="fi(this)" onchange="updatePropField(${pi},'origNet',pa(this.value))"><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g" id="an_ccrOrig">${sf>0&&origNet>0?(origNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_pbOrig">${sf>0&&origNet>0?(sf/origNet).toFixed(1)+'年':'—'}</span></div></div>
-          </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr>
+              <th style="padding:8px 12px;font-size:11px;font-weight:500;color:#888;border-bottom:1px solid #e0e0d8;text-align:left;width:140px"></th>
+              <th style="padding:8px 12px;font-size:11px;font-weight:500;color:#888;border-bottom:1px solid #e0e0d8;text-align:center">購入時満室想定</th>
+              <th style="padding:8px 12px;font-size:11px;font-weight:500;color:#888;border-bottom:1px solid #e0e0d8;text-align:center">現時点満室想定（実績平均）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:0.5px solid #f0f0e8">
+              <td style="padding:7px 12px;font-size:12px;color:#888">月額収入</td>
+              <td style="padding:7px 12px;text-align:center;white-space:nowrap"><input class="nbox ai" type="text" id="origRentMon_${pi}" value="${fmt(origRent)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',pa(this.value));document.getElementById('origRentAnn_${pi}').value=fmt(pa(this.value)*12)" style="width:80px"><span class="nunit">/月</span></td>
+              <td style="padding:7px 12px;text-align:center;white-space:nowrap"><span class="nbox auto" style="width:80px">${fmt(currRentFull)}</span><span class="nunit">/月</span></td>
+            </tr>
+            <tr style="border-bottom:0.5px solid #f0f0e8">
+              <td style="padding:7px 12px;font-size:12px;color:#888">年間収入</td>
+              <td style="padding:7px 12px;text-align:center;white-space:nowrap"><input class="nbox" type="text" id="origRentAnn_${pi}" value="${fmt(origRent*12)}" onblur="fi(this)" onchange="updatePropField(${pi},'origRent',Math.round(pa(this.value)/12));document.getElementById('origRentMon_${pi}').value=fmt(Math.round(pa(this.value)/12))" style="width:80px"><span class="nunit">/年</span></td>
+              <td style="padding:7px 12px;text-align:center;white-space:nowrap"><span class="nbox auto" style="width:80px">${fmt(currRentFull*12)}</span><span class="nunit">/年</span></td>
+            </tr>
+            <tr style="border-bottom:0.5px solid #f0f0e8">
+              <td style="padding:7px 12px;font-size:12px;color:#888">年間純利益</td>
+              <td style="padding:7px 12px;text-align:center;white-space:nowrap"><input class="nbox" type="text" value="${fmt(origNet)}" onblur="fi(this)" onchange="updatePropField(${pi},'origNet',pa(this.value))" style="width:80px"><span class="nunit">/年</span></td>
+              <td style="padding:7px 12px;text-align:center;white-space:nowrap"><span class="nbox auto" style="width:80px" id="an_avgNet">${fmt(avgNet)}</span><span class="nunit">/年</span><span class="nnote" id="an_avgNote" style="font-size:10px;color:#aaa;display:block">累計${fmt(cumNet)}÷${elapsed}ヶ月×12</span></td>
+            </tr>
+            <tr style="border-bottom:0.5px solid #f0f0e8">
+              <td style="padding:7px 12px;font-size:12px;color:#888">CCR</td>
+              <td style="padding:7px 12px;text-align:center"><span class="nbox auto g" style="width:80px" id="an_ccrOrig">${sf>0&&origNet>0?(origNet/sf*100).toFixed(2)+'%':'—'}</span></td>
+              <td style="padding:7px 12px;text-align:center"><span class="nbox auto g" style="width:80px" id="an_ccrCurr">${sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—'}</span></td>
+            </tr>
+            <tr>
+              <td style="padding:7px 12px;font-size:12px;color:#888">自己資金回収年数</td>
+              <td style="padding:7px 12px;text-align:center"><span class="nbox auto" style="width:80px" id="an_pbOrig">${sf>0&&origNet>0?(sf/origNet).toFixed(1)+'年':'—'}</span></td>
+              <td style="padding:7px 12px;text-align:center"><span class="nbox auto" style="width:80px" id="an_pbCurr">${sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—'}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;padding:8px 10px;background:#fafaf8;border-radius:6px;font-size:11px;color:#888" id="an_elapsed">
+          物件取得年月：${acq}　経過：${elapsed}ヶ月
         </div>
-        <div>
-          <div class="col-head">現時点満室想定（実績平均）</div>
-          <div class="info-rows">
-            <div class="ir"><div class="ic lbl" style="width:160px">現在家賃<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(currRentFull)}</span><span class="nunit">/月</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">現在家賃<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto">${fmt(currRentFull*12)}</span><span class="nunit">/年</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">年間純利益<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_avgNet">${fmt(avgNet)}</span><span class="nunit">/年</span><span class="nnote" id="an_avgNote">累計${fmt(cumNet)}÷${elapsed}ヶ月×12</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">CCR<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto g" id="an_ccrCurr">${sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—'}</span></div></div>
-            <div class="ir"><div class="ic lbl" style="width:160px">自己資金回収年数<span class="badge ba-b">自動</span></div><div class="ic amt"><span class="nbox auto" id="an_pbCurr">${sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—'}</span></div></div>
-          </div>
-          <div style="margin-top:8px;padding:8px 10px;background:#fafaf8;border-radius:6px;font-size:11px;color:#888" id="an_elapsed">
-            物件取得年月：${acq}　経過：${elapsed}ヶ月
-          </div>
-        </div>
-      </div>
 
   <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
     <div class="sec-toggle" onclick="togSec('dep')"><span style="font-size:13px;font-weight:500">耐用年数・減価償却</span><span id="ic_dep">▼</span></div>
