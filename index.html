@@ -2135,7 +2135,7 @@ function deleteCommonTx(idx){
   const d=(desc||'').toLowerCase();
   if(/仲介|仲介手数料/.test(d)) return '売買仲介手数料';
   if(/司法書士|登記|所有権|抵当権/.test(d)) return '所有権・抵当権登記費用';
-  if(/融資|融資手数料|事務手数料|ローン手数料|取扱手数料|銀行手数料/.test(d)) return '融資手数料';
+  if(/融資|融資手数料|事務手数料|ローン手数料|取扱手数料|銀行手数料|融資関連|住宅ローン|担保事務/.test(d)) return '融資手数料';
   if(/固都税|固定資産税|都市計画税|精算/.test(d)) return '固都税精算金';
   return 'その他諸費用';
 }
