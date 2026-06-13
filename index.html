@@ -2469,7 +2469,7 @@ async function confirmMultiUpload(){
       if(isMiscChecked){
         const p=properties[parseInt(propIdx)];
         const txIdx=p.transactions.length-1;
-        if(txIdx>=0){
+        if(txIdx>=0&&!p.transactions[txIdx].isMiscCost){
           p.transactions[txIdx].isMiscCost=true;
           toggleMiscCost(parseInt(propIdx),txIdx,true);
         }
@@ -2735,7 +2735,16 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
 const acqYM=(p.acquireDate||'').slice(0,7);
 const isNearAcq=acqYM&&ym&&Math.abs(mdiff(acqYM,ym))<=6;
 const isMiscCost=type==='expense'&&isNearAcq;
-p.transactions.push({ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null,isMiscCost});
+const acqYM=(p.acquireDate||'').slice(0,7);
+const isNearAcq=acqYM&&ym&&Math.abs(mdiff(acqYM,ym))<=6;
+const autoMiscCost=type==='expense'&&isNearAcq;
+const newTx={ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null,isMiscCost:autoMiscCost};
+p.transactions.push(newTx);
+if(autoMiscCost){
+  const txIdx=p.transactions.length-1;
+  const propIdx=properties.indexOf(p);
+  if(propIdx>=0) toggleMiscCost(propIdx,txIdx,true);
+}
   
     saveProps();
     showToast(`収支記録：${ym} ${type==='income'?'収入':'支出'} ${amount.toLocaleString()}円`,'success');
