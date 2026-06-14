@@ -1000,23 +1000,24 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td class="left" style="color:#16a34a;font-weight:500">収入</td>
-          ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi);return`<td class="g" style="text-align:right${pos>1?';opacity:.6':''}">${v>0?fmt(v):'—'}</td>`;}).join('')}
-          <td class="g" style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8">${fmt(totI2)}</td>
+        <tbody>
+        <tr style="border-bottom:0.5px solid #e0e0d8">
+          <td class="left" style="font-weight:500">収支</td>
+          ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi)-getMonthE(idx,pi);return`<td style="text-align:right;font-weight:500${pos>1?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v<0?'▲':''}${fmt(v)}</td>`;}).join('')}
+          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${totI2-totE2>=0?'g':'r'}">${totI2-totE2<0?'▲':''}${fmt(totI2-totE2)}</td>
         </tr>
-        <tr>
-          <td class="left" style="color:#dc2626;font-weight:500">支出</td>
-          ${indices.map((idx,pos)=>{const v=getMonthE(idx,pi);return`<td class="r" style="text-align:right${pos>1?';opacity:.6':''}">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
-          <td class="r" style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8">▲${fmt(totE2)}</td>
-        </tr>
-        ${isAll?`<tr>
-          <td class="left" style="color:#dc2626;font-size:11px">法人税等</td>
+        ${isAll?properties.map((p,pi2)=>`<tr style="border-bottom:0.5px solid #f0f0e8">
+          <td class="left" style="font-size:11px;color:#888;padding-left:16px">${p.name}</td>
+          ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi2)-getMonthE(idx,pi2);return`<td style="text-align:right;font-size:11px${pos>1?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v!==0?(v<0?'▲':'')+fmt(v):'—'}</td>`;}).join('')}
+          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${getAnnualI(pi2)-getAnnualE(pi2)>=0?'g':'r'}">${getAnnualI(pi2)-getAnnualE(pi2)<0?'▲':''}${fmt(getAnnualI(pi2)-getAnnualE(pi2))}</td>
+        </tr>`).join(''):''}
+        ${isAll?`<tr style="border-bottom:0.5px solid #e0e0d8">
+          <td class="left" style="color:#dc2626;font-size:11px;padding-left:16px">法人税等</td>
           ${indices.map((idx,pos)=>{const v=TAX_MONTHLY[idx];return`<td class="r" style="text-align:right;font-size:11px${pos>1?';opacity:.6':''}">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
           <td class="r" style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8">▲${fmt(indices.reduce((s,idx)=>s+TAX_MONTHLY[idx],0))}</td>
         </tr>
-        <tr>
-          <td class="left" style="color:#dc2626;font-size:11px">共通経費</td>
+        <tr style="border-bottom:0.5px solid #e0e0d8">
+          <td class="left" style="color:#dc2626;font-size:11px;padding-left:16px">共通経費</td>
           ${indices.map((idx,pos)=>{const v=COMMON_MONTHLY[idx];return`<td class="r" style="text-align:right;font-size:11px${pos>1?';opacity:.6':''}">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
           <td class="r" style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8">▲${fmt(indices.reduce((s,idx)=>s+COMMON_MONTHLY[idx],0))}</td>
         </tr>`:''}
