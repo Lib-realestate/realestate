@@ -849,19 +849,17 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
       <div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
       <div style="font-size:11px;color:#888;margin-top:2px">${totOcc}/${totRooms}室 稼働中</div></div><div class="col-sep"></div>`;
     properties.forEach(p=>{const o=p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[_curYM]?.[r.no];if(!snap)return false;return snap.status==='occupied'||snap.status==='new'||snap.status==='late';}).length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
-    summaryHTML=`<div class="summary-grid"><div class="col">${colAnn}</div><div class="col">${colMon}</div><div class="col">${colOcc}</div></div>`;
+    summaryHTML=`<div class="summary-grid"><div class="col">${colAnn}</div></div>`;
   } else {
     const p=properties[pi];
     const _today=new Date().toISOString().slice(0,10);
 const _getStatus=r=>{if(!r.since)return'vacant';if(r.moveOutDate){if(r.since<=_today&&r.moveOutDate>=_today)return'occupied';if(r.moveOutDate<_today)return'vacant';}return r.status||'occupied';};
 const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.length);
-    summaryHTML=`<div class="cf-top-grid">
-      <div class="col single"><div class="ct" style="margin-bottom:8px">年間収支 <span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
+    summaryHTML=`<div class="summary-grid"><div class="col single"><div class="ct" style="margin-bottom:8px">年間収支 <span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
         <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${annNet>=0?'g':'r'}">${annNet<0?'▲':''}${fmt(annNet)}</span></div>
         <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
         <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div>
-      <div id="cfChartCard" class="card" style="margin-bottom:0;padding:12px 14px"><div class="flex-b" style="margin-bottom:8px"><span class="ct">月次収支推移（${periodLabel}）</span><div class="flex" style="gap:8px;font-size:10px;color:#888"><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span><span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span></div></div><div style="position:relative;height:160px"><canvas id="cfChart"></canvas></div></div>
-    </div>`;
+      <div id="cfChartCard" class="card" style="margin-bottom:0;padding:12px 14px"><div class="flex-b" style="margin-bottom:8px"><span class="ct">月次収支推移（${periodLabel}）</span><div class="flex" style="gap:8px;font-size:10px;color:#888"><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span><span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span></div></div></div></div>`;
   }
 
   // 月次テーブル
