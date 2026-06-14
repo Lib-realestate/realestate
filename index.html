@@ -2842,7 +2842,7 @@ function applyRoomsToProperty(propIdx, rooms, ym){
     p.rooms.forEach(r=>{
       if(!snapshot[r.no]){
         const prevSnap=p.monthlySnapshots?.[ym]?.[r.no];
-        snapshot[r.no]=prevSnap||{status:'vacant',since:'',items:[{label:'家賃',amt:0},{label:'管理費',amt:0},{label:'駐車場',amt:0},{label:'その他',amt:0}],lateFrom:null};
+        snapshot[r.no]={status:'vacant',since:'',items:[{label:'家賃',amt:0},{label:'管理費',amt:0},{label:'駐車場',amt:0},{label:'その他',amt:0}],lateFrom:null};
       }
     });
     p.monthlySnapshots[ym]=snapshot;
