@@ -974,23 +974,24 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   const expColspan=isAll?3:1; // 支出計+法人税等+共通経費 or 支出計のみ
 
   document.getElementById('pages').innerHTML=`
- <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;margin-bottom:10px;align-items:start">
-    <div style="min-width:0;align-self:stretch">${summaryHTML}</div>
-    <div class="card" style="margin-bottom:0;display:flex;flex-direction:column">
-      <div class="flex-b" style="margin-bottom:8px">
-        <span class="ct">月次収支推移（${periodLabel}）</span>
-        <div class="flex" style="gap:8px;font-size:10px;color:#888">
-          <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span>
-          <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span>
-          <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
-        </div>
+  ${summaryHTML}
+  <div class="card" style="margin-bottom:10px">
+    <div class="flex-b" style="margin-bottom:8px">
+      <span class="ct">月次収支推移（${periodLabel}）</span>
+      <div class="flex" style="gap:8px;font-size:10px;color:#888">
+        <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span>
+        <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span>
+        <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
       </div>
-     <div class="card" style="padding:0;overflow:hidden">
+    </div>
+    <div style="position:relative;height:200px"><canvas id="cfChart"></canvas></div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
       <span class="ct">月次収支明細</span>
       <span style="font-size:10px;color:#888">▲=マイナス / 斜体=予測</span>
     </div>
-   <div class="cf-wrap"><table class="cftable">
+    <div class="cf-wrap"><table class="cftable">
       <thead>
         <tr>
           <th class="left" style="min-width:80px"></th>
@@ -999,7 +1000,6 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         </tr>
       </thead>
       <tbody>
-        <tbody>
         <tr style="border-bottom:0.5px solid #e0e0d8">
           <td class="left" style="font-weight:500">収支</td>
           ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi)-getMonthE(idx,pi);return`<td style="text-align:right;font-weight:500${pos>1?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v<0?'▲':''}${fmt(v)}</td>`;}).join('')}
