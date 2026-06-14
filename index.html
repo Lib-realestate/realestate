@@ -973,17 +973,6 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
 
   document.getElementById('pages').innerHTML=`
   ${summaryHTML}
-  <div class="card" style="margin-bottom:10px">
-    <div class="flex-b" style="margin-bottom:8px">
-      <span class="ct">月次収支推移（${periodLabel}）</span>
-      <div class="flex" style="gap:8px;font-size:10px;color:#888">
-        <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span>
-        <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span>
-        <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
-      </div>
-    </div>
-    <div style="position:relative;height:200px"><canvas id="cfChart"></canvas></div>
-  </div>
   <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
       <span class="ct">月次収支明細</span>
