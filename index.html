@@ -1054,19 +1054,27 @@ function renderOccAll(){
 
   let body=indices.map((idx,pos)=>{
     const m=MONTH_BASE[idx];
-   const to=properties.reduce((s,p)=>s+p.rooms.filter(r=>getRoomOccStatus(r)==='occupied').length,0);
+   const yr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+    const mo=MONTH_BASE[idx];
+    const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr+1:yr;
+    const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;
+    const getOcc=(p)=>p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[ym]?.[r.no];return snap&&(snap.status==='occupied'||snap.status==='new'||snap.status==='late');}).length;
+    const to=properties.reduce((s,p)=>s+getOcc(p),0);
     const ta=properties.reduce((s,p)=>s+p.rooms.length,0);
     const r=pct(to,ta);
     let row=`<tr><td class="lbl">${labels[pos]}</td><td class="gsep">${to}/${ta}</td><td><span class="pill ${pillCls(r)}">${r}%</span></td>`;
-    properties.forEach(p=>{const po=p.rooms.filter(r=>getRoomOccStatus(r)==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);row+=`<td class="gsep">${po}/${pt}</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
+    properties.forEach(p=>{const po=getOcc(p),pt=p.rooms.length,pr=pct(po,pt);row+=`<td class="gsep">${po}/${pt}</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
     return row+'</tr>';
   }).join('');
 
-  const annTo=properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length*12,0);
-  const annTa=properties.reduce((s,p)=>s+p.rooms.length*12,0);
+  const yr2=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const getOccByYM=(p,ym)=>p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[ym]?.[r.no];return snap&&(snap.status==='occupied'||snap.status==='new'||snap.status==='late');}).length;
+  const validMonths=indices.filter(idx=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr2+1:yr2;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return properties.some(p=>Object.keys(p.monthlySnapshots?.[ym]||{}).length>0);});
+  const annTo=validMonths.length>0?Math.round(validMonths.reduce((s,idx)=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr2+1:yr2;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return s+properties.reduce((ss,p)=>ss+getOccByYM(p,ym),0);},0)/validMonths.length):0;
+  const annTa=properties.reduce((s,p)=>s+p.rooms.length,0);
   const annR=pct(annTo,annTa);
   let yrow=`<tr class="yr-row"><td class="lbl">年間平均</td><td class="gsep">—</td><td><span class="pill ${pillCls(annR)}">${annR}%</span></td>`;
-  properties.forEach(p=>{const po=p.rooms.filter(r=>getRoomOccStatus(r)==='occupied').length,pt=p.rooms.length,pr=pct(po,pt);yrow+=`<td class="gsep">—</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
+  properties.forEach(p=>{const pValidMonths=validMonths.filter(idx=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr2+1:yr2;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return Object.keys(p.monthlySnapshots?.[ym]||{}).length>0;});const po=pValidMonths.length>0?Math.round(pValidMonths.reduce((s,idx)=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr2+1:yr2;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return s+getOccByYM(p,ym);},0)/pValidMonths.length):0;const pt=p.rooms.length,pr=pct(po,pt);yrow+=`<td class="gsep">—</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
   yrow+=`</tr>`;
 
   document.getElementById('pages').innerHTML=`
@@ -1095,10 +1103,11 @@ function renderOccAll(){
     <div style="position:relative;height:200px"><canvas id="occChart"></canvas></div>
   </div>`;
 
-  const propRates=properties.map(p=>indices.map(()=>pct(p.rooms.filter(r=>r.status==='occupied').length,p.rooms.length)));
+  const yr3=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const propRates=properties.map(p=>indices.map(idx=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr3+1:yr3;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return pct(getOccByYM(p,ym),p.rooms.length);}));
   charts.occChart=new Chart(document.getElementById('occChart'),{type:'line',data:{labels,datasets:[
     ...properties.map((p,i)=>({label:p.name,data:propRates[i],borderColor:colors[i],backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.3})),
-    {label:'全体',data:indices.map(()=>pct(properties.reduce((s,p)=>s+p.rooms.filter(r=>r.status==='occupied').length,0),properties.reduce((s,p)=>s+p.rooms.length,0))),borderColor:'#aaa',borderDash:[4,3],backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:.3},
+    {label:'全体',data:indices.map(idx=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr3+1:yr3;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return pct(properties.reduce((s,p)=>s+getOccByYM(p,ym),0),properties.reduce((s,p)=>s+p.rooms.length,0));}),borderColor:'#aaa',borderDash:[4,3],backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:.3},
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
     scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}}}}});
 }
