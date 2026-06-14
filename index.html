@@ -1122,6 +1122,7 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
       if(!snap)return;
       total++;
       if(snap.status==='occupied'||snap.status==='new'||snap.status==='late')occ++;
+else if(!snap.status||snap.status===null) {} // デフォルト（null）は空室扱い
     });
     // 全室データがある月のみ計算
     return total===p.rooms.length?Math.round(occ/total*100):total>0?Math.round(occ/total*100):null;
@@ -2827,6 +2828,13 @@ function applyRoomsToProperty(propIdx, rooms, ym){
 
   // スナップショットを保存
   if(ym&&Object.keys(snapshot).length>0){
+    // スキップされた部屋（明細にない＝空室）もスナップショットに追加
+    p.rooms.forEach(r=>{
+      if(!snapshot[r.no]){
+        const prevSnap=p.monthlySnapshots?.[ym]?.[r.no];
+        snapshot[r.no]=prevSnap||{status:'vacant',since:'',items:[{label:'家賃',amt:0},{label:'管理費',amt:0},{label:'駐車場',amt:0},{label:'その他',amt:0}],lateFrom:null};
+      }
+    });
     p.monthlySnapshots[ym]=snapshot;
   }
   console.log('スナップショット保存後:', JSON.stringify(Object.keys(p.monthlySnapshots||{})));
