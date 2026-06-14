@@ -2794,7 +2794,7 @@ function applyRoomsToProperty(propIdx, rooms, ym){
     const labels=['家賃','管理費','駐車場','その他'];
     const prevSnap=p.monthlySnapshots?.[ym]?.[roomData.no];
     snapshot[roomData.no]={
-      status:prevSnap?.status||null,
+      status:prevSnap?.status||'occupied',
       since:'',
       items:labels.map(lbl=>{
         const newAmt=roomData.items?.find(x=>x.label===lbl)?.amount||0;
@@ -2984,7 +2984,17 @@ function renderSettings(){
     </tbody></table></div>
   <div class="card"><div class="flex-b" style="margin-bottom:10px"><span class="ct">物件一覧</span><button class="btn btn-b" onclick="document.getElementById('addPropModal').classList.add('open')">+ 物件追加</button></div>
     <table><thead><tr><th>物件名</th><th>種別</th><th>部屋数</th><th>Drive</th><th></th></tr></thead><tbody>
-      ${properties.map(p=>`<tr><td>${p.name}</td><td><span class="badge bb">${p.type}</span></td><td>${p.rooms.length}室</td><td><span class="badge ${p.folderId?'bg':'br-b'}">${p.folderId?'作成済':'未作成'}</span></td><td><button class="btn" style="font-size:10px" onclick="deleteProp('${p.id}')">削除</button></td></tr>`).join('')}
+      ${properties.map((p,i)=>`<tr>
+  <td>${p.name}</td>
+  <td><span class="badge bb">${p.type}</span></td>
+  <td>${p.rooms.length}室</td>
+  <td><span class="badge ${p.folderId?'bg':'br-b'}">${p.folderId?'作成済':'未作成'}</span></td>
+  <td style="white-space:nowrap">
+    <button class="btn" style="font-size:10px;padding:2px 6px" onclick="moveProp(${i},-1)" ${i===0?'disabled':''}>↑</button>
+    <button class="btn" style="font-size:10px;padding:2px 6px" onclick="moveProp(${i},1)" ${i===properties.length-1?'disabled':''}>↓</button>
+    <button class="btn" style="font-size:10px;margin-left:4px" onclick="deleteProp('${p.id}')">削除</button>
+  </td>
+</tr>`).join('')}
     </tbody></table></div>`;
 }
 
@@ -3026,6 +3036,17 @@ const rooms=Array.from({length:units},(_,i)=>({
   showIconPage('settings');
 }
 
+  function moveProp(idx,dir){
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=properties.length)return;
+  const tmp=properties[idx];
+  properties[idx]=properties[newIdx];
+  properties[newIdx]=tmp;
+  saveProps();
+  buildPropSelector();
+  renderSettings();
+}
+  
 function deleteProp(id){if(!confirm('この物件を削除しますか？\n（Driveのフォルダは削除されません）'))return;properties=properties.filter(p=>p.id!==id);saveProps();buildPropSelector();renderSettings();}
 
 function closeModal(id){const el=document.getElementById(id);el.classList.remove('open');el.style.display='';}
