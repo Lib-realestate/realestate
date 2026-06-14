@@ -24,7 +24,7 @@ select,input[type=number],input[type=text],input[type=date],input[type=month]{bo
 .content{padding:12px;max-width:100%;margin:0 auto}
 
 /* サブグリッド3列 */
-.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .cf-top-grid{margin-bottom:10px}
 .col{background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;padding:12px 14px;display:grid;grid-template-rows:auto auto 6px auto auto auto}
 .col.single{display:block;height:100%;box-sizing:border-box}
@@ -853,7 +853,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
     const totNet=properties.reduce((s,p,i)=>s+getAnnualI(i)-getAnnualE(i),0);
     const colRec=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div class="col-total">
-        <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">自己資金合計</span><span style="font-size:13px;font-weight:500">${fmt(totSf)}</span></div>
+        <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">自己資金合計</span><span style="font-size:13px;font-weight:500;color:#dc2626">▲${fmt(totSf)}</span></div>
         <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">これまでの収益</span><span style="font-size:13px;font-weight:500" class="${totNet>=0?'g':'r'}">${totNet<0?'▲':''}${fmt(totNet)}</span></div>
         <div class="flex-b"><span style="font-size:11px;color:#888">差額</span><span style="font-size:13px;font-weight:500" class="${totNet-totSf>=0?'g':'r'}">${totNet-totSf<0?'▲':''}${fmt(Math.abs(totNet-totSf))}</span></div>
       </div>`;
@@ -867,7 +867,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const pNet=getAnnualI(pi)-getAnnualE(pi);
     const colRec2=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div class="col-total">
-        <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">自己資金</span><span style="font-size:13px;font-weight:500">${fmt(pSf)}</span></div>
+        <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">自己資金</span><span style="font-size:13px;font-weight:500;color:#dc2626">▲${fmt(pSf)}</span></div>
         <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">これまでの収益</span><span style="font-size:13px;font-weight:500" class="${pNet>=0?'g':'r'}">${pNet<0?'▲':''}${fmt(pNet)}</span></div>
         <div class="flex-b"><span style="font-size:11px;color:#888">差額</span><span style="font-size:13px;font-weight:500" class="${pNet-pSf>=0?'g':'r'}">${pNet-pSf<0?'▲':''}${fmt(Math.abs(pNet-pSf))}</span></div>
       </div>`;
