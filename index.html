@@ -359,19 +359,6 @@ let properties=[];
   const _todayStr=()=>new Date().toISOString().slice(0,10);
 const getRoomOccStatus=r=>{const t=_todayStr();if(!r.since)return r.status||'vacant';if(r.moveOutDate){if(r.since<=t&&r.moveOutDate>=t)return'occupied';if(r.moveOutDate<t)return'vacant';}return r.status||'occupied';};
 
-  function getAnnualEExMisc(pi){
-  const yr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
-  const props=pi===null?properties:[properties[pi]];
-  return props.reduce((s,p)=>{
-    return s+(p.transactions||[]).filter(t=>{
-      if(t.type!=='expense')return false;
-      if(t.isMiscCost)return false;
-      const y=t.ym?parseInt(t.ym.slice(0,4)):0;
-      return y===yr;
-    }).reduce((ss,t)=>ss+t.amount,0);
-  },0)+(pi===null?COMMON_MONTHLY_TOTAL+TAX_MONTHLY_TOTAL:0);
-}
-  
   function getContractItems(r, ym, pi){
   // その月限定のoverride（スナップショット内）を優先
   if(pi!==undefined){
