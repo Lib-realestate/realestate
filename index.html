@@ -2829,6 +2829,7 @@ function applyRoomsToProperty(propIdx, rooms, ym){
   if(ym&&Object.keys(snapshot).length>0){
     p.monthlySnapshots[ym]=snapshot;
   }
+  console.log('スナップショット保存後:', JSON.stringify(Object.keys(p.monthlySnapshots||{})));
 
   if(skipped.length>0){
     showToast(`未登録の部屋をスキップ: ${skipped.join('、')}号室`,'error');
