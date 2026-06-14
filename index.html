@@ -1139,7 +1139,18 @@ const _drawCfChart=()=>{
    </div>`;
   };
   _drawCfChart();
-  window.addEventListener('resize',_drawCfChart);
+  window.addEventListener('resize',()=>{
+    const wrap=document.querySelector('#pages .card [style*="height:200px"]');
+    if(wrap){
+      const newDiv=document.createElement('div');
+      newDiv.id='cfChart';
+      newDiv.style.height='100%';
+      newDiv.style.width='100%';
+      wrap.innerHTML='';
+      wrap.appendChild(newDiv);
+      _drawCfChart();
+    }
+  });
 }
   
 function toggleSub(...ids){ids.forEach(id=>{const el=document.getElementById('sub_'+id);if(el)el.style.display=el.style.display==='none'?'':'none';});}
