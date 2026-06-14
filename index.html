@@ -1041,8 +1041,8 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const minVal=rawMin<0?rawMin*1.1:0;
     const range=maxVal-minVal;
     const barHTML=labels.map((l,i)=>{
-      const iH=incData[i]>0?Math.round(incData[i]/maxVal*100):0;
-      const eH=expData[i]>0?Math.round(expData[i]/maxVal*100):0;
+      const iH=incData[i]>0?Math.round((incData[i]-minVal)/range*100):0;
+      const eH=expData[i]>0?Math.round((expData[i]-minVal)/range*100):0;
       const net=netData[i];
       const netColor=net>=0?'#16a34a':'#dc2626';
       return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0">
