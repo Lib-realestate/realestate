@@ -1038,17 +1038,6 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   ]},options:{responsive:true,maintainAspectRatio:false,onResize:(chart,size)=>{chart.resize();},plugins:{legend:{display:false}},
     scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000).toFixed(0)+'万',font:{size:10}}}}}});
 }
-  const _syncChartHeight=()=>{
-  const colEl=document.querySelector('.cf-top-grid .col');
-  const chartWrap=document.querySelector('.cf-top-grid .card');
-  if(colEl&&chartWrap){
-    const h=colEl.clientHeight;
-    chartWrap.style.height=h+'px';
-    if(charts.cfChart)charts.cfChart.resize();
-  }
-};
-_syncChartHeight();
-window.addEventListener('resize',_syncChartHeight);
 
   const _syncChartHeight=()=>{
   const colEl=document.querySelector('[style*="grid-template-columns"] .col');
