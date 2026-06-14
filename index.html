@@ -869,6 +869,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
             <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">自己資金</th>
             <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">収益累計</th>
             <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">差額</th>
+            <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">回収率</th>
           </tr></thead>
           <tbody>
             <tr style="border-bottom:0.5px solid #f0f0e8;font-weight:500">
@@ -876,6 +877,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
               <td style="padding:6px 8px;text-align:right;color:#dc2626">▲${fmt(totSf)}</td>
               <td style="padding:6px 8px;text-align:right" class="${totNet>=0?'g':'r'}">${totNet<0?'▲':''}${fmt(totNet)}</td>
               <td style="padding:6px 8px;text-align:right" class="${totNet-totSf>=0?'g':'r'}">${totNet-totSf<0?'▲':''}${fmt(Math.abs(totNet-totSf))}</td>
+              <td style="padding:6px 8px;text-align:right" class="${totSf>0&&pct(totNet,totSf)>=50?'g':'r'}">${totSf>0?pct(totNet,totSf)+'%':'—'}</td>
             </tr>
             ${properties.map((p,i)=>{
               const sf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
@@ -885,6 +887,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
                 <td style="padding:5px 8px;text-align:right;color:#dc2626;font-size:10px">▲${fmt(sf)}</td>
                 <td style="padding:5px 8px;text-align:right;font-size:10px" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>
                 <td style="padding:5px 8px;text-align:right;font-size:10px" class="${net-sf>=0?'g':'r'}">${net-sf<0?'▲':''}${fmt(Math.abs(net-sf))}</td>
+              <td style="padding:5px 8px;text-align:right;font-size:10px" class="${sf>0&&pct(net,sf)>=50?'g':'r'}">${sf>0?pct(net,sf)+'%':'—'}</td>
               </tr>`;
             }).join('')}
           </tbody>
