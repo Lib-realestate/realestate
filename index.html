@@ -1676,7 +1676,9 @@ ${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfc
     <div class="sec-body" id="body_info" style="max-height:1000px"><div style="padding:12px 14px">
       <div style="font-size:10px;color:#888;margin-bottom:8px;text-align:right"><span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span> 自動読み取り（編集可）</div>
       <div class="info-rows">
-        <div class="ir"><div class="ic lbl">物件種別</div><div class="ic amt" style="text-align:left"><span class="badge bb">${p.type}</span></div></div>
+        <div class="ir"><div class="ic lbl">物件種別</div><div class="ic amt" style="text-align:left">
+  <input type="text" value="${p.type||''}" style="width:120px;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updatePropField(${pi},'type',this.value)">
+</div></div>
         <div class="ir"><div class="ic lbl">所在地 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="text" value="${p.addr||''}" style="width:200px" onchange="updatePropField(${pi},'addr',this.value)"></div></div>
         <div class="ir"><div class="ic lbl">物件取得年月日 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="date" value="${p.acquireDate||''}" style="width:140px;height:30px;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updatePropField(${pi},'acquireDate',this.value)"></div></div>
         <div class="ir"><div class="ic lbl">建築年月 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="number" value="${p.builtYear||''}" style="width:72px" onchange="updatePropField(${pi},'builtYear',parseInt(this.value))"> 年 <input type="number" value="${p.builtMonth||''}" style="width:50px" onchange="updatePropField(${pi},'builtMonth',parseInt(this.value))"> 月${p.builtYear?'（築'+(2025-p.builtYear)+'年）':''}</div></div>
