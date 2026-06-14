@@ -973,7 +973,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
 
   document.getElementById('pages').innerHTML=`
  <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;margin-bottom:10px;align-items:stretch">
-    <div style="min-width:0">${summaryHTML}</div>
+    <div style="min-width:0;display:flex;flex-direction:column;height:100%">${summaryHTML}<div style="flex:1"></div></div>
     <div class="card" style="margin-bottom:0;display:flex;flex-direction:column">
       <div class="flex-b" style="margin-bottom:8px">
         <span class="ct">月次収支推移（${periodLabel}）</span>
