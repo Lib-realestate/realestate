@@ -246,7 +246,11 @@ tr:last-child td{border-bottom:none}
       <div class="form-group"><label class="form-label">構造</label><select id="newPropStruct" style="width:100%"><option>RC</option><option>鉄骨造</option><option>木造</option></select></div>
       <div class="form-group"><label class="form-label">所在地</label><input type="text" id="newPropAddr" placeholder="東京都新宿区" style="width:100%"></div>
     </div>
-    <div class="form-group"><label class="form-label">部屋数</label><input type="number" id="newPropUnits" placeholder="1" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">部屋数</label><input type="number" id="newPropUnits" placeholder="1" style="width:100%" oninput="updateRoomNumberInputs()"></div>
+<div class="form-group" id="roomNumbersGroup" style="display:none">
+  <label class="form-label">部屋番号（1部屋1行、または カンマ区切りで入力）</label>
+  <textarea id="newPropRoomNos" rows="4" style="width:100%;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:6px 8px;font-family:'Noto Sans JP',sans-serif" placeholder="例：101,102,201,202&#10;または&#10;101&#10;102&#10;201&#10;202"></textarea>
+</div>
     <div class="modal-actions"><button class="btn" onclick="closeModal('addPropModal')">キャンセル</button><button class="btn btn-primary" onclick="addNewProperty()">追加してフォルダ作成</button></div>
   </div>
 </div>
@@ -2874,6 +2878,22 @@ function renderSettings(){
     </tbody></table></div>`;
 }
 
+  function updateRoomNumberInputs(){
+  const units=parseInt(document.getElementById('newPropUnits').value)||0;
+  const group=document.getElementById('roomNumbersGroup');
+  const textarea=document.getElementById('newPropRoomNos');
+  if(units>0){
+    group.style.display='block';
+    // 現在の入力を解析して件数が違う場合のみ更新
+    const current=(textarea.value||'').split(/[\n,]/).map(s=>s.trim()).filter(Boolean);
+    if(current.length!==units){
+      textarea.value=Array.from({length:units},(_,i)=>String(101+i)).join('\n');
+    }
+  } else {
+    group.style.display='none';
+  }
+}
+  
 async function addNewProperty(){
   const name=document.getElementById('newPropName').value.trim();const type=document.getElementById('newPropType').value;
   if(!name){showToast('物件名を入力してください','error');return;}
@@ -2881,7 +2901,14 @@ async function addNewProperty(){
   const price=parseInt(document.getElementById('newPropPrice').value)||0;
   const selfInput=parseInt(document.getElementById('newPropSelf').value)||0;
   const loan=parseInt(document.getElementById('newPropLoan').value)||0;
-  const rooms=Array.from({length:units},(_,i)=>({no:units===1?'全室':String(i+1),layout:'',area:null,status:'occupied',since:today(),note:'',items:[{label:'家賃',amt:0}]}));
+  // 部屋番号を取得
+const roomNosRaw=document.getElementById('newPropRoomNos')?.value||'';
+const roomNos=roomNosRaw.split(/[\n,]/).map(s=>s.trim()).filter(Boolean);
+const rooms=Array.from({length:units},(_,i)=>({
+  no:roomNos[i]||String(i+1),
+  layout:'',area:null,status:'occupied',since:today(),note:'',
+  items:[{label:'家賃',amt:0}]
+}));
   const newProp={id:'p'+Date.now(),name,type,addr:document.getElementById('newPropAddr').value,builtYear:parseInt(document.getElementById('newPropBuilt').value)||null,builtMonth:null,floors:null,structure:document.getElementById('newPropStruct').value,area:null,units,acquireDate:today(),price,reform:0,miscCost:0,loan,debt:loan,loanSegs:[{id:0,startYM:nowYM(),rate:1.5,years:35,loan}],folderId:null,subFolders:{},origRent:0,origNet:0,rooms};
   properties.push(newProp);saveProps();buildPropSelector();buildYearSel();closeModal('addPropModal');
   showToast(`${name} を追加しました。フォルダを作成中…`,'info');
