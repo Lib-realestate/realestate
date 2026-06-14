@@ -25,6 +25,9 @@ select,input[type=number],input[type=text],input[type=date],input[type=month]{bo
 
 /* サブグリッド3列 */
 .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.cf-top-grid{display:grid;grid-template-columns:280px 1fr;gap:10px;margin-bottom:10px}
+.cf-chart-card{margin-bottom:0;padding:12px 14px}
+@media(max-width:700px){.cf-top-grid{grid-template-columns:1fr}}
 .col{background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;padding:12px 14px;display:grid;grid-template-rows:auto auto 6px auto auto auto}
 .col.single{display:block;height:100%;box-sizing:border-box}
 .col-header{padding-bottom:8px}
@@ -872,6 +875,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${annNet>=0?'g':'r'}">${annNet<0?'▲':''}${fmt(annNet)}</span></div>
         <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
         <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div>
+      <div id="cfChartCard" class="card" style="margin-bottom:0;padding:12px 14px"><div class="flex-b" style="margin-bottom:8px"><span class="ct">月次収支推移（${periodLabel}）</span><div class="flex" style="gap:8px;font-size:10px;color:#888"><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span><span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span></div></div><div style="position:relative;height:160px"><canvas id="cfChart"></canvas></div></div>
     </div>`;
   }
 
@@ -996,10 +1000,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
         </div>
       </div>
-      <div style="position:relative;height:220px"><canvas id="cfChart"></canvas></div>
-    </div>
-  </div>
-  <div class="card" style="padding:0;overflow:hidden">
+     <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
       <span class="ct">月次収支明細</span>
       <span style="font-size:10px;color:#888">▲=マイナス / 斜体=予測</span>
