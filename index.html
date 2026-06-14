@@ -1599,7 +1599,8 @@ function renderAnalysis(){
   // 入力済み月のtransactionsから実際の累計を計算
 const allTx=p.transactions||[];
 // スナップショットがある月数を使用
-const snapMonthCount=Object.keys(p.monthlySnapshots||{}).length||1;
+const txMonths=[...new Set(allTx.filter(t=>!t.isMiscCost&&t.type==='income').map(t=>t.ym))];
+const snapMonthCount=txMonths.length||1;
 // 諸費用（isMiscCost）は年間純利益計算から除外
 const cumNet=allTx.reduce((s,t)=>{
   if(t.isMiscCost)return s;
@@ -1878,7 +1879,8 @@ const currRentFull=p.rooms.reduce((s,r)=>s+getContractTotal(r,nowYM()),0);
   // 入力済み月のtransactionsから実際の累計を計算
 const allTx=p.transactions||[];
 // スナップショットがある月数を使用
-const snapMonthCount=Object.keys(p.monthlySnapshots||{}).length||1;
+const txMonths=[...new Set(allTx.filter(t=>!t.isMiscCost&&t.type==='income').map(t=>t.ym))];
+const snapMonthCount=txMonths.length||1;
 const cumNet=allTx.reduce((s,t)=>t.type==='income'?s+t.amount:s-t.amount,0);
 const avgNet=Math.round(cumNet/snapMonthCount*12);
   const currRentAnnEl=document.getElementById('an_currRentAnn');if(currRentAnnEl)currRentAnnEl.textContent=(currRentFull*12).toLocaleString();
