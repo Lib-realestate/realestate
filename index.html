@@ -972,7 +972,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   const expColspan=isAll?3:1; // 支出計+法人税等+共通経費 or 支出計のみ
 
   document.getElementById('pages').innerHTML=`
- <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;margin-bottom:10px;align-items:stretch">
+ <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;margin-bottom:10px;align-items:start">
     <div style="min-width:0;display:flex;flex-direction:column;height:100%">${summaryHTML}<div style="flex:1"></div></div>
     <div class="card" style="margin-bottom:0;display:flex;flex-direction:column">
       <div class="flex-b" style="margin-bottom:8px">
@@ -983,7 +983,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
         </div>
       </div>
-      <div style="position:relative;flex:1;min-height:180px"><canvas id="cfChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="cfChart"></canvas></div>
     </div>
   </div>
   <div class="card" style="padding:0;overflow:hidden">
