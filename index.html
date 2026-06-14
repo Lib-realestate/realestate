@@ -1094,8 +1094,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     </table></div>
   </div>`;
 
+const _drawCfChart=()=>{
   const cfEl=document.getElementById('cfChart');
-  if(cfEl){
+  if(!cfEl)return;
     const netData=incData.map((v,i)=>v-expData[i]);
     const allVals=[...incData,...expData,...netData];
     const rawMax=Math.max(...allVals,0);
@@ -1135,8 +1136,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#2563eb;border-radius:2px;display:inline-block"></span>純利益</span>
-    </div>`;
-  }
+   </div>`;
+  };
+  _drawCfChart();
+  window.addEventListener('resize',_drawCfChart);
 }
   
 function toggleSub(...ids){ids.forEach(id=>{const el=document.getElementById('sub_'+id);if(el)el.style.display=el.style.display==='none'?'':'none';});}
