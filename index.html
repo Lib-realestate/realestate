@@ -1054,6 +1054,13 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <div style="font-size:8px;color:#888;white-space:nowrap;height:14px;line-height:14px">${l}</div>
       </div>`;
     }).join('');
+    const chartW=cfEl.parentElement?.clientWidth||400;
+    const chartH=cfEl.parentElement?.clientHeight||200;
+    const padL=36,padB=20,padT=14;
+    const gW=chartW-padL;
+    const gH=chartH-padB-padT;
+    const xScale=i=>(i+0.5)/labels.length*gW;
+    const yScale=v=>gH-(v-minVal)/range*gH;
     const yLabels=[maxVal,maxVal*0.75+minVal*0.25,maxVal*0.5+minVal*0.5,maxVal*0.25+minVal*0.75,minVal].map(v=>`<span>${v<0?'▲':''}¥${Math.round(Math.abs(v)/10000)}万</span>`).join('');
     cfEl.outerHTML=`<div style="display:flex;gap:2px;height:calc(100% - 28px)">
       <div style="display:flex;flex-direction:column;justify-content:space-between;font-size:8px;color:#aaa;padding-right:4px;min-width:32px;text-align:right">${yLabels}</div>
