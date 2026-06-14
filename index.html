@@ -2661,10 +2661,93 @@ async function confirmUpload(){
   }
   pendingUpload=null;
 }
+
+  let _pendingRoomUpdate=null;
+
+function showRoomNoSuggestion(propIdx,rooms,ym,missingInExisting,missingInNew){
+  _pendingRoomUpdate={propIdx,rooms,ym};
+  const p=properties[propIdx];
+
+  const suggestions=missingInNew.map((oldNo,i)=>{
+    const newNo=missingInExisting[i]||'—';
+    return{oldNo,newNo};
+  });
+
+  const rows=suggestions.map((s,i)=>`
+    <tr style="border-bottom:0.5px solid #f0f0e8">
+      <td style="padding:8px;font-size:12px">${s.oldNo}号室</td>
+      <td style="padding:8px;text-align:center;color:#888">→</td>
+      <td style="padding:8px;font-size:12px;color:#2563eb">${s.newNo}号室</td>
+      <td style="padding:8px;text-align:center">
+        <input type="checkbox" id="roomChk_${i}" checked style="width:14px;height:14px">
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;color:#444;margin-bottom:12px;line-height:1.8">
+      明細書の部屋番号と登録済みの部屋番号に相違があります。<br>
+      以下の変更を適用しますか？
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
+      <thead style="background:#fafaf8">
+        <tr>
+          <th style="padding:8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">現在の番号</th>
+          <th style="padding:8px;border-bottom:0.5px solid #e0e0d8"></th>
+          <th style="padding:8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">明細書の番号</th>
+          <th style="padding:8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">変更する</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="font-size:11px;color:#888">※チェックした部屋のみ番号を変更します。変更しない場合はキャンセルしてください。</div>`;
+
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='部屋番号の確認';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal');_pendingRoomUpdate=null;">キャンセル</button>
+    <button class="btn btn-primary" onclick="confirmRoomNoUpdate(${JSON.stringify(suggestions).replace(/"/g,'&quot;')})">変更して続ける</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+function confirmRoomNoUpdate(suggestions){
+  closeModal('classifyModal');
+  if(!_pendingRoomUpdate)return;
+  const{propIdx,rooms,ym}=_pendingRoomUpdate;
+  const p=properties[propIdx];
+
+  // チェックされた部屋番号を更新
+  suggestions.forEach((s,i)=>{
+    const chk=document.getElementById(`roomChk_${i}`);
+    if(chk?.checked){
+      const room=p.rooms.find(r=>r.no===s.oldNo);
+      if(room) room.no=s.newNo;
+    }
+  });
+  saveProps();
+  showToast('部屋番号を更新しました','success');
+
+  // 更新後に再度apply
+  _pendingRoomUpdate=null;
+  applyRoomsToProperty(propIdx,rooms,ym);
+}
+  
 function applyRoomsToProperty(propIdx, rooms, ym){
   if(!rooms||!rooms.length)return false;
   const p=properties[propIdx];
   if(!p)return false;
+
+  // 既存部屋番号と照合して不一致を検知
+  const existingNos=p.rooms.map(r=>r.no);
+  const newNos=rooms.map(r=>String(r.no));
+  const missingInExisting=newNos.filter(no=>!existingNos.includes(no));
+  const missingInNew=existingNos.filter(no=>!newNos.includes(no));
+
+  // 不一致がある場合は確認モーダルを表示
+  if(missingInExisting.length>0&&missingInNew.length>0){
+    // 1対1の対応が推測できる場合のみ提案
+    showRoomNoSuggestion(propIdx,rooms,ym,missingInExisting,missingInNew);
+    return false;
+  }
 
   if(!p.monthlySnapshots) p.monthlySnapshots={};
 
