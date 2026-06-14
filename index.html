@@ -2509,7 +2509,8 @@ async function confirmMultiUpload(){
       }
       if(item.result?.rooms&&item.result.rooms.length>0){
         const ym=date?date.slice(0,7):'';
-        applyRoomsToProperty(parseInt(propIdx),item.result.rooms,ym);
+        const applied=applyRoomsToProperty(parseInt(propIdx),item.result.rooms,ym);
+        if(applied) showToast(`入居状況を更新しました`,'success');
       }
       successCount++;
     }catch(e){
@@ -2520,6 +2521,8 @@ async function confirmMultiUpload(){
   await loadDriveFiles();
   showToast(`完了：${successCount}件成功${errorCount>0?' / '+errorCount+'件失敗':''}`,successCount>0?'success':'error');
   multiPendingUploads=[];
+  // 入居状況タブを表示中なら再描画
+  if(currentTabId==='occupancy') renderOccupancy();
 }
 async function analyzeAndConfirm(file){
   const id='f_'+Date.now()+Math.random().toString(36).slice(2);
