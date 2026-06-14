@@ -744,12 +744,21 @@ const ym=`${yr}-${String(mo).padStart(2,'0')}`;
 if(pi===null)return properties.reduce((s,p)=>s+getTx(p,ym,'expense'),0);
 return getTx(properties[pi],ym,'expense');
 }
-function getTx(p,ym,type){
-if(!p||!p.transactions)return 0;
-return p.transactions.filter(t=>t.ym===ym&&t.type===type).reduce((s,t)=>s+t.amount,0);
+function getTx(p,ym,type,exMisc=false){
+  if(!p||!p.transactions)return 0;
+  return p.transactions.filter(t=>t.ym===ym&&t.type===type&&(!exMisc||!t.isMiscCost)).reduce((s,t)=>s+t.amount,0);
+}
+function getMonthEEx(mi,pi){
+  const mo=MONTH_BASE[mi];
+  const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;
+  const ym=`${yr}-${String(mo).padStart(2,'0')}`;
+  if(pi===null)return properties.reduce((s,p)=>s+getTx(p,ym,'expense',true),0);
+  return getTx(properties[pi],ym,'expense',true);
 }
 function getAnnualI(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthI(i,pi),0);}
 function getAnnualE(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthE(i,pi),0);}
+function getAnnualEEx(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthEEx(i,pi),0);}
 
 /* ── ナビ ── */
 function switchProp(){currentProp=document.getElementById('propSel').value;iconPageActive=null;updateIconBtns();buildNav();showTab('cashflow');}
@@ -818,8 +827,8 @@ function renderCashflow(){
   const isAll=currentProp==='all';
   const pi=isAll?null:parseInt(currentProp);
   const mi=getMonthlyIdx();
-  const moI=getMonthI(mi,pi),moE=getMonthE(mi,pi),moNet=moI-moE;
-  const annI=getAnnualI(pi),annE=getAnnualE(pi),annNet=annI-annE;
+  const moI=getMonthI(mi,pi),moE=getMonthEEx(mi,pi),moNet=moI-moE;
+  const annI=getAnnualI(pi),annE=getAnnualEEx(pi),annNet=annI-annE;
   const periodLabel=yearMode==='fiscal'?`${fiscalMonth}月決算年度`:'暦年（1〜12月）';
   const moLabel=document.getElementById('monthSel').options[document.getElementById('monthSel').selectedIndex].text;
   const selfFund=isAll?properties.reduce((s,p)=>s+((p.price+p.reform+p.miscCost)-p.loan),0):((properties[pi]?.price+properties[pi]?.reform+properties[pi]?.miscCost)-properties[pi]?.loan||0);
@@ -910,7 +919,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   const labels=getFiscalLabels();
 
   let rows=indices.map((idx,pos)=>{
-    const income=getMonthI(idx,pi);
+    const income=getMonthEEx(idx,pi);
     const exp=getMonthE(idx,pi);
     const common=isAll?COMMON_MONTHLY[idx]:0;
     const corpTax=isAll?TAX_MONTHLY[idx]:0;
@@ -945,13 +954,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   </tr>`;
 
   const incData=indices.map(i=>getMonthI(i,pi));
-  const yr2=parseInt(document.getElementById('yearSel').value);
-  const expData=indices.map(i=>{
-    const ym2=`${yr2}-${String(MONTH_BASE[i]).padStart(2,'0')}`;
-    const props=isAll?properties:[properties[pi]];
-    const misc=props.reduce((s,p)=>(p.transactions||[]).filter(t=>t.isMiscCost&&t.ym===ym2).reduce((ss,t)=>ss+t.amount,s),0);
-    return getMonthE(i,pi)-misc+(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0);
-  });
+  const expData=indices.map(i=>getMonthEEx(i,pi)+(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0));
 
   // 列定義：全物件=収入計|支出計|法人税等|共通経費|純利益|年間累計|取得累計|回収率
   //         個別  =収入計|支出計|純利益|年間累計|取得累計|回収率
@@ -972,7 +975,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
 
   const rows2=indices.map((idx,pos)=>{
     const income=getMonthI(idx,pi);
-    const exp=getMonthE(idx,pi);
+    const exp=getMonthEEx(idx,pi);
     const common=isAll?COMMON_MONTHLY[idx]:0;
     const corpTax=isAll?TAX_MONTHLY[idx]:0;
     const totalExp=exp+common+corpTax;
