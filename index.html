@@ -2881,7 +2881,7 @@ async function addNewProperty(){
   const price=parseInt(document.getElementById('newPropPrice').value)||0;
   const selfInput=parseInt(document.getElementById('newPropSelf').value)||0;
   const loan=parseInt(document.getElementById('newPropLoan').value)||0;
-  const rooms=Array.from({length:units},(_,i)=>({no:units===1?'全室':String(101+i),layout:'',area:null,status:'occupied',since:today(),note:'',items:[{label:'家賃',amt:0}]}));
+  const rooms=Array.from({length:units},(_,i)=>({no:units===1?'全室':String(i+1),layout:'',area:null,status:'occupied',since:today(),note:'',items:[{label:'家賃',amt:0}]}));
   const newProp={id:'p'+Date.now(),name,type,addr:document.getElementById('newPropAddr').value,builtYear:parseInt(document.getElementById('newPropBuilt').value)||null,builtMonth:null,floors:null,structure:document.getElementById('newPropStruct').value,area:null,units,acquireDate:today(),price,reform:0,miscCost:0,loan,debt:loan,loanSegs:[{id:0,startYM:nowYM(),rate:1.5,years:35,loan}],folderId:null,subFolders:{},origRent:0,origNet:0,rooms};
   properties.push(newProp);saveProps();buildPropSelector();buildYearSel();closeModal('addPropModal');
   showToast(`${name} を追加しました。フォルダを作成中…`,'info');
