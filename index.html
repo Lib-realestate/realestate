@@ -1041,16 +1041,15 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const minVal=rawMin<0?rawMin*1.1:0;
     const range=maxVal-minVal;
     const barHTML=labels.map((l,i)=>{
-      const zeroY=gH-(0-minVal)/range*gH;
-      const iH=incData[i]>0?Math.round(incData[i]/range*gH):0;
-      const eH=expData[i]>0?Math.round(expData[i]/range*gH):0;
+      const iH=Math.round(incData[i]/maxVal*100);
+      const eH=Math.round(expData[i]/maxVal*100);
       const net=netData[i];
       const netColor=net>=0?'#16a34a':'#dc2626';
       return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0">
         <div style="font-size:8px;color:${netColor};font-weight:500;white-space:nowrap;height:14px;line-height:14px">${net!==0?(net<0?'▲':'')+fmt(net):''}</div>
-        <div style="flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:1px;padding-bottom:${Math.round((-minVal)/range*100)}%">
-          <div style="width:6px;background:#86efac;height:${iH}%;min-height:${incData[i]>0?1:0}px;border-radius:1px 1px 0 0;transition:height .2s"></div>
-          <div style="width:6px;background:#fca5a5;height:${eH}%;min-height:${expData[i]>0?1:0}px;border-radius:1px 1px 0 0;transition:height .2s"></div>
+        <div style="flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:1px">
+          <div style="width:6px;background:#86efac;height:${iH}%;border-radius:1px 1px 0 0"></div>
+          <div style="width:6px;background:#fca5a5;height:${eH}%;border-radius:1px 1px 0 0"></div>
         </div>
         <div style="font-size:8px;color:#888;white-space:nowrap;height:14px;line-height:14px">${l}</div>
       </div>`;
