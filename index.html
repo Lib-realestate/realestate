@@ -1033,11 +1033,16 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
 
   const cfEl=document.getElementById('cfChart');
   if(cfEl){
-    const maxVal=Math.max(...incData,...expData,1);
     const netData=incData.map((v,i)=>v-expData[i]);
+    const allVals=[...incData,...expData,...netData];
+    const rawMax=Math.max(...allVals,0);
+    const rawMin=Math.min(...allVals,0);
+    const maxVal=rawMax*1.1||1;
+    const minVal=rawMin<0?rawMin*1.1:0;
+    const range=maxVal-minVal;
     const barHTML=labels.map((l,i)=>{
-      const iH=Math.round(incData[i]/maxVal*100);
-      const eH=Math.round(expData[i]/maxVal*100);
+      const iH=Math.round((incData[i]-minVal)/range*100);
+      const eH=Math.round((expData[i]-minVal)/range*100);
       const net=netData[i];
       const netColor=net>=0?'#16a34a':'#dc2626';
       return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:2px">
@@ -1049,13 +1054,13 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <div style="font-size:9px;color:#888;white-space:nowrap">${l}</div>
       </div>`;
     }).join('');
-    const yLabels=[maxVal,maxVal*0.75,maxVal*0.5,maxVal*0.25,0].map(v=>`<span>¥${Math.round(v/10000)}万</span>`).join('');
+    const yLabels=[maxVal,maxVal*0.75+minVal*0.25,maxVal*0.5+minVal*0.5,maxVal*0.25+minVal*0.75,minVal].map(v=>`<span>${v<0?'▲':''}¥${Math.round(Math.abs(v)/10000)}万</span>`).join('');
     cfEl.outerHTML=`<div style="display:flex;gap:2px;height:calc(100% - 28px)">
       <div style="display:flex;flex-direction:column;justify-content:space-between;font-size:8px;color:#aaa;padding-right:4px;min-width:32px;text-align:right">${yLabels}</div>
       <div style="flex:1;display:flex;align-items:flex-end;gap:2px;border-left:0.5px solid #e0e0d8;border-bottom:0.5px solid #e0e0d8;position:relative">
         ${barHTML}
         <svg style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible" viewBox="0 0 ${labels.length} 100" preserveAspectRatio="none">
-          <polyline points="${netData.map((v,i)=>`${i+0.5},${100-Math.max(0,Math.min(100,v/maxVal*100))}`).join(' ')}" fill="none" stroke="#2563eb" stroke-width="0.3" vector-effect="non-scaling-stroke"/>
+          <polyline points="${netData.map((v,i)=>`${i+0.5},${100-Math.max(0,Math.min(100,(v-minVal)/range*100))}`).join(' ')}" fill="none" stroke="#2563eb" stroke-width="0.3" vector-effect="non-scaling-stroke"/>
         </svg>
       </div>
     </div>
