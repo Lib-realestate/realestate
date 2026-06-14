@@ -1038,7 +1038,6 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   ]},options:{responsive:true,maintainAspectRatio:false,onResize:(chart,size)=>{chart.resize();},plugins:{legend:{display:false}},
     scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000).toFixed(0)+'万',font:{size:10}}}}}});
 }
-window.addEventListener('resize',()=>{if(charts.cfChart)charts.cfChart.resize();});
 function toggleSub(...ids){ids.forEach(id=>{const el=document.getElementById('sub_'+id);if(el)el.style.display=el.style.display==='none'?'':'none';});}
 
 /* ── 入居状況タブ ── */
