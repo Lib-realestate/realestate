@@ -1057,8 +1057,8 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         </tr>
         ${isAll?properties.map((p,pi2)=>`<tr style="border-bottom:0.5px solid #f0f0e8">
           <td class="left" style="font-size:11px;color:#888;padding-left:16px;position:sticky;left:0;background:#fff;z-index:2">${p.name}</td>
-          ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi2)-getMonthE(idx,pi2);return`<td style="text-align:right;font-size:11px${pos>1?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v!==0?(v<0?'▲':'')+fmt(v):'—'}</td>`;}).join('')}
-          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${getAnnualI(pi2)-getAnnualE(pi2)>=0?'g':'r'}">${getAnnualI(pi2)-getAnnualE(pi2)<0?'▲':''}${fmt(getAnnualI(pi2)-getAnnualE(pi2))}</td>
+          ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi2)-getMonthEEx(idx,pi2);return`<td style="text-align:right;font-size:11px${pos>1?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v!==0?(v<0?'▲':'')+fmt(v):'—'}</td>`;}).join('')}
+          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${getAnnualI(pi2)-getAnnualEEx(pi2)>=0?'g':'r'}">${getAnnualI(pi2)-getAnnualEEx(pi2)<0?'▲':''}${fmt(getAnnualI(pi2)-getAnnualEEx(pi2))}</td>
         </tr>`).join(''):''}
         ${isAll?`<tr style="border-bottom:0.5px solid #e0e0d8">
           <td class="left" style="color:#dc2626;font-size:11px;padding-left:16px;position:sticky;left:0;background:#fff;z-index:2">法人税等</td>
