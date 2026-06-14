@@ -1885,7 +1885,7 @@ const cumNet=allTx.reduce((s,t)=>t.type==='income'?s+t.amount:s-t.amount,0);
 const avgNet=Math.round(cumNet/snapMonthCount*12);
   const currRentAnnEl=document.getElementById('an_currRentAnn');if(currRentAnnEl)currRentAnnEl.textContent=(currRentFull*12).toLocaleString();
   const avgNetEl=document.getElementById('an_avgNet');if(avgNetEl)avgNetEl.textContent=avgNet.toLocaleString();
-  const avgNoteEl=document.getElementById('an_avgNote');if(avgNoteEl)avgNoteEl.textContent=`累計${cumNet.toLocaleString()}÷${elapsed}ヶ月×12`;
+  const avgNoteEl=document.getElementById('an_avgNote');if(avgNoteEl)avgNoteEl.textContent=`累計${cumNet.toLocaleString()}÷${snapMonthCount}ヶ月×12`;
   const ccrCurrEl=document.getElementById('an_ccrCurr');if(ccrCurrEl)ccrCurrEl.textContent=sf>0&&avgNet>0?(avgNet/sf*100).toFixed(2)+'%':'—';
   const pbCurrEl=document.getElementById('an_pbCurr');if(pbCurrEl)pbCurrEl.textContent=sf>0&&avgNet>0?(sf/avgNet).toFixed(1)+'年':'—';
   const elapsedEl=document.getElementById('an_elapsed');if(elapsedEl)elapsedEl.textContent=`物件取得年月：${acq}　経過：${elapsed}ヶ月`;
