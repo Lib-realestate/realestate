@@ -1600,7 +1600,11 @@ function renderAnalysis(){
 const allTx=p.transactions||[];
 // スナップショットがある月数を使用
 const snapMonthCount=Object.keys(p.monthlySnapshots||{}).length||1;
-const cumNet=allTx.reduce((s,t)=>t.type==='income'?s+t.amount:s-t.amount,0);
+// 諸費用（isMiscCost）は年間純利益計算から除外
+const cumNet=allTx.reduce((s,t)=>{
+  if(t.isMiscCost)return s;
+  return t.type==='income'?s+t.amount:s-t.amount;
+},0);
 const avgNet=Math.round(cumNet/snapMonthCount*12);
   const origRent=p.origRent||0;
   // 入金済み月の現況家賃収入の月平均
