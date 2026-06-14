@@ -849,7 +849,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
       <div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
       <div style="font-size:11px;color:#888;margin-top:2px">${totOcc}/${totRooms}室 稼働中</div></div><div class="col-sep"></div>`;
     properties.forEach(p=>{const o=p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[_curYM]?.[r.no];if(!snap)return false;return snap.status==='occupied'||snap.status==='new'||snap.status==='late';}).length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
-    summaryHTML=`<div style="display:grid;grid-template-columns:280px 1fr;gap:10px;margin-bottom:10px;align-items:stretch"><div class="col">${colAnn}</div><div class="card" style="padding:12px 14px;margin-bottom:0;display:flex;flex-direction:column"><div class="flex-b" style="margin-bottom:8px"><span class="ct">月次収支推移（${periodLabel}）</span><div class="flex" style="gap:8px;font-size:10px;color:#888"><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span><span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span></div></div><div style="position:relative;flex:1;min-height:150px;overflow:hidden"><canvas id="cfChart"></canvas></div></div></div>`;
+    summaryHTML=`<div style="display:grid;grid-template-columns:280px 1fr;gap:10px;margin-bottom:10px;align-items:stretch"><div class="col">${colAnn}</div><div class="card" style="padding:12px 14px;margin-bottom:0;display:flex;flex-direction:column"><div class="flex-b" style="margin-bottom:8px"><span class="ct">月次収支推移（${periodLabel}）</span><div class="flex" style="gap:8px;font-size:10px;color:#888"><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span><span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span></div></div><div style="position:relative;flex:1;min-height:150px;overflow:hidden"><div id="cfChart" style="height:100%;width:100%"></div></div></div></div>`;
   } else {
     const p=properties[pi];
     const _today=new Date().toISOString().slice(0,10);
@@ -859,7 +859,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${annNet>=0?'g':'r'}">${annNet<0?'▲':''}${fmt(annNet)}</span></div>
         <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
         <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div>
-      <div id="cfChartCard" class="card" style="margin-bottom:0;padding:12px 14px"><div class="flex-b" style="margin-bottom:8px"><span class="ct">月次収支推移（${periodLabel}）</span><div class="flex" style="gap:8px;font-size:10px;color:#888"><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span><span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span></div></div><div style="position:relative;flex:1;min-height:150px;overflow:hidden;width:100%"><canvas id="cfChart"></canvas></div></div></div>`;
+      <div id="cfChartCard" class="card" style="margin-bottom:0;padding:12px 14px"><div class="flex-b" style="margin-bottom:8px"><span class="ct">月次収支推移（${periodLabel}）</span><div class="flex" style="gap:8px;font-size:10px;color:#888"><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span><span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span><span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span></div></div><div style="position:relative;flex:1;min-height:150px;overflow:hidden;width:100%"><div id="cfChart" style="height:100%;width:100%"></div></div></div></div>`;
   }
 
   // 月次テーブル
@@ -1031,24 +1031,40 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     </table></div>
   </div>`;
 
-  charts.cfChart=new Chart(document.getElementById('cfChart'),{type:'bar',data:{labels,datasets:[
-    {label:'収入',data:incData,backgroundColor:'rgba(134,239,172,.4)',borderColor:'#16a34a',borderWidth:1},
-    {label:'支出',data:expData,backgroundColor:'rgba(252,165,165,.4)',borderColor:'#dc2626',borderWidth:1},
-    {type:'line',label:'純利益',data:incData.map((v,i)=>v-expData[i]),borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.3},
-  ]},options:{responsive:true,maintainAspectRatio:false,onResize:(chart,size)=>{chart.resize();},plugins:{legend:{display:false}},
-    scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'¥'+(v/10000).toFixed(0)+'万',font:{size:10}}}}}});
-}
-
-  const _syncChartHeight=()=>{
-  const colEl=document.querySelector('[style*="grid-template-columns"] .col');
-  const chartWrap=document.querySelector('[style*="grid-template-columns"] .card');
-  if(colEl&&chartWrap){
-    chartWrap.style.height=colEl.clientHeight+'px';
-    if(charts.cfChart)charts.cfChart.resize();
+  const cfEl=document.getElementById('cfChart');
+  if(cfEl){
+    const maxVal=Math.max(...incData,...expData,1);
+    const netData=incData.map((v,i)=>v-expData[i]);
+    const barHTML=labels.map((l,i)=>{
+      const iH=Math.round(incData[i]/maxVal*100);
+      const eH=Math.round(expData[i]/maxVal*100);
+      const net=netData[i];
+      const netColor=net>=0?'#16a34a':'#dc2626';
+      return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:2px">
+        <div style="font-size:9px;color:${netColor};font-weight:500;white-space:nowrap">${net!==0?(net<0?'▲':'')+fmt(net):''}</div>
+        <div style="flex:1;width:100%;display:flex;align-items:flex-end;gap:1px;justify-content:center">
+          <div style="width:8px;background:#86efac;height:${iH}%;min-height:${incData[i]>0?2:0}px;border-radius:2px 2px 0 0"></div>
+          <div style="width:8px;background:#fca5a5;height:${eH}%;min-height:${expData[i]>0?2:0}px;border-radius:2px 2px 0 0"></div>
+        </div>
+        <div style="font-size:9px;color:#888;white-space:nowrap">${l}</div>
+      </div>`;
+    }).join('');
+    cfEl.outerHTML=`<div style="display:flex;align-items:stretch;gap:2px;height:calc(100% - 24px);padding:0 4px">
+      <div style="display:flex;flex-direction:column;justify-content:space-between;font-size:9px;color:#aaa;padding-right:4px;min-width:28px;text-align:right">
+        <span>¥${Math.round(maxVal/10000)}万</span>
+        <span>¥${Math.round(maxVal/20000)}万</span>
+        <span>¥0</span>
+      </div>
+      ${barHTML}
+    </div>
+    <div style="display:flex;gap:10px;font-size:10px;color:#888;margin-top:4px">
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#86efac;border-radius:2px;display:inline-block"></span>収入</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#fca5a5;border-radius:2px;display:inline-block"></span>支出</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#2563eb;border-radius:2px;display:inline-block"></span>純利益</span>
+    </div>`;
   }
-};
-setTimeout(_syncChartHeight,100);
-window.addEventListener('resize',_syncChartHeight);
+}
+}
   
 function toggleSub(...ids){ids.forEach(id=>{const el=document.getElementById('sub_'+id);if(el)el.style.display=el.style.display==='none'?'':'none';});}
 
