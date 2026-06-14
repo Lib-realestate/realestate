@@ -1192,7 +1192,9 @@ const contractTotal=(r,ym)=>getContractTotal(r,ym);
       const annualDiffLabel=annualDiff===0?'±0':annualDiff>0?'+'+annualDiff.toLocaleString():'▲'+Math.abs(annualDiff).toLocaleString();
 
       return`<tr style="border-bottom:0.5px solid #f0f0e8">
-        <td style="position:sticky;left:0;z-index:2;background:#fff;padding:4px 6px;font-weight:500;font-size:11px;white-space:nowrap;min-width:44px;border-right:1px solid #d0d0c8">${r.no}${p.type==='1棟'?'号':''}</td>
+        <td style="position:sticky;left:0;z-index:2;background:#fff;padding:4px 6px;font-weight:500;font-size:11px;white-space:nowrap;min-width:44px;border-right:1px solid #d0d0c8">
+  <span style="cursor:pointer;border-bottom:1px dashed #aaa" onclick="editRoomNo(${pi},${ri})" title="クリックで部屋番号を変更">${r.no}${p.type==='1棟'?'号':''}</span>
+</td>
         <td style="padding:4px 4px;min-width:52px;border-right:0.5px solid #e0e0d8">
           <input type="text" value="${r.layout||''}" placeholder="1K" style="width:38px;font-size:10px;border:0.5px solid #d0d0c8;border-radius:3px;padding:2px 3px" onchange="updateRoomField(${pi},${ri},'layout',this.value)">
           <div style="font-size:9px;color:${annualDiffColor};font-weight:500;margin-top:1px;white-space:nowrap">${annualDiffLabel}</div>
@@ -1513,6 +1515,30 @@ function saveContractItems(pi,ri,targetYM){
   showToast('契約家賃を保存しました','success');
 }
 
+  function editRoomNo(pi,ri){
+  const p=properties[pi];
+  const r=p.rooms[ri];
+  const newNo=prompt(`部屋番号を変更してください\n現在：${r.no}号`,''+r.no);
+  if(!newNo||newNo===r.no)return;
+  if(p.rooms.find((room,i)=>room.no===newNo&&i!==ri)){
+    showToast(`${newNo}号室はすでに登録されています`,'error');
+    return;
+  }
+  // monthlySnapshotsの部屋番号も更新
+  if(p.monthlySnapshots){
+    Object.keys(p.monthlySnapshots).forEach(ym=>{
+      if(p.monthlySnapshots[ym][r.no]){
+        p.monthlySnapshots[ym][newNo]=p.monthlySnapshots[ym][r.no];
+        delete p.monthlySnapshots[ym][r.no];
+      }
+    });
+  }
+  r.no=newNo;
+  saveProps();
+  renderOccProp();
+  showToast(`部屋番号を${newNo}号に変更しました`,'success');
+}
+  
   function addRoom(pi){
   const p=properties[pi];
   const no=prompt('部屋番号を入力してください（例: 205）');
