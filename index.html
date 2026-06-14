@@ -664,7 +664,11 @@ async function loadPropsFromD(){
       // ローカルより件数が多い場合のみDriveで上書き
       const localRaw=localStorage.getItem('re_props');
       const localProps=localRaw?JSON.parse(localRaw):[];
-      if(json.properties.length>=localProps.length){
+      // savedAtで比較してより新しい方を使用
+const driveTime=new Date(json.savedAt||0).getTime();
+      const localSavedAt=localStorage.getItem('re_props_backup_at');
+      const localTime=new Date(localSavedAt||0).getTime();
+      if(driveTime>=localTime){
         properties=json.properties;
       } else {
         properties=localProps;
