@@ -1000,7 +1000,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   }).join('');
 
   const totI2=indices.reduce((s,i)=>s+getMonthI(i,pi),0);
-  const totE2=indices.reduce((s,i)=>s+getMonthE(i,pi),0);
+  const totE2=indices.reduce((s,i)=>s+getMonthEEx(i,pi),0);
   const totCommon2=isAll?COMMON_MONTHLY.reduce((s,v)=>s+v,0):0;
   const totTax2=isAll?TAX_MONTHLY.reduce((s,v)=>s+v,0):0;
   const totNet2=totI2-totE2-totCommon2-totTax2;
