@@ -2768,9 +2768,10 @@ function applyRoomsToProperty(propIdx, rooms, ym){
   const missingInExisting=newNos.filter(no=>!existingNos.includes(no));
   const missingInNew=existingNos.filter(no=>!newNos.includes(no));
 
-  // 不一致がある場合は確認モーダルを表示
-  if(missingInExisting.length>0&&missingInNew.length>0){
-    // 1対1の対応が推測できる場合のみ提案
+  // 不一致がある場合：明細の部屋数と既存の部屋数が近い場合のみ提案
+  // （大幅に異なる場合は別物件の可能性があるのでスキップ）
+  const matchRate=newNos.filter(no=>existingNos.includes(no)).length/newNos.length;
+  if(missingInExisting.length>0&&missingInNew.length>0&&matchRate>=0.5){
     showRoomNoSuggestion(propIdx,rooms,ym,missingInExisting,missingInNew);
     return false;
   }
