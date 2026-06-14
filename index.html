@@ -1881,7 +1881,7 @@ const allTx=p.transactions||[];
 // スナップショットがある月数を使用
 const txMonths=[...new Set(allTx.filter(t=>!t.isMiscCost&&t.type==='income').map(t=>t.ym))];
 const snapMonthCount=txMonths.length||1;
-const cumNet=allTx.reduce((s,t)=>t.type==='income'?s+t.amount:s-t.amount,0);
+const cumNet=allTx.reduce((s,t)=>{if(t.isMiscCost)return s;return t.type==='income'?s+t.amount:s-t.amount;},0);
 const avgNet=Math.round(cumNet/snapMonthCount*12);
   const currRentAnnEl=document.getElementById('an_currRentAnn');if(currRentAnnEl)currRentAnnEl.textContent=(currRentFull*12).toLocaleString();
   const avgNetEl=document.getElementById('an_avgNet');if(avgNetEl)avgNetEl.textContent=avgNet.toLocaleString();
