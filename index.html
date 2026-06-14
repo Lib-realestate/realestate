@@ -852,10 +852,33 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
     const totSf=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
     const totNet=properties.reduce((s,p,i)=>s+getAnnualI(i)-getAnnualE(i),0);
     const colRec=`<div class="col-header"><span class="ct">収益状況</span></div>
-      <div class="col-total">
-        <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">自己資金合計</span><span style="font-size:13px;font-weight:500;color:#dc2626">▲${fmt(totSf)}</span></div>
-        <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">これまでの収益</span><span style="font-size:13px;font-weight:500" class="${totNet>=0?'g':'r'}">${totNet<0?'▲':''}${fmt(totNet)}</span></div>
-        <div class="flex-b"><span style="font-size:11px;color:#888">差額</span><span style="font-size:13px;font-weight:500" class="${totNet-totSf>=0?'g':'r'}">${totNet-totSf<0?'▲':''}${fmt(Math.abs(totNet-totSf))}</span></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr>
+            <th style="padding:4px 8px;text-align:left;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8"></th>
+            <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">自己資金</th>
+            <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">収益累計</th>
+            <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">差額</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:0.5px solid #f0f0e8;font-weight:500">
+              <td style="padding:6px 8px">全物件</td>
+              <td style="padding:6px 8px;text-align:right;color:#dc2626">▲${fmt(totSf)}</td>
+              <td style="padding:6px 8px;text-align:right" class="${totNet>=0?'g':'r'}">${totNet<0?'▲':''}${fmt(totNet)}</td>
+              <td style="padding:6px 8px;text-align:right" class="${totNet-totSf>=0?'g':'r'}">${totNet-totSf<0?'▲':''}${fmt(Math.abs(totNet-totSf))}</td>
+            </tr>
+            ${properties.map((p,i)=>{
+              const sf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
+              const net=getAnnualI(i)-getAnnualE(i);
+              return`<tr style="border-bottom:0.5px solid #f0f0e8">
+                <td style="padding:5px 8px;color:#888">${p.name}</td>
+                <td style="padding:5px 8px;text-align:right;color:#dc2626;font-size:10px">▲${fmt(sf)}</td>
+                <td style="padding:5px 8px;text-align:right;font-size:10px" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>
+                <td style="padding:5px 8px;text-align:right;font-size:10px" class="${net-sf>=0?'g':'r'}">${net-sf<0?'▲':''}${fmt(Math.abs(net-sf))}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
       </div>`;
     summaryHTML=`<div class="summary-grid"><div class="col">${colAnn}</div><div class="col">${colRec}</div></div>`;
   } else {
@@ -921,10 +944,12 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   </tr>`;
 
   const incData=indices.map(i=>getMonthI(i,pi));
+  const yr2=parseInt(document.getElementById('yearSel').value);
   const expData=indices.map(i=>{
-    const e=getMonthE(i,pi);
-    const misc=isAll?0:((properties[pi]?.transactions||[]).filter(t=>t.isMiscCost&&t.ym===`${parseInt(document.getElementById('yearSel').value)}-${String(MONTH_BASE[i]).padStart(2,'0')}`).reduce((s,t)=>s+t.amount,0));
-    return e-misc+(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0);
+    const ym2=`${yr2}-${String(MONTH_BASE[i]).padStart(2,'0')}`;
+    const props=isAll?properties:[properties[pi]];
+    const misc=props.reduce((s,p)=>(p.transactions||[]).filter(t=>t.isMiscCost&&t.ym===ym2).reduce((ss,t)=>ss+t.amount,s),0);
+    return getMonthE(i,pi)-misc+(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0);
   });
 
   // 列定義：全物件=収入計|支出計|法人税等|共通経費|純利益|年間累計|取得累計|回収率
