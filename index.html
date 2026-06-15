@@ -861,11 +861,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
     properties.forEach(p=>{const o=p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[_curYM]?.[r.no];if(!snap)return false;return snap.status==='occupied'||snap.status==='new'||snap.status==='late';}).length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
     const totSf=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
     const yr3=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
-    const totNet=properties.reduce((s,p)=>{
-      const allTx=p.transactions||[];
-      return s+allTx.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0)
-        -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0);
-    },0)-180000-280000;
+    let totNet=0;// 後で計算
     const colRec=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -922,6 +918,13 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   // 月次テーブル
   const COMMON_MONTHLY=[15000,15000,15000,15000,15000,15000,15000,15000,15000,15000,15000,15000];
   const TAX_MONTHLY=[0,0,0,0,0,0,0,0,0,80000,0,200000];
+  const commonTotal=isAll?COMMON_MONTHLY.reduce((s,v)=>s+v,0):0;
+  const taxTotal=isAll?TAX_MONTHLY.reduce((s,v)=>s+v,0):0;
+  totNet=properties.reduce((s,p)=>{
+    const allTx=p.transactions||[];
+    return s+allTx.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0)
+      -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0);
+  },0)-commonTotal-taxTotal;
   let cumNet=0;
   const indices=getFiscalIndices();
   const labels=getFiscalLabels();
