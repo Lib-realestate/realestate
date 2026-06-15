@@ -966,10 +966,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   const pi2=isAll?null:parseInt(currentProp);
   if(!isAll&&pi2!==null){
     const p=properties[pi2];
-    const acq=p.acquireDate?p.acquireDate.slice(0,7):nowYM();
-    const elapM=Math.max(0,mdiff(acq,nowYM()));
-    const aI=getAnnualI(pi2),aE=getAnnualE(pi2);
-    cumFromAcq=(aI-aE)/12*elapM; // 取得からの累計（簡易）
+    const allTxAcq=p.transactions||[];
+    cumFromAcq=allTxAcq.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0)
+      -allTxAcq.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0);
   }
 
   // 行を再生成（累計2種追加）
