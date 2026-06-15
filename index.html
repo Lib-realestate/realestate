@@ -972,6 +972,14 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   }
 
   // 行を再生成（累計2種追加）
+  const prevYearNet=(()=>{
+    const yr2=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+    return properties.reduce((s,p)=>{
+      const allTx=p.transactions||[];
+      return s+allTx.filter(t=>t.type==='income'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0)
+        -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0);
+    },0);
+  })();
   let cumAnn=0;
   let cumAcq=isAll?prevYearNet:cumFromAcq-(()=>{let s=0;indices.forEach(i=>{s+=getMonthI(i,pi)-getMonthEEx(i,pi)-(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0);});return s;})();
 
