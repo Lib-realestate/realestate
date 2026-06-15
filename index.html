@@ -865,7 +865,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
       const allTx=p.transactions||[];
       return s+allTx.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0)
         -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0);
-    },0)-COMMON_MONTHLY.reduce((s,v)=>s+v,0)-TAX_MONTHLY.reduce((s,v)=>s+v,0);
+    },0)-180000-280000;
     const colRec=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:11px">
