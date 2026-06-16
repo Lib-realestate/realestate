@@ -793,7 +793,7 @@ function changeMonth(dir){
 
 function buildNav(){
   const isAll=currentProp==='all';
-  const tabs=isAll?['cashflow:収支','ledger:明細','occupancy:入居状況']:['cashflow:収支','ledger:明細','occupancy:入居状況','analysis:分析','exit:出口戦略'];
+  const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略'];
   document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
   document.getElementById('mainNav').firstChild.classList.add('active');
 }
