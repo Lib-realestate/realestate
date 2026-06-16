@@ -872,7 +872,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
             <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">差額</th>
             <th style="padding:4px 8px;text-align:right;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8">回収率</th>
           </tr></thead>
-          <tbody>
+          <tbody id="colRecContent">
             <tr style="border-bottom:0.5px solid #f0f0e8;font-weight:500">
               <td style="padding:6px 8px">全物件</td>
               <td style="padding:6px 8px;text-align:right;color:#dc2626">▲${fmt(totSf)}</td>
@@ -925,6 +925,34 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     return s+allTx.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0)
       -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0);
   },0)-commonTotal-taxTotal;
+  // colRecをここで再生成（totNet確定後）
+  if(isAll){
+    const totSf2=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
+    document.querySelector&&setTimeout(()=>{
+      const recEl=document.getElementById('colRecContent');
+      if(recEl) recEl.innerHTML=`
+        <tr style="border-bottom:0.5px solid #f0f0e8;font-weight:500">
+          <td style="padding:6px 8px">全物件</td>
+          <td style="padding:6px 8px;text-align:right;color:#dc2626">▲${fmt(totSf2)}</td>
+          <td style="padding:6px 8px;text-align:right" class="${totNet>=0?'g':'r'}">${totNet<0?'▲':''}${fmt(totNet)}</td>
+          <td style="padding:6px 8px;text-align:right" class="${totNet-totSf2>=0?'g':'r'}">${totNet-totSf2<0?'▲':''}${fmt(Math.abs(totNet-totSf2))}</td>
+          <td style="padding:6px 8px;text-align:right" class="${totSf2>0&&pct(totNet,totSf2)>=50?'g':'r'}">${totSf2>0?pct(totNet,totSf2)+'%':'—'}</td>
+        </tr>
+        ${properties.map((p,i)=>{
+          const sf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
+          const allTx2=p.transactions||[];
+          const net=allTx2.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0)
+            -allTx2.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0);
+          return`<tr style="border-bottom:0.5px solid #f0f0e8">
+            <td style="padding:5px 8px;color:#888">${p.name}</td>
+            <td style="padding:5px 8px;text-align:right;color:#dc2626;font-size:10px">▲${fmt(sf)}</td>
+            <td style="padding:5px 8px;text-align:right;font-size:10px" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>
+            <td style="padding:5px 8px;text-align:right;font-size:10px" class="${net-sf>=0?'g':'r'}">${net-sf<0?'▲':''}${fmt(Math.abs(net-sf))}</td>
+            <td style="padding:5px 8px;text-align:right;font-size:10px" class="${sf>0&&pct(net,sf)>=50?'g':'r'}">${sf>0?pct(net,sf)+'%':'—'}</td>
+          </tr>`;
+        }).join('')}`;
+    },0);
+  }
   let cumNet=0;
   const indices=getFiscalIndices();
   const labels=getFiscalLabels();
