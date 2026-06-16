@@ -1135,8 +1135,51 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         </tr>
       </tbody>
     </table></div>
-  </div>`;
-
+  </div>
+  ${(()=>{
+    if(isAll) return '';
+    const p=properties[pi];
+    const yr2=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
+    const txsAll=(p.transactions||[]).filter(t=>{const y=t.ym?parseInt(t.ym.slice(0,4)):0;return y===yr2;});
+    const income=txsAll.filter(t=>t.type==='income');
+    const expense=txsAll.filter(t=>t.type==='expense');
+    const relatedFiles=driveFiles.filter(f=>f.propId===p.id);
+    const tableHead=`<thead style="background:#fafaf8"><tr>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">年月</th>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
+      <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">金額</th>
+      <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">諸費用</th>
+      <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
+      <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:50px"></th>
+    </tr></thead>`;
+    const emptyRow=`<tr><td colspan="7" style="padding:20px;text-align:center;color:#ccc;font-size:12px">データなし</td></tr>`;
+    const txRow=(t,idx)=>{
+      const linked=t.driveLink?{webViewLink:t.driveLink,name:t.driveFileName}:relatedFiles.find(f=>(t.driveFileId&&f.id===t.driveFileId)||(t.desc&&f.name.includes(t.desc)));
+      return`<tr>
+        <td style="padding:7px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
+        <td style="padding:7px 8px;font-size:12px">${t.desc||'—'}</td>
+        <td style="padding:7px 8px;font-size:11px;color:#888">${t.cat||'—'}</td>
+        <td style="padding:7px 8px;text-align:right;font-weight:500;font-size:13px;font-variant-numeric:tabular-nums" class="${t.type==='income'?'g':'r'}">${t.type==='income'?'':'▲'}${t.amount.toLocaleString()}</td>
+        ${t.type==='expense'?`<td style="padding:7px 8px;text-align:center"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;white-space:nowrap"><input type="checkbox" ${t.isMiscCost?'checked':''} onchange="toggleMiscCost(${pi},${idx},this.checked)" style="width:14px;height:14px">諸費用</label></td>`:'<td></td>'}
+        <td style="padding:7px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
+        <td style="padding:7px 8px;text-align:center"><button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteTx(${pi},${idx})">削除</button></td>
+      </tr>`;
+    };
+    return`
+    <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8"><span class="ct" style="color:#16a34a">収入明細</span></div>
+      <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:500px">
+        ${tableHead}<tbody>${income.length?income.map((t,i)=>txRow(t,p.transactions.indexOf(t))).join(''):emptyRow}</tbody>
+      </table></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8"><span class="ct" style="color:#dc2626">支出明細</span></div>
+      <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:500px">
+        ${tableHead}<tbody>${expense.length?expense.map((t,i)=>txRow(t,p.transactions.indexOf(t))).join(''):emptyRow}</tbody>
+      </table></div>
+    </div>`;
+  })()}`;
 const _drawCfChart=()=>{
   const cfEl=document.getElementById('cfChart');
   if(!cfEl)return;
