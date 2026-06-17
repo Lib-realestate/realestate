@@ -2486,6 +2486,7 @@ function toggleMiscCost(pi,txIdx,checked){
   p.miscCost=Object.values(p.miscItems).reduce((s,v)=>s+v,0);
   saveProps();
   showToast(`諸費用合計を更新しました: ${p.miscCost.toLocaleString()}円`,'success');
+  if(currentTabId==='cashflow') renderCashflow();
 }
 function deleteTx(pi,txIdx){
   if(!confirm('この明細を削除しますか？'))return;
