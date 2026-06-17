@@ -1460,6 +1460,14 @@ else if(!snap.status||snap.status===null) {} // デフォルト（null）は空�
     },0)
   ,0);
   const snapMonths=MONTHS.filter(({ym})=>p.rooms.some(r=>getSnap(r.no,ym))).length;
+  // 今期滞納額（各部屋の年間差額合計）
+  const annualLateSumByRoom=p.rooms.reduce((s,r)=>{
+    return s+MONTHS.reduce((ss,{ym})=>{
+      const snap=getSnap(r.no,ym);
+      if(!snap||snap.status==='vacant'||snap.status==='new')return ss;
+      return ss+snapTotal(snap)-contractTotal(r,ym);
+    },0);
+  },0);
 
   // 年間家賃収入（入力済み月の契約家賃合計）
   const annualRentIncome=MONTHS.reduce((s,{ym})=>{
@@ -1640,35 +1648,22 @@ else if(!snap.status||snap.status===null) {} // デフォルト（null）は空�
   document.getElementById('pages').innerHTML=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
     <div class="col single">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span class="ct">入金状況 <span style="font-size:9px;color:#aaa">${yr}年</span></span>
-        <span style="font-size:11px;color:#888">${p.rooms.length}室 / ${snapMonths}ヶ月分</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="ct" style="margin-bottom:12px">滞納状況 <span style="font-size:9px;color:#aaa">${yr}年</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
-          <div style="font-size:10px;color:#888;margin-bottom:2px">入金合計</div>
-          <div style="font-size:16px;font-weight:500;color:#16a34a">${annualTotal.toLocaleString()}</div>
+          <div style="font-size:10px;color:#888;margin-bottom:4px">今期滞納額</div>
+          <div style="font-size:20px;font-weight:500;color:${annualLateSumByRoom<0?'#dc2626':annualLateSumByRoom>0?'#16a34a':'#888'}">${annualLateSumByRoom!==0?(annualLateSumByRoom<0?'▲'+fmt(-annualLateSumByRoom):'+'+fmt(annualLateSumByRoom)):'±0'}</div>
         </div>
         <div>
-          <div style="font-size:10px;color:#888;margin-bottom:2px">年間家賃収入</div>
-          <div style="font-size:16px;font-weight:500">${annualRentIncome.toLocaleString()}</div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:#888;margin-bottom:2px">年間滞納額</div>
-          <div style="font-size:16px;font-weight:500;color:${annualLateAmt<0?'#dc2626':'#16a34a'}">${annualLateAmt!==0?(annualLateAmt<0?'▲'+fmt(-annualLateAmt):'+'+fmt(annualLateAmt)):'—'}</div>
-        </div>
-      </div>
-      <div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #f0f0e8;display:flex;gap:16px">
-        <div>
-          <span style="font-size:10px;color:#888">累計滞納額：</span>
-          <span style="font-size:11px;font-weight:500;color:${cumLate<0?'#dc2626':cumLate>0?'#16a34a':'#888'}">${cumLate!==0?(cumLate<0?'▲'+fmt(-cumLate):'+'+fmt(cumLate)):'—'}</span>
+          <div style="font-size:10px;color:#888;margin-bottom:4px">累計滞納額</div>
+          <div style="font-size:20px;font-weight:500;color:${cumLate<0?'#dc2626':cumLate>0?'#16a34a':'#888'}">${cumLate!==0?(cumLate<0?'▲'+fmt(-cumLate):'+'+fmt(cumLate)):'±0'}</div>
         </div>
       </div>
     </div>
     <div class="col single">
       <div class="ct" style="margin-bottom:8px">入居率 <span style="font-size:9px;color:#aaa">${yr}年平均</span></div>
       <div style="font-size:28px;font-weight:500;color:${avgOcc>=80?'#16a34a':avgOcc>=60?'#f59e0b':'#dc2626'}">${avgOcc}%</div>
-      <div style="font-size:11px;color:#888;margin-top:4px">データあり月の平均 / ${p.rooms.length}室</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">データあり月の平均</div>
     </div>
   </div>
 
