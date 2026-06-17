@@ -827,7 +827,7 @@ function renderCashflow(){
   const moI=getMonthI(mi,pi),moE=getMonthEEx(mi,pi),moNet=moI-moE;
   const annI=getAnnualI(pi),annE=getAnnualEEx(pi),annNet=annI-annE;
   const periodLabel=yearMode==='fiscal'?`${fiscalMonth}月決算年度`:'暦年（1〜12月）';
-  const moLabel=document.getElementById('monthSel').options[document.getElementById('monthSel').selectedIndex].text;
+  const moLabel=`${new Date().getFullYear()}年${new Date().getMonth()+1}月`;
   const selfFund=isAll?properties.reduce((s,p)=>s+((p.price+p.reform+p.miscCost)-p.loan),0):((properties[pi]?.price+properties[pi]?.reform+properties[pi]?.miscCost)-properties[pi]?.loan||0);
 
   // 上段3列
