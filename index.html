@@ -723,7 +723,7 @@ const startIdx=MONTH_BASE.indexOf(startMonth);
 return Array.from({length:12},(_,i)=>(startIdx+i)%12);
 }
 function getFiscalLabels(){return getFiscalIndices().map(i=>MONTH_LABELS_ALL[i]);}
-function getMonthlyIdx(){const mo=parseInt(document.getElementById('monthSel').value);return MONTH_BASE.indexOf(mo);}
+function getMonthlyIdx(){const mo=new Date().getMonth()+1;return MONTH_BASE.indexOf(mo);}
 function getMonthI(mi,pi){
 const mo=MONTH_BASE[mi];
 const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
