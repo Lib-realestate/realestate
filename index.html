@@ -1087,7 +1087,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   </div>
   <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:10px 14px 6px;border-bottom:0.5px solid #e0e0d8" class="flex-b">
-      <span class="ct">月次収支明細</span>
+      <span class="ct">月次収支表</span>
       <span style="font-size:10px;color:#888">▲=マイナス / 斜体=予測</span>
     </div>
     <div class="cf-wrap" style="overflow-x:auto"><table class="cftable" style="border-collapse:collapse;width:100%">
@@ -1196,13 +1196,17 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         const txRows=txList.map(t=>{
           const linked=t.driveLink?{webViewLink:t.driveLink}:null;
           return`<tr style="border-bottom:0.5px solid #f0f0e8">
-            <td style="padding:6px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
-            <td style="padding:6px 8px;font-size:12px">${t.desc||'—'}</td>
-            <td style="padding:6px 8px;font-size:11px;color:#888">${t.cat||'—'}</td>
-            <td style="padding:6px 8px;text-align:right;font-size:12px;color:#16a34a">${t.type==='income'?t.amount.toLocaleString():'—'}</td>
-            <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.type==='expense'?'▲'+t.amount.toLocaleString():'—'}</td>
-            <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
-          </tr>`;
+          <td style="padding:4px 6px;white-space:nowrap"><input type="month" value="${t.ym||''}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px" onchange="updateTxField(${pi},${idx},'ym',this.value)"></td>
+          <td style="padding:4px 6px"><input type="text" value="${t.desc||''}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:100%" onchange="updateTxField(${pi},${idx},'desc',this.value)"></td>
+          <td style="padding:4px 6px"><select style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateTxField(${pi},${idx},'cat',this.value)">
+            ${SUB_FOLDERS.map(s=>`<option value="${s}" ${t.cat===s?'selected':''}>${s}</option>`).join('')}
+          </select></td>
+          <td style="padding:4px 6px;text-align:right">${t.type==='income'?`<input type="number" value="${t.amount}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:90px;text-align:right;color:#16a34a" onchange="updateTxField(${pi},${idx},'amount',parseInt(this.value)||0)">`:'—'}</td>
+          <td style="padding:4px 6px;text-align:right">${t.type==='expense'?`<input type="number" value="${t.amount}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:90px;text-align:right;color:#dc2626" onchange="updateTxField(${pi},${idx},'amount',parseInt(this.value)||0)">`:'—'}</td>
+          ${t.type==='expense'?`<td style="padding:4px 6px;text-align:center"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px"><input type="checkbox" ${t.isMiscCost?'checked':''} onchange="toggleMiscCost(${pi},${idx},this.checked)" style="width:14px;height:14px">諸費用</label></td>`:'<td></td>'}
+          <td style="padding:4px 6px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:t.manualEntry?`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
+          <td style="padding:4px 6px;text-align:center"><button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteTx(${pi},${idx})">削除</button></td>
+        </tr>`;
         }).join('');
         const sumRow=`<tr style="background:#fafaf8;border-bottom:1px solid #d0d0c8;font-weight:500">
           <td colspan="4" style="padding:5px 8px;font-size:11px;color:#888">${ym2.replace('-','年')}月 合計</td>
@@ -1293,7 +1297,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     }).join('');
     return`
     <div class="card" style="padding:0;overflow:hidden">
-      <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8"><span class="ct">明細履歴</span></div>
+      <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
+        <span class="ct">明細履歴</span>
+        <button class="btn-add" onclick="addManualTx(${pi})">＋ 明細追加</button>
+      </div>
       <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:600px">
         ${unifiedHead}<tbody>${allTxSorted.length?unifiedRows:`<tr><td colspan="8" style="padding:20px;text-align:center;color:#ccc;font-size:12px">データなし</td></tr>`}</tbody>
       </table></div>
@@ -2648,6 +2655,59 @@ function toggleMiscCost(pi,txIdx,checked){
   showToast(`諸費用合計を更新しました: ${p.miscCost.toLocaleString()}円`,'success');
   if(currentTabId==='cashflow') renderCashflow();
 }
+
+  function updateTxField(pi,idx,field,value){
+  if(!properties[pi]?.transactions?.[idx])return;
+  properties[pi].transactions[idx][field]=value;
+  saveProps();
+}
+
+function addManualTx(pi){
+  const p=properties[pi];
+  if(!p.transactions)p.transactions=[];
+  p.transactions.push({
+    ym:nowYM(),
+    type:'expense',
+    amount:0,
+    desc:'',
+    cat:'03_支出',
+    manualEntry:true,
+    createdAt:new Date().toISOString()
+  });
+  saveProps();
+  renderCashflow();
+}
+
+function uploadTxDoc(pi,idx){
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='.pdf,.jpg,.jpeg,.png';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    const p=properties[pi];
+    const t=p.transactions[idx];
+    if(!t)return;
+    showToast('アップロード中...','info');
+    try{
+      const up=await ensurePropFolders(p);
+      const targetId=up.subFolders[t.cat]||up.subFolders['05_その他'];
+      const finalName=`${(t.ym||'').replace('-','')}_${t.desc||'手動入力'}${file.name.slice(file.name.lastIndexOf('.'))}`;
+      const driveResult=await uploadToDrive(file,targetId,finalName);
+      t.driveFileId=driveResult.id;
+      t.driveLink=driveResult.webViewLink;
+      t.driveFileName=driveResult.name;
+      t.manualEntry=false;
+      saveProps();
+      renderCashflow();
+      showToast('書類を格納しました','success');
+    }catch(e){
+      showToast('格納に失敗しました: '+e.message,'error');
+    }
+  };
+  input.click();
+}
+  
 function deleteTx(pi,txIdx){
   if(!confirm('この明細を削除しますか？'))return;
   properties[pi].transactions.splice(txIdx,1);
