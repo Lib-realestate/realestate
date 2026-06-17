@@ -2883,8 +2883,19 @@ async function analyzeMultipleFiles(files){
   showMultiClassifyModal();
 }
 
+  const COMMON_CATS=['共通経費','税金等'];
+function updateCatOptions(idx,propVal){
+  const sel=document.getElementById(`mpCat_${idx}`);
+  if(!sel)return;
+  if(propVal==='common'){
+    sel.innerHTML=COMMON_CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  } else {
+    sel.innerHTML=SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('');
+  }
+}
+  
 function showMultiClassifyModal(){
-  const propOptions=properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+  const propOptions=`<option value="common">全物件（共通）</option>`+properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
   const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('');
 
   const rows=multiPendingUploads.map((item,idx)=>{
@@ -2896,7 +2907,7 @@ function showMultiClassifyModal(){
       <td style="padding:6px 8px;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.file.name}${dupBadge}</td>
       <td style="padding:6px 4px;font-size:11px;color:#888">${r?.issuer||'—'}</td>
 <td style="padding:6px 4px;font-size:11px;color:#888">${r?.summary||'—'}</td>
-      <td style="padding:6px 4px"><select id="mpProp_${idx}" style="font-size:11px;width:100%"><option value="">— 未分類 —</option>${propOptions.replace(`value="${detectedProp}"`,`value="${detectedProp}" selected`)}</select></td>
+      <td style="padding:6px 4px"><select id="mpProp_${idx}" style="font-size:11px;width:100%" onchange="updateCatOptions(${idx},this.value)"><option value="">— 未分類 —</option>${propOptions.replace(`value="${detectedProp}"`,`value="${detectedProp}" selected`)}</select></td>
       <td style="padding:6px 4px"><select id="mpCat_${idx}" style="font-size:11px;width:100%">${catOptions.replace(`value="${detectedCat}"`,`value="${detectedCat}" selected`)}</select></td>
       <td style="padding:6px 4px"><input type="date" id="mpDate_${idx}" value="${r?.date||today()}" style="font-size:11px;width:110px"></td>
       <td style="padding:6px 4px;font-size:11px;text-align:right;color:${r?.category==='収入'?'#16a34a':'#dc2626'}">${r?.amount?r.amount.toLocaleString():'—'}</td>
@@ -2953,6 +2964,29 @@ async function confirmMultiUpload(){
     const cat=document.getElementById(`mpCat_${idx}`)?.value;
     const date=document.getElementById(`mpDate_${idx}`)?.value;
     if(!propIdx){errorCount++;continue;}
+    if(propIdx==='common'){
+      // 全物件共通経費として保存
+      const commonCat=document.getElementById(`mpCat_${idx}`)?.value||'共通経費';
+      const commonDate=document.getElementById(`mpDate_${idx}`)?.value;
+      const commonYM=commonDate?commonDate.slice(0,7):'';
+      if(commonYM&&item.result?.amount>0){
+        if(!commonTransactions) commonTransactions=[];
+        commonTransactions.push({
+          ym:commonYM,
+          type:'expense',
+          amount:item.result.amount,
+          desc:item.result.description||'',
+          cat:commonCat,
+          createdAt:new Date().toISOString(),
+          driveFileId:null,
+          driveLink:null
+        });
+        saveProps();
+        showToast(`共通経費を登録しました: ${item.result.amount.toLocaleString()}円`,'success');
+      }
+      successCount++;
+      continue;
+    }
     const prop=properties[parseInt(propIdx)];
     updateProc(item.id,'uploading',`${prop.name} / ${cat} へアップロード中…`);
     try{
@@ -3403,7 +3437,7 @@ function renderUpload(){
   if(unclassifiedItems.length>0){
     html+=`<div class="card"><div class="ct" style="color:#b45309;margin-bottom:10px">未分類トレイ（${unclassifiedItems.length}件）</div>`;
     unclassifiedItems.forEach((item,idx)=>{
-      const propOptions=properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+      const propOptions=`<option value="common">全物件（共通）</option>`+properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
       const catOptions=SUB_FOLDERS.map(s=>`<option value="${s}" ${s===item.cat?'selected':''}>${s}</option>`).join('');
       html+=`<div class="unclassified-item">
         <div style="font-size:12px;font-weight:500;margin-bottom:4px">${item.name}</div>
