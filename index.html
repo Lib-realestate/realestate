@@ -956,6 +956,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   let cumNet=0;
   const indices=getFiscalIndices();
   const labels=getFiscalLabels();
+  const isFutureIdx=(idx)=>{const yr4=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());const mo2=MONTH_BASE[idx];const ym4=`${yr4}-${String(mo2).padStart(2,'0')}`;return ym4>nowYM();};
 
   let rows=indices.map((idx,pos)=>{
     const income=getMonthEEx(idx,pi);
@@ -1318,8 +1319,7 @@ function renderOccAll(){
 
   const indices=getFiscalIndices();
   const labels=getFiscalLabels();
-  const isFutureIdx=(idx)=>{const yr4=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());const mo2=MONTH_BASE[idx];const ym3=`${yr4}-${String(mo2).padStart(2,'0')}`;return ym3>nowYM();};
-
+  
   let body=indices.map((idx,pos)=>{
     const m=MONTH_BASE[idx];
    const yr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
