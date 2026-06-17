@@ -1089,7 +1089,14 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <tr>
           <th class="left" style="min-width:80px;position:sticky;left:0;z-index:3;background:#fafaf8"></th>
           <th style="min-width:72px;text-align:right;border-right:1px solid #d0d0c8;color:#888;font-size:10px">前期繰越</th>
-          ${labels.map((l,pos)=>`<th style="min-width:72px;text-align:right">${l}${pos>1?'<span style="font-size:9px;opacity:.5;display:block">予測</span>':''}</th>`).join('')}
+          ${labels.map((l,pos)=>{
+  const idx=getFiscalIndices()[pos];
+  const mo=MONTH_BASE[idx];
+  const yr2=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
+  const ym2=`${yr2}-${String(mo).padStart(2,'0')}`;
+  const isFuture=ym2>nowYM();
+  return`<th style="min-width:72px;text-align:right">${l}${isFuture?'<span style="font-size:9px;opacity:.5;display:block">予測</span>':''}</th>`;
+}).join('')}
           <th style="min-width:72px;text-align:right;border-left:1px solid #d0d0c8">合計</th>
         </tr>
       </thead>
