@@ -1318,8 +1318,7 @@ function renderOccAll(){
 
   const indices=getFiscalIndices();
   const labels=getFiscalLabels();
-  const yr3=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
-  const isFutureIdx=(idx)=>{const mo2=MONTH_BASE[idx];const ym3=`${yr3}-${String(mo2).padStart(2,'0')}`;return ym3>nowYM();};
+  const isFutureIdx=(idx)=>{const yr4=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());const mo2=MONTH_BASE[idx];const ym3=`${yr4}-${String(mo2).padStart(2,'0')}`;return ym3>nowYM();};
 
   let body=indices.map((idx,pos)=>{
     const m=MONTH_BASE[idx];
