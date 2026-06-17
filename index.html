@@ -1270,14 +1270,18 @@ const _drawCfChart=()=>{
           ${incData.map((v,i)=>{
             const x=xScale(i);
             const barW=gW/labels.length*0.35;
+            const zero=yScale(0);
             const y=yScale(v);
-            return`<rect x="${x-barW}" y="${y}" width="${barW}" height="${gH-y}" fill="#86efac" opacity="0.8"/>`;
+            const barH=Math.abs(zero-y);
+            return v>0?`<rect x="${x-barW}" y="${y}" width="${barW}" height="${barH}" fill="#86efac" opacity="0.8"/>`:'';
           }).join('')}
           ${expData.map((v,i)=>{
             const x=xScale(i);
             const barW=gW/labels.length*0.35;
+            const zero=yScale(0);
             const y=yScale(v);
-            return`<rect x="${x}" y="${y}" width="${barW}" height="${gH-y}" fill="#fca5a5" opacity="0.8"/>`;
+            const barH=Math.abs(zero-y);
+            return v>0?`<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="#fca5a5" opacity="0.8"/>`:'';
           }).join('')}
           <polyline points="${netData.map((v,i)=>`${xScale(i)},${yScale(v)}`).join(' ')}" fill="none" stroke="#2563eb" stroke-width="1.5"/>
           ${netData.map((v,i)=>{
