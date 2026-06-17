@@ -1281,7 +1281,11 @@ const _drawCfChart=()=>{
           ${netData.map((v,i)=>{
             const x=xScale(i);
             const y=yScale(v);
+            const netColor=v>=0?'#16a34a':'#dc2626';
+            const netLabel=v!==0?(v<0?'▲':'')+fmt(v):'';
+            const anchor=i<labels.length/2?'start':'end';
             return`<circle cx="${x}" cy="${y}" r="3" fill="white" stroke="#2563eb" stroke-width="1.5"/>
+              ${netLabel?`<text x="${x}" y="${y-6}" font-size="8" fill="${netColor}" text-anchor="${anchor}" font-family="sans-serif">${netLabel}</text>`:''}
               <text x="${x}" y="${gH+12}" font-size="8" fill="#888" text-anchor="middle" font-family="sans-serif">${labels[i]}</text>`;
           }).join('')}
         </svg>
