@@ -1265,8 +1265,18 @@ const _drawCfChart=()=>{
       <div style="flex:1;display:flex;align-items:flex-end;gap:2px;border-left:0.5px solid #e0e0d8;border-bottom:0.5px solid #e0e0d8;position:relative">
         <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none" preserveAspectRatio="none"><line x1="0" y1="25%" x2="100%" y2="25%" stroke="#e0e0d8" stroke-width="0.5"/><line x1="0" y1="50%" x2="100%" y2="50%" stroke="#e0e0d8" stroke-width="0.5"/><line x1="0" y1="75%" x2="100%" y2="75%" stroke="#e0e0d8" stroke-width="0.5"/>${minVal<0?`<line x1="0" y1="${(1-(-minVal)/range)*100}%" x2="100%" y2="${(1-(-minVal)/range)*100}%" stroke="#dc2626" stroke-width="0.5" stroke-dasharray="3,2"/>`:''}</svg>
        <svg style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible">
-          <polyline points="${incData.map((v,i)=>`${xScale(i)},${yScale(v)}`).join(' ')}" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4,2"/>
-          <polyline points="${expData.map((v,i)=>`${xScale(i)},${yScale(v)}`).join(' ')}" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,2"/>
+          ${incData.map((v,i)=>{
+            const x=xScale(i);
+            const barW=gW/labels.length*0.35;
+            const y=yScale(v);
+            return`<rect x="${x-barW}" y="${y}" width="${barW}" height="${gH-y}" fill="#86efac" opacity="0.8"/>`;
+          }).join('')}
+          ${expData.map((v,i)=>{
+            const x=xScale(i);
+            const barW=gW/labels.length*0.35;
+            const y=yScale(v);
+            return`<rect x="${x}" y="${y}" width="${barW}" height="${gH-y}" fill="#fca5a5" opacity="0.8"/>`;
+          }).join('')}
           <polyline points="${netData.map((v,i)=>`${xScale(i)},${yScale(v)}`).join(' ')}" fill="none" stroke="#2563eb" stroke-width="1.5"/>
           ${netData.map((v,i)=>{
             const x=xScale(i);
