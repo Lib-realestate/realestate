@@ -1459,8 +1459,8 @@ else if(!snap.status||snap.status===null) {} // デフォルト（null）は空�
       return ss+contractTotal(r,ym2);
     },0)
   ,0);
-  const annualDiff=annualTotal-currOccIncome*snapMonths;
   const snapMonths=MONTHS.filter(({ym})=>p.rooms.some(r=>getSnap(r.no,ym))).length;
+  const annualDiff=annualTotal-currOccIncome*snapMonths;
 
   const renderTable=(showDetail)=>{
     const detailLabels=['家賃','管理費','共益費','駐車場','その他'];
