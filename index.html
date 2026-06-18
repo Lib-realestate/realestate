@@ -2660,6 +2660,7 @@ function toggleMiscCost(pi,txIdx,checked){
   if(!properties[pi]?.transactions?.[idx])return;
   properties[pi].transactions[idx][field]=value;
   saveProps();
+  showToast('保存しました','success');
 }
 
 function addManualTx(pi){
