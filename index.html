@@ -1279,7 +1279,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         const linked=t.driveLink?{webViewLink:t.driveLink}:relatedFiles.find(f=>(t.driveFileId&&f.id===t.driveFileId));
         return`<tr style="border-bottom:0.5px solid #f0f0e8">
           <td style="padding:4px 6px;white-space:nowrap"><input type="month" value="${t.ym||''}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px" onchange="updateTxField(${pi},${idx},'ym',this.value)"></td>
-          <td style="padding:4px 6px"><input type="text" value="${(t.desc||'').replace(/"/g,'&quot;')}"
+          <td style="padding:4px 6px"><input type="text" value="${(t.desc||'').replace(/"/g,'&quot;')}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:100%" onchange="updateTxField(${pi},${idx},'desc',this.value)"></td>
           <td style="padding:4px 6px"><select style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateTxCatAndType(${pi},${idx},this.value)">
             ${SUB_FOLDERS.map(s=>`<option value="${s}" ${t.cat===s?'selected':''}>${s}</option>`).join('')}
           </select></td>
