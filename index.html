@@ -2712,7 +2712,7 @@ function deleteTx(pi,txIdx){
   if(!confirm('この明細を削除しますか？'))return;
   properties[pi].transactions.splice(txIdx,1);
   saveProps();
-  renderLedger();
+  renderCashflow();
 }
   
 /* ── 出口戦略 ── */
