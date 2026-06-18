@@ -1186,9 +1186,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">年月</th>
         <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
         <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
-        <th style="padding:6px 8px;text-align:right;font-size:10px;color:#16a34a;border-bottom:0.5px solid #e0e0d8;min-width:90px">収入金額</th>
         <th style="padding:6px 8px;text-align:right;font-size:10px;color:#dc2626;border-bottom:0.5px solid #e0e0d8;min-width:90px">支出金額</th>
         <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
+        <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:50px"></th>
       </tr></thead>`;
       const rows=Object.entries(byMonth).map(([ym2,txList])=>{
         const monthI=txList.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
@@ -1208,10 +1208,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           </tr>`;
         }).join('');
         const sumRow=`<tr style="background:#fafaf8;border-bottom:1px solid #d0d0c8;font-weight:500">
-          <td colspan="4" style="padding:5px 8px;font-size:11px;color:#888">${ym2.replace('-','年')}月 合計</td>
-          <td style="padding:5px 8px;text-align:right;font-size:11px;color:#16a34a">${monthI>0?monthI.toLocaleString():'—'}</td>
+          <td colspan="3" style="padding:5px 8px;font-size:11px;color:#888">${ym2.replace('-','年')}月 合計</td>
           <td style="padding:5px 8px;text-align:right;font-size:11px;color:#dc2626">${monthE>0?'▲'+monthE.toLocaleString():'—'}</td>
-          <td></td>
+          <td colspan="2"></td>
         </tr>`;
         return txRows+sumRow;
       }).join('');
@@ -2665,6 +2664,63 @@ function toggleMiscCost(pi,txIdx,checked){
   showToast('保存しました','success');
 }
 
+  function updateCommonTxField(idx,field,value){
+  if(!commonTransactions?.[idx])return;
+  commonTransactions[idx][field]=value;
+  saveProps();
+  showToast('保存しました','success');
+}
+
+function deleteCommonTxByIdx(idx){
+  if(!confirm('この明細を削除しますか？'))return;
+  commonTransactions.splice(idx,1);
+  saveProps();
+  renderCashflow();
+}
+
+function addManualCommonTx(){
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">共通明細を追加</div>
+    <div class="form-group">
+      <label class="form-label">年月</label>
+      <input type="month" id="mtYM" value="${nowYM()}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">内容</label>
+      <input type="text" id="mtDesc" placeholder="内容を入力" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <select id="mtCat" style="width:100%">
+        ${COMMON_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">金額（円）</label>
+      <input type="number" id="mtAmt" placeholder="0" style="width:100%">
+    </div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='共通明細追加';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
+    <button class="btn btn-primary" onclick="saveManualCommonTx()">追加</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+function saveManualCommonTx(){
+  const ym=document.getElementById('mtYM')?.value;
+  const desc=document.getElementById('mtDesc')?.value||'';
+  const cat=document.getElementById('mtCat')?.value;
+  const amount=parseInt(document.getElementById('mtAmt')?.value)||0;
+  if(!ym||amount<=0){showToast('年月と金額を入力してください','error');return;}
+  if(!commonTransactions)commonTransactions=[];
+  commonTransactions.push({ym,type:'expense',amount,desc,cat,manualEntry:true,createdAt:new Date().toISOString()});
+  saveProps();
+  closeModal('classifyModal');
+  renderCashflow();
+  showToast('共通明細を追加しました','success');
+}
+  
 function addManualTx(pi){
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">明細を追加</div>
