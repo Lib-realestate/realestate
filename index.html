@@ -1184,7 +1184,8 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       allSorted.forEach(t=>{const ym2=t.ym||'不明';if(!byMonth[ym2])byMonth[ym2]=[];byMonth[ym2].push(t);});
       const tableHead=`<thead style="background:#fafaf8;position:sticky;top:0;z-index:2"><tr>
         <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">年月</th>
-        <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">種別</th>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
         <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
         <th style="padding:6px 8px;text-align:right;font-size:10px;color:#dc2626;border-bottom:0.5px solid #e0e0d8;min-width:90px">支出金額</th>
         <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">書類</th>
@@ -1232,6 +1233,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const relatedFiles=driveFiles.filter(f=>f.propId===p.id);
     const tableHead=`<thead style="background:#fafaf8"><tr>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">年月</th>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">種別</th>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
       <th style="padding:6px 8px;text-align:right;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;min-width:100px">金額</th>
@@ -1263,6 +1265,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     });
     const unifiedHead=`<thead style="background:#fafaf8"><tr>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">年月</th>
+      <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;width:60px">種別</th>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">内容</th>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">カテゴリ</th>
       <th style="padding:6px 8px;text-align:right;font-size:10px;color:#16a34a;border-bottom:0.5px solid #e0e0d8;min-width:90px">収入金額</th>
@@ -1279,6 +1282,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         const linked=t.driveLink?{webViewLink:t.driveLink}:relatedFiles.find(f=>(t.driveFileId&&f.id===t.driveFileId));
         return`<tr style="border-bottom:0.5px solid #f0f0e8">
           <td style="padding:4px 6px;white-space:nowrap"><input type="month" value="${t.ym||''}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px" onchange="updateTxField(${pi},${idx},'ym',this.value)"></td>
+          <td style="padding:4px 6px"><select style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateTxFieldAndRedraw(${pi},${idx},'type',this.value)">
+            <option value="income" ${t.type==='income'?'selected':''}>収入</option>
+            <option value="expense" ${t.type==='expense'?'selected':''}>支出</option>
+          </select></td>
           <td style="padding:4px 6px"><input type="text" value="${(t.desc||'').replace(/"/g,'&quot;')}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:100%" onchange="updateTxField(${pi},${idx},'desc',this.value)"></td>
           <td style="padding:4px 6px"><select style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateTxField(${pi},${idx},'cat',this.value)">
             ${SUB_FOLDERS.map(s=>`<option value="${s}" ${t.cat===s?'selected':''}>${s}</option>`).join('')}
@@ -2659,6 +2666,13 @@ function toggleMiscCost(pi,txIdx,checked){
   if(currentTabId==='cashflow') renderCashflow();
 }
 
+  function updateTxFieldAndRedraw(pi,idx,field,value){
+  if(!properties[pi]?.transactions?.[idx])return;
+  properties[pi].transactions[idx][field]=value;
+  saveProps();
+  renderCashflow();
+}
+  
   function updateTxField(pi,idx,field,value){
   if(!properties[pi]?.transactions?.[idx])return;
   properties[pi].transactions[idx][field]=value;
