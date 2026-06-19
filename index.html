@@ -2791,33 +2791,65 @@ function saveManualTx(pi){
 }
 
 function uploadTxDoc(pi,idx){
-  const input=document.createElement('input');
-  input.type='file';
-  input.accept='.pdf,.jpg,.jpeg,.png';
-  input.onchange=async(e)=>{
-    const file=e.target.files[0];
-    if(!file)return;
-    const p=properties[pi];
-    const t=p.transactions[idx];
-    if(!t)return;
-    showToast('アップロード中...','info');
-    try{
-      const up=await ensurePropFolders(p);
-      const targetId=up.subFolders[t.cat]||up.subFolders['05_その他'];
-      const finalName=`${(t.ym||'').replace('-','')}_${t.desc||'手動入力'}${file.name.slice(file.name.lastIndexOf('.'))}`;
-      const driveResult=await uploadToDrive(file,targetId,finalName);
-      t.driveFileId=driveResult.id;
-      t.driveLink=driveResult.webViewLink;
-      t.driveFileName=driveResult.name;
-      t.manualEntry=false;
-      saveProps();
-      renderCashflow();
-      showToast('書類を格納しました','success');
-    }catch(e){
-      showToast('格納に失敗しました: '+e.message,'error');
-    }
-  };
-  input.click();
+  const p=properties[pi];
+  const t=p.transactions[idx];
+  if(!t)return;
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">書類を格納</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px">${t.ym||''}　${t.desc||''}</div>
+    <div id="txDocDropZone" style="border:2px dashed #d0d0c8;border-radius:8px;padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .2s"
+      ondragover="event.preventDefault();this.style.borderColor='#2563eb'"
+      ondragleave="this.style.borderColor='#d0d0c8'"
+      ondrop="handleTxDocDrop(event,${pi},${idx})">
+      <div style="font-size:32px;margin-bottom:8px">📄</div>
+      <div style="font-size:13px;color:#666;margin-bottom:8px">ここにファイルをドロップ</div>
+      <div style="font-size:11px;color:#aaa;margin-bottom:12px">PDF・画像ファイル対応</div>
+      <button class="btn" onclick="document.getElementById('txDocFileInput').click()">ファイルを選択</button>
+      <input type="file" id="txDocFileInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleTxDocFile(event,${pi},${idx})">
+    </div>
+    <div id="txDocStatus" style="margin-top:8px;font-size:11px;color:#888;text-align:center"></div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='書類格納';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+async function handleTxDocFile(e,pi,idx){
+  const file=e.target.files[0];
+  if(file)await doUploadTxDoc(file,pi,idx);
+}
+
+async function handleTxDocDrop(e,pi,idx){
+  e.preventDefault();
+  document.getElementById('txDocDropZone').style.borderColor='#d0d0c8';
+  const file=e.dataTransfer.files[0];
+  if(file)await doUploadTxDoc(file,pi,idx);
+}
+
+async function doUploadTxDoc(file,pi,idx){
+  const p=properties[pi];
+  const t=p.transactions[idx];
+  if(!t)return;
+  const status=document.getElementById('txDocStatus');
+  if(status)status.textContent='アップロード中...';
+  try{
+    const up=await ensurePropFolders(p);
+    const targetId=up.subFolders[t.cat]||up.subFolders['05_その他'];
+    const finalName=`${(t.ym||'').replace('-','')}_${t.desc||'手動入力'}${file.name.slice(file.name.lastIndexOf('.'))}`;
+    const driveResult=await uploadToDrive(file,targetId,finalName);
+    t.driveFileId=driveResult.id;
+    t.driveLink=driveResult.webViewLink;
+    t.driveFileName=driveResult.name;
+    t.manualEntry=false;
+    saveProps();
+    closeModal('classifyModal');
+    renderCashflow();
+    showToast('書類を格納しました','success');
+  }catch(e){
+    if(status)status.textContent='格納に失敗しました: '+e.message;
+    showToast('格納に失敗しました','error');
+  }
 }
   
 function deleteTx(pi,txIdx){
