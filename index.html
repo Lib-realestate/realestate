@@ -1253,9 +1253,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     }
     const p=properties[pi];
     const yr2=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
-    const txsAll=(p.transactions||[]).filter(t=>{const y=t.ym?parseInt(t.ym.slice(0,4)):0;return y===yr2;});
+    const txsAll=(p.transactions||[]).filter(t=>{const y=t.ym?parseInt(t.ym.slice(0,4)):0;return y===yr2&&t.type!==undefined;});
     const income=txsAll.filter(t=>t.type==='income');
-    const expense=txsAll.filter(t=>t.type==='expense');
+    const expense=txsAll.filter(t=>t.type==='expense'||t.type==='repayment');
     const relatedFiles=driveFiles.filter(f=>f.propId===p.id);
     const tableHead=`<thead style="background:#fafaf8"><tr>
       <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;white-space:nowrap">年月</th>
@@ -3721,6 +3721,33 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
   const amount=result?.amount||0;
   if(amount<=0)return;
   const type=cat.includes('収入')?'income':cat.includes('返済')?'repayment':'expense';
+  // 返済予定表の場合は月ごとに展開
+  if(type==='repayment'&&result?.items?.length>0){
+    result.items.forEach(item=>{
+      const match=item.label.match(/^(\d{4}-\d{2})_(元金|利息)$/);
+      if(!match)return;
+      const repayYM=match[1];
+      const repayType=match[2];
+      const dup=p.transactions.find(t=>t.ym===repayYM&&t.type==='repayment'&&t.cat===repayType);
+      if(!dup){
+        p.transactions.push({
+          ym:repayYM,
+          type:'repayment',
+          amount:item.amount,
+          desc:`ローン返済（${repayType}）`,
+          cat:repayType,
+          createdAt:new Date().toISOString(),
+          driveFileId:driveResult?.id||null,
+          driveFileName:driveResult?.name||null,
+          driveLink:driveResult?.webViewLink||null,
+          isMiscCost:false
+        });
+      }
+    });
+    saveProps();
+    showToast(`返済データを${result.items.length/2}ヶ月分登録しました`,'success');
+    return;
+  }
   const dup=p.transactions.find(t=>t.ym===ym&&t.amount===amount&&t.type===type&&t.desc===(result?.description||''));
   if(!dup){
    // 取得月から6ヶ月以内の支出は諸費用候補として自動フラグ
