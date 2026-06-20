@@ -347,7 +347,7 @@ function saveDriveFolderUrl(url){
   renderSettings();
 }
 const SCOPES='https://www.googleapis.com/auth/drive';
-const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_その他'];
+const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_返済','05_その他'];
 const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
 
 let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
@@ -755,6 +755,15 @@ function getMonthEEx(mi,pi){
 function getAnnualI(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthI(i,pi),0);}
 function getAnnualE(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthE(i,pi),0);}
 function getAnnualEEx(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthEEx(i,pi),0);}
+function getMonthRepay(mi,pi){
+  const mo=MONTH_BASE[mi];
+  const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;
+  const ym=`${yr}-${String(mo).padStart(2,'0')}`;
+  if(pi===null)return 0;
+  return (properties[pi].transactions||[]).filter(t=>t.ym===ym&&t.type==='repayment').reduce((s,t)=>s+t.amount,0);
+}
+function getAnnualRepay(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthRepay(i,pi),0);}
 
 /* ── ナビ ── */
 function switchProp(){currentProp=document.getElementById('propSel').value;iconPageActive=null;updateIconBtns();buildNav();showTab('cashflow');}
@@ -1150,11 +1159,29 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           ${indices.map((idx,pos)=>{const v=TAX_MONTHLY[idx];return`<td class="r" style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''}">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
           <td class="r" style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8">▲${fmt(indices.reduce((s,idx)=>s+TAX_MONTHLY[idx],0))}</td>
         </tr>`:''}
-        <tr style="border-top:1px solid #d0d0c8;background:#fafaf8">
-          <td class="left" style="font-weight:700;position:sticky;left:0;background:#fafaf8;z-index:2">純利益</td>
+        ${!isAll?`<tr style="border-bottom:0.5px solid #e0e0d8">
+          <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#dc2626">返済</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,net=inc-exp-common-tax;ca+=net;return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>`;}).join('');})()}
-          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${totNet2>=0?'g':'r'}">${totNet2<0?'▲':''}${fmt(totNet2)}</td>
+          ${indices.map((idx,pos)=>{const v=getMonthRepay(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#dc2626">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
+          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8;color:#dc2626">${getAnnualRepay(pi)>0?'▲'+fmt(getAnnualRepay(pi)):'—'}</td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td class="left" style="font-size:11px;color:#888;padding-left:16px;position:sticky;left:0;background:#fff;z-index:2">元金</td>
+          <td style="border-right:1px solid #d0d0c8"></td>
+          ${indices.map((idx,pos)=>{const mo2=MONTH_BASE[idx];const baseYr2=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());const yr2=(yearMode==='fiscal'&&mo2<=fiscalMonth)?baseYr2+1:baseYr2;const ym2=`${yr2}-${String(mo2).padStart(2,'0')}`;const v=(properties[pi].transactions||[]).filter(t=>t.ym===ym2&&t.type==='repayment'&&t.cat==='元金').reduce((s,t)=>s+t.amount,0);return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''};color:#dc2626">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
+          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8;color:#dc2626">—</td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #e0e0d8">
+          <td class="left" style="font-size:11px;color:#888;padding-left:16px;position:sticky;left:0;background:#fff;z-index:2">利息</td>
+          <td style="border-right:1px solid #d0d0c8"></td>
+          ${indices.map((idx,pos)=>{const mo2=MONTH_BASE[idx];const baseYr2=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());const yr2=(yearMode==='fiscal'&&mo2<=fiscalMonth)?baseYr2+1:baseYr2;const ym2=`${yr2}-${String(mo2).padStart(2,'0')}`;const v=(properties[pi].transactions||[]).filter(t=>t.ym===ym2&&t.type==='repayment'&&t.cat==='利息').reduce((s,t)=>s+t.amount,0);return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''};color:#dc2626">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
+          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8;color:#dc2626">—</td>
+        </tr>`:''}
+        <tr style="border-top:1px solid #d0d0c8;background:#fafaf8">
+          <td class="left" style="font-weight:700;position:sticky;left:0;background:#fafaf8;z-index:2">CF</td>
+          <td style="border-right:1px solid #d0d0c8"></td>
+          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll?0:getMonthRepay(idx,pi),net=inc-exp-common-tax-repay;ca+=net;return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>`;}).join('');})()}
+          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${totNet2-getAnnualRepay(pi)>=0?'g':'r'}">${totNet2-getAnnualRepay(pi)<0?'▲':''}${fmt(totNet2-getAnnualRepay(pi))}</td>
         </tr>
         <tr>
           <td class="left" style="font-size:12px;font-weight:700;position:sticky;left:0;background:#fff;z-index:2">年間累計</td>
@@ -3693,7 +3720,7 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
   if(!ym)return;
   const amount=result?.amount||0;
   if(amount<=0)return;
-  const type=cat.includes('収入')?'income':'expense';
+  const type=cat.includes('収入')?'income':cat.includes('返済')?'repayment':'expense';
   const dup=p.transactions.find(t=>t.ym===ym&&t.amount===amount&&t.type===type&&t.desc===(result?.description||''));
   if(!dup){
    // 取得月から6ヶ月以内の支出は諸費用候補として自動フラグ
