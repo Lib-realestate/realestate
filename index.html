@@ -3125,7 +3125,10 @@ async function doUploadTxDoc(file,pi,idx){
   const status=document.getElementById('txDocStatus');
   if(status)status.textContent='アップロード中...';
   try{
-    const up=await ensurePropFolders(p);
+    let up=p;
+    if(!p.subFolders||Object.keys(p.subFolders).length===0){
+      up=await ensurePropFolders(p);
+    }
     const targetId=up.subFolders[t.cat]||up.subFolders['05_その他'];
     const finalName=`${(t.ym||'').replace('-','')}${t.desc?'_'+t.desc:''}${file.name.slice(file.name.lastIndexOf('.'))}`;
     const driveResult=await uploadToDrive(file,targetId,finalName);
