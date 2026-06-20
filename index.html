@@ -757,6 +757,12 @@ function getAnnualE(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthE(i,pi
 function getAnnualEEx(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthEEx(i,pi),0);}
 
 // ── CF計算コア関数（全箇所から参照）──
+function isFutureIdx(idx){
+  const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const mo2=MONTH_BASE[idx];
+  const ym4=`${yr4}-${String(mo2).padStart(2,'0')}`;
+  return ym4>nowYM();
+}
 function getMonthCF(idx,pi){
   const isAll=pi===null;
   const inc=getMonthI(idx,pi);
@@ -1004,7 +1010,6 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   let cumNet=0;
   const indices=getFiscalIndices();
   const labels=getFiscalLabels();
-  const isFutureIdx=(idx)=>{const yr4=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());const mo2=MONTH_BASE[idx];const ym4=`${yr4}-${String(mo2).padStart(2,'0')}`;return ym4>nowYM();};
 
   let rows=indices.map((idx,pos)=>{
     const income=getMonthEEx(idx,pi);
