@@ -980,7 +980,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   });
   const commonTotal=isAll?COMMON_MONTHLY.reduce((s,v)=>s+v,0):0;
   const taxTotal=isAll?TAX_MONTHLY.reduce((s,v)=>s+v,0):0;
-  totNet=getLifetimeCF(null);
+  totNet=properties.reduce((s,p,i)=>s+getLifetimeCF(i),0);
   // colRecをここで再生成（totNet確定後）
   if(isAll){
     const totSf2=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
