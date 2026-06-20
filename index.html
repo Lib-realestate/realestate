@@ -897,7 +897,9 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
 const _getStatus=r=>{if(!r.since)return'vacant';if(r.moveOutDate){if(r.since<=_today&&r.moveOutDate>=_today)return'occupied';if(r.moveOutDate<_today)return'vacant';}return r.status||'occupied';};
 const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.length);
     const pSf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
-    const pNet=getAnnualI(pi)-getAnnualE(pi);
+    const allTxP=p.transactions||[];
+    const pNet=allTxP.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0)
+      -allTxP.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0);
     const colRec2=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div class="col-total">
         <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">自己資金</span><span style="font-size:13px;font-weight:500;color:#dc2626">▲${fmt(pSf)}</span></div>
