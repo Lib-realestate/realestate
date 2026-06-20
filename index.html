@@ -995,13 +995,14 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const totSf2=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
     document.querySelector&&setTimeout(()=>{
       const recEl=document.getElementById('colRecContent');
+      const totNetFinal=getLifetimeCF(null);
       if(recEl) recEl.innerHTML=`
         <tr style="border-bottom:0.5px solid #f0f0e8;font-weight:500">
           <td style="padding:6px 8px">全物件</td>
           <td style="padding:6px 8px;text-align:right;color:#dc2626">▲${fmt(totSf2)}</td>
-          <td style="padding:6px 8px;text-align:right" class="${totNet>=0?'g':'r'}">${totNet<0?'▲':''}${fmt(totNet)}</td>
-          <td style="padding:6px 8px;text-align:right" class="${totNet-totSf2>=0?'g':'r'}">${totNet-totSf2<0?'▲':''}${fmt(Math.abs(totNet-totSf2))}</td>
-          <td style="padding:6px 8px;text-align:right" class="${totSf2>0&&pct(totNet,totSf2)>=50?'g':'r'}">${totSf2>0?pct(totNet,totSf2)+'%':'—'}</td>
+          <td style="padding:6px 8px;text-align:right" class="${totNetFinal>=0?'g':'r'}">${totNetFinal<0?'▲':''}${fmt(totNetFinal)}</td>
+          <td style="padding:6px 8px;text-align:right" class="${totNetFinal-totSf2>=0?'g':'r'}">${totNetFinal-totSf2<0?'▲':''}${fmt(Math.abs(totNetFinal-totSf2))}</td>
+          <td style="padding:6px 8px;text-align:right" class="${totSf2>0&&pct(totNetFinal,totSf2)>=50?'g':'r'}">${totSf2>0?pct(totNetFinal,totSf2)+'%':'—'}</td>
         </tr>
         ${properties.map((p,i)=>{
           const sf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
