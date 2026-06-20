@@ -3316,8 +3316,9 @@ async function confirmMultiUpload(){
       const isMiscChecked=document.getElementById(`mpMisc_${idx}`)?.checked;
       if(isMiscChecked){
         const p=properties[parseInt(propIdx)];
+        const miscCheck=document.getElementById(`mpMisc_${idx}`);
         const txIdx=p.transactions.length-1;
-        if(txIdx>=0&&!p.transactions[txIdx].isMiscCost){
+        if(txIdx>=0&&miscCheck?.checked){
           p.transactions[txIdx].isMiscCost=true;
           toggleMiscCost(parseInt(propIdx),txIdx,true);
         }
@@ -3679,9 +3680,7 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
   if(!dup){
    // 取得月から6ヶ月以内の支出は諸費用候補として自動フラグ
 const acqYM=(p.acquireDate||'').slice(0,7);
-const isNearAcq=acqYM&&ym&&Math.abs(mdiff(acqYM,ym))<=6;
-const autoMiscCost=type==='expense'&&isNearAcq;
-const newTx={ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null,isMiscCost:autoMiscCost};
+const newTx={ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null,isMiscCost:false};
 p.transactions.push(newTx);
 if(autoMiscCost){
   const txIdx=p.transactions.length-1;
