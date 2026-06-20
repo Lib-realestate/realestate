@@ -3119,8 +3119,10 @@ async function handleTxDocDrop(e,pi,idx){
 }
 
 async function doUploadTxDoc(file,pi,idx){
+  console.log('doUploadTxDoc:', pi, idx);
   const p=properties[pi];
   const t=p.transactions[idx];
+  console.log('transaction:', t);
   if(!t)return;
   const status=document.getElementById('txDocStatus');
   if(status)status.textContent='アップロード中...';
