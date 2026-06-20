@@ -755,6 +755,44 @@ function getMonthEEx(mi,pi){
 function getAnnualI(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthI(i,pi),0);}
 function getAnnualE(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthE(i,pi),0);}
 function getAnnualEEx(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthEEx(i,pi),0);}
+
+// ── CF計算コア関数（全箇所から参照）──
+function getMonthCF(idx,pi){
+  const isAll=pi===null;
+  const inc=getMonthI(idx,pi);
+  const exp=getMonthEEx(idx,pi);
+  const common=isAll?(typeof COMMON_MONTHLY!=='undefined'?COMMON_MONTHLY[idx]:0):0;
+  const tax=isAll?(typeof TAX_MONTHLY!=='undefined'?TAX_MONTHLY[idx]:0):0;
+  const repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi);
+  return inc-exp-common-tax-repay;
+}
+
+function getAnnualCF(pi){
+  return getFiscalIndices().reduce((s,i)=>s+getMonthCF(i,pi),0);
+}
+
+function getPrevYearCF(pi){
+  const yr2=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const isAll=pi===null;
+  if(isAll){
+    return properties.reduce((s,p,i)=>{
+      const allTx=p.transactions||[];
+      return s
+        +allTx.filter(t=>t.type==='income'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0)
+        -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0)
+        -allTx.filter(t=>t.type==='repayment'&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0);
+    },0);
+  } else {
+    const allTx=properties[pi]?.transactions||[];
+    return allTx.filter(t=>t.type==='income'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0)
+      -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0)
+      -allTx.filter(t=>t.type==='repayment'&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0);
+  }
+}
+
+function getLifetimeCF(pi){
+  return getPrevYearCF(pi)+getAnnualCF(pi);
+}
 function getMonthRepay(mi,pi){
   const mo=MONTH_BASE[mi];
   const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
@@ -906,9 +944,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
 const _getStatus=r=>{if(!r.since)return'vacant';if(r.moveOutDate){if(r.since<=_today&&r.moveOutDate>=_today)return'occupied';if(r.moveOutDate<_today)return'vacant';}return r.status||'occupied';};
 const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.length);
     const pSf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
-    const allTxP=p.transactions||[];
-    const pNet=allTxP.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0)
-      -allTxP.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0);
+    const pNet=getLifetimeCF(pi);
     const colRec2=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div class="col-total">
         <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">自己資金</span><span style="font-size:13px;font-weight:500;color:#dc2626">▲${fmt(pSf)}</span></div>
@@ -936,11 +972,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   });
   const commonTotal=isAll?COMMON_MONTHLY.reduce((s,v)=>s+v,0):0;
   const taxTotal=isAll?TAX_MONTHLY.reduce((s,v)=>s+v,0):0;
-  totNet=properties.reduce((s,p)=>{
-    const allTx=p.transactions||[];
-    return s+allTx.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0)
-      -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((ss,t)=>ss+t.amount,0);
-  },0)-commonTotal-taxTotal;
+  totNet=getLifetimeCF(null);
   // colRecをここで再生成（totNet確定後）
   if(isAll){
     const totSf2=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
@@ -1026,25 +1058,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   }
 
   // 行を再生成（累計2種追加）
-  const prevYearNet=(()=>{
-    const yr2=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
-    if(isAll){
-      return properties.reduce((s,p)=>{
-        const allTx=p.transactions||[];
-        return s+allTx.filter(t=>t.type==='income'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0)
-          -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0)
-          -allTx.filter(t=>t.type==='repayment'&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((ss,t)=>ss+t.amount,0);
-      },0);
-    } else {
-      const p=properties[pi];
-      const allTx=p?.transactions||[];
-      return allTx.filter(t=>t.type==='income'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0)
-        -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0)
-        -allTx.filter(t=>t.type==='repayment'&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0);
-    }
-  })();
+  const prevYearNet=getPrevYearCF(pi);
   let cumAnn=0;
-  let cumAcq=isAll?prevYearNet:cumFromAcq-(()=>{let s=0;indices.forEach(i=>{s+=getMonthI(i,pi)-getMonthEEx(i,pi)-(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0)-(isFutureIdx(i)?0:getMonthRepay(i,pi));});return s;})();
+  let cumAcq=prevYearNet;
 
   const rows2=indices.map((idx,pos)=>{
     const income=getMonthI(idx,pi);
@@ -1191,26 +1207,26 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <tr style="border-top:1px solid #d0d0c8;background:#fafaf8">
           <td class="left" style="font-weight:700;position:sticky;left:0;background:#fafaf8;z-index:2">CF</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi),net=inc-exp-common-tax-repay;ca+=net;return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>`;}).join('');})()}
-          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${totNet2-getAnnualRepay(pi)>=0?'g':'r'}">${totNet2-getAnnualRepay(pi)<0?'▲':''}${fmt(totNet2-getAnnualRepay(pi))}</td>
+          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const net=getMonthCF(idx,pi);ca+=net;return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>`;}).join('');})()}
+          ${(()=>{const tot=getAnnualCF(pi);return`<td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${tot>=0?'g':'r'}">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
         </tr>
         <tr>
           <td class="left" style="font-size:12px;font-weight:700;position:sticky;left:0;background:#fff;z-index:2">年間累計</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi);ca+=inc-exp-common-tax-repay;return`<td style="text-align:right;font-size:11px;color:#888${isFutureIdx(idx)?';opacity:.6':''}">${ca<0?'▲':''}${fmt(ca)}</td>`;}).join('');})()}
-          ${(()=>{let ca=0;indices.forEach(idx=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi);ca+=inc-exp-common-tax-repay;});return`<td style="text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${ca<0?'▲':''}${fmt(ca)}</td>`;})()}
+          ${(()=>{let ca=0;return indices.map((idx,pos)=>{ca+=getMonthCF(idx,pi);return`<td style="text-align:right;font-size:11px;color:#888${isFutureIdx(idx)?';opacity:.6':''}">${ca<0?'▲':''}${fmt(ca)}</td>`;}).join('');})()}
+          ${(()=>{const tot=getAnnualCF(pi);return`<td style="text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
         </tr>
         <tr>
           <td class="left" style="font-size:11px;color:#888;position:sticky;left:0;background:#fff;z-index:2">取得来累計</td>
           <td style="border-right:1px solid #d0d0c8;font-size:11px;color:#888;text-align:right">${prevYearNet<0?'▲':''}${fmt(prevYearNet)}</td>
-          ${(()=>{let ca=prevYearNet;return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi);ca+=inc-exp-common-tax-repay;return`<td style="text-align:right;font-size:11px;color:#888${isFutureIdx(idx)?';opacity:.6':''}">${ca<0?'▲':''}${fmt(ca)}</td>`;}).join('');})()}
-          ${(()=>{let ca=prevYearNet;indices.forEach(idx=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi);ca+=inc-exp-common-tax-repay;});return`<td style="text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${ca<0?'▲':''}${fmt(ca)}</td>`;})()}
+          ${(()=>{let ca=prevYearNet;return indices.map((idx,pos)=>{ca+=getMonthCF(idx,pi);return`<td style="text-align:right;font-size:11px;color:#888${isFutureIdx(idx)?';opacity:.6':''}">${ca<0?'▲':''}${fmt(ca)}</td>`;}).join('');})()}
+          ${(()=>{const tot=getLifetimeCF(pi);return`<td style="text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
         </tr>
         <tr>
           <td class="left" style="font-size:11px;color:#888;position:sticky;left:0;background:#fff;z-index:2">回収率</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${(()=>{let ca=cumAcq-indices.reduce((s,idx)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0;return s+inc-exp-common-tax;},0);return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0;ca+=inc-exp-common-tax;return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''}" class="${selfFund>0&&pct(ca,selfFund)>=50?'g':'b'}">${selfFund>0?pct(ca,selfFund)+'%':'—'}</td>`;}).join('');})()}
-          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${selfFund>0&&pct(cumAcq,selfFund)>=50?'g':'b'}">${selfFund>0?pct(cumAcq,selfFund)+'%':'—'}</td>
+          ${(()=>{let ca=prevYearNet;return indices.map((idx,pos)=>{ca+=getMonthCF(idx,pi);return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''}" class="${selfFund>0&&pct(ca,selfFund)>=50?'g':'b'}">${selfFund>0?pct(ca,selfFund)+'%':'—'}</td>`;}).join('');})()}
+          ${(()=>{const tot=getLifetimeCF(pi);return`<td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${selfFund>0&&pct(tot,selfFund)>=50?'g':'b'}">${selfFund>0?pct(tot,selfFund)+'%':'—'}</td>`;})()}
         </tr>
       </tbody>
     </table></div>
