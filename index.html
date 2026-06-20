@@ -877,7 +877,7 @@ function renderCashflow(){
   const pi=isAll?null:parseInt(currentProp);
   const mi=getMonthlyIdx();
   const moI=getMonthI(mi,pi),moE=getMonthEEx(mi,pi),moNet=moI-moE;
-  const annI=getAnnualI(pi),annE=getAnnualEEx(pi),annNet=annI-annE;
+  const annI=getAnnualI(pi),annE=getAnnualEEx(pi),annNet=getAnnualCF(pi);
   const periodLabel=yearMode==='fiscal'?`${fiscalMonth}月決算年度`:'暦年（1〜12月）';
   const moLabel=`${new Date().getFullYear()}年${new Date().getMonth()+1}月`;
   const selfFund=isAll?properties.reduce((s,p)=>s+((p.price+p.reform+p.miscCost)-p.loan),0):((properties[pi]?.price+properties[pi]?.reform+properties[pi]?.miscCost)-properties[pi]?.loan||0);
@@ -885,11 +885,12 @@ function renderCashflow(){
   // 上段3列
   let summaryHTML='';
   if(isAll){
-    let colAnn=`<div class="col-header"><span class="ct">年間収支 </span><span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
-      <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${annNet>=0?'g':'r'}">${annNet<0?'▲':''}${fmt(annNet)}</span></div>
+    const annCF=getAnnualCF(pi);
+    let colAnn=`<div class="col-header"><span class="ct">年間CF </span><span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
+      <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${annCF>=0?'g':'r'}">${annCF<0?'▲':''}${fmt(annCF)}</span></div>
       <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
       <div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div><div class="col-sep"></div>`;
-    properties.forEach((p,i)=>{const pI=getAnnualI(i),pE=getAnnualEEx(i);colAnn+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="${(pI-pE)>=0?'g':'r'}" style="font-size:11px;font-weight:500">${(pI-pE)<0?'▲':''}${fmt(pI-pE)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(pI,pI+pE)}%"></div><div class="bar-e" style="width:${pct(pE,pI+pE)}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(pI)}</span><span class="r">${fmt(pE)}</span></div></div>`;});
+    properties.forEach((p,i)=>{const pCF=getAnnualCF(i);colAnn+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="${pCF>=0?'g':'r'}" style="font-size:11px;font-weight:500">${pCF<0?'▲':''}${fmt(pCF)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(getAnnualI(i),getAnnualI(i)+getAnnualEEx(i))}%"></div><div class="bar-e" style="width:${pct(getAnnualEEx(i),getAnnualI(i)+getAnnualEEx(i))}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(getAnnualI(i))}</span><span class="r">${fmt(getAnnualEEx(i))}</span></div></div>`;});
     let colMon=`<div class="col-header"><span class="ct">月間収支 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
       <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${moNet>=0?'g':'r'}">${moNet<0?'▲':''}${fmt(moNet)}</span></div>
       <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(moI,moI+moE)}%"></div><div class="bar-e" style="width:${pct(moE,moI+moE)}%"></div></div>
@@ -958,7 +959,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <div class="flex-b"><span style="font-size:11px;color:#888">差額</span><span style="font-size:13px;font-weight:500" class="${pNet-pSf>=0?'g':'r'}">${pNet-pSf<0?'▲':''}${fmt(Math.abs(pNet-pSf))}</span></div>
       </div>`;
     summaryHTML=`<div class="summary-grid"><div class="col single"><div class="ct" style="margin-bottom:8px">年間収支 <span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
-      <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${annNet>=0?'g':'r'}">${annNet<0?'▲':''}${fmt(annNet)}</span></div>
+      <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${annNet>=0?'g':'r'}">${annNet<0?'▲':''}${fmt(Math.abs(annNet))}</span></div>
       <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
       <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div>
       <div class="col">${colRec2}</div></div>`;
