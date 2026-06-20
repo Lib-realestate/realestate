@@ -2731,6 +2731,19 @@ function saveTxModal(pi,idx){
   closeModal('classifyModal');
   renderCashflow();
   showToast('保存しました','success');
+  // Driveファイル名を更新
+  if(t.driveFileId&&accessToken){
+    const ext=t.driveFileName?t.driveFileName.slice(t.driveFileName.lastIndexOf('.')):'';
+    const newName=`${(t.ym||'').replace('-','')}${t.desc?'_'+t.desc:''}${ext}`;
+    fetch(`https://www.googleapis.com/drive/v3/files/${t.driveFileId}`,{
+      method:'PATCH',
+      headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({name:newName})
+    }).then(()=>{
+      t.driveFileName=newName;
+      saveProps();
+    }).catch(e=>console.warn('ファイル名更新失敗:',e));
+  }
 }
   
   function updateTxField(pi,idx,field,value){
