@@ -3234,10 +3234,28 @@ async function ensurePropFolders(prop){
 async function createFolders(propId){const prop=properties.find(p=>p.id===propId);if(!prop)return;showToast('フォルダを作成・確認中…','info');try{await ensurePropFolders(prop);showToast('フォルダ作成完了','success');renderAnalysis();}catch(e){showToast('エラー: '+e.message,'error');}}
 
 async function uploadToDrive(file,folderId,fileName){
-  const form=new FormData();form.append('metadata',new Blob([JSON.stringify({name:fileName,parents:[folderId]})],{type:'application/json'}));form.append('file',file);
-  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
-  if(!r.ok){const err=await r.text();console.error('uploadToDrive error:',r.status,err);throw new Error('Upload failed: '+r.status+' '+err);}
-  return await r.json();
+  // Step1: resumableセッション開始
+  const initRes=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,webViewLink',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+accessToken,
+      'Content-Type':'application/json',
+      'X-Upload-Content-Type':file.type,
+      'X-Upload-Content-Length':file.size
+    },
+    body:JSON.stringify({name:fileName,parents:[folderId]})
+  });
+  if(!initRes.ok){const err=await initRes.text();throw new Error('Init failed: '+initRes.status+' '+err);}
+  const uploadUrl=initRes.headers.get('Location');
+  if(!uploadUrl)throw new Error('No upload URL');
+  // Step2: ファイルアップロード
+  const uploadRes=await fetch(uploadUrl,{
+    method:'PUT',
+    headers:{'Content-Type':file.type,'Content-Length':file.size},
+    body:file
+  });
+  if(!uploadRes.ok){const err=await uploadRes.text();throw new Error('Upload failed: '+uploadRes.status+' '+err);}
+  return await uploadRes.json();
 }
 
 async function moveFileToDrive(fileId,newFolderId){const r=await gapi.client.drive.files.get({fileId,fields:'parents'});await gapi.client.drive.files.update({fileId,addParents:newFolderId,removeParents:r.result.parents.join(','),fields:'id,parents'});}
