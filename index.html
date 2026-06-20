@@ -885,7 +885,7 @@ function renderCashflow(){
   // 上段3列
   let summaryHTML='';
   if(isAll){
-    const annCF=getAnnualCF(pi);
+    const annCF=isAll?properties.reduce((s,p,i)=>s+getAnnualCF(i),0):getAnnualCF(pi);
     let colAnn=`<div class="col-header"><span class="ct">年間CF </span><span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
       <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${annCF>=0?'g':'r'}">${annCF<0?'▲':''}${fmt(annCF)}</span></div>
       <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
