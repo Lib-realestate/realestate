@@ -1021,7 +1021,8 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const p=properties[pi2];
     const allTxAcq=p.transactions||[];
     cumFromAcq=allTxAcq.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0)
-      -allTxAcq.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0);
+      -allTxAcq.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0)
+      -allTxAcq.filter(t=>t.type==='repayment').reduce((s,t)=>s+t.amount,0);
   }
 
   // 行を再生成（累計2種追加）
@@ -1034,7 +1035,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     },0);
   })();
   let cumAnn=0;
-  let cumAcq=isAll?prevYearNet:cumFromAcq-(()=>{let s=0;indices.forEach(i=>{s+=getMonthI(i,pi)-getMonthEEx(i,pi)-(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0);});return s;})();
+  let cumAcq=isAll?prevYearNet:cumFromAcq-(()=>{let s=0;indices.forEach(i=>{s+=getMonthI(i,pi)-getMonthEEx(i,pi)-(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0)-(isFutureIdx(i)?0:getMonthRepay(i,pi));});return s;})();
 
   const rows2=indices.map((idx,pos)=>{
     const income=getMonthI(idx,pi);
