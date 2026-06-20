@@ -2977,6 +2977,7 @@ function addManualTx(pi){
       <select id="mtType" style="width:100%">
         <option value="income">収入</option>
         <option value="expense" selected>支出</option>
+        <option value="repayment">返済</option>
       </select>
     </div>
     <div class="form-group">
@@ -2992,6 +2993,12 @@ function addManualTx(pi){
     <div class="form-group">
       <label class="form-label">金額（円）</label>
       <input type="number" id="mtAmt" placeholder="0" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="mtMisc" style="width:16px;height:16px">
+        <span class="form-label" style="margin:0">諸費用に含める</span>
+      </label>
     </div>`;
   const modal=document.getElementById('classifyModal');
   modal.querySelector('.modal-title').textContent='明細追加';
@@ -3010,7 +3017,9 @@ function saveManualTx(pi){
   if(!ym||amount<=0){showToast('年月と金額を入力してください','error');return;}
   const p=properties[pi];
   if(!p.transactions)p.transactions=[];
-  p.transactions.push({ym,type,amount,desc,cat,manualEntry:true,createdAt:new Date().toISOString()});
+  const isMisc=document.getElementById('mtMisc')?.checked||false;
+  p.transactions.push({ym,type,amount,desc,cat,isMiscCost:isMisc,manualEntry:true,createdAt:new Date().toISOString()});
+  if(isMisc) toggleMiscCost(pi,p.transactions.length-1,true);
   saveProps();
   closeModal('classifyModal');
   renderCashflow();
