@@ -3235,23 +3235,18 @@ async function ensurePropFolders(prop){
 async function createFolders(propId){const prop=properties.find(p=>p.id===propId);if(!prop)return;showToast('フォルダを作成・確認中…','info');try{await ensurePropFolders(prop);showToast('フォルダ作成完了','success');renderAnalysis();}catch(e){showToast('エラー: '+e.message,'error');}}
 
 async function uploadToDrive(file,folderId,fileName){
-  const toBase64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});
-  const b64=await toBase64(file);
-  const boundary='-------314159265358979323846';
-  const body=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name:fileName,parents:[folderId]})}\r\n--${boundary}\r\nContent-Type: ${file.type}\r\nContent-Transfer-Encoding: base64\r\n\r\n${b64}\r\n--${boundary}--`;
+  const form=new FormData();
+  form.append('metadata',new Blob([JSON.stringify({name:fileName,parents:[folderId]})],{type:'application/json'}));
+  form.append('file',file);
   const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{
     method:'POST',
-    headers:{
-      Authorization:'Bearer '+accessToken,
-      'Content-Type':`multipart/related; boundary="${boundary}"`
-    },
-    body
+    headers:{Authorization:'Bearer '+accessToken},
+    body:form
   });
-if(!r.ok){const err=await r.text();throw new Error('Upload failed: '+r.status+' '+err);}
-  const result=await r.json();
-  console.log('uploadToDrive result:', result);
-  return result;
+  if(!r.ok){const err=await r.text();throw new Error('Upload failed: '+r.status+' '+err);}
+  return await r.json();
 }
+
 
 async function moveFileToDrive(fileId,newFolderId){const r=await gapi.client.drive.files.get({fileId,fields:'parents'});await gapi.client.drive.files.update({fileId,addParents:newFolderId,removeParents:r.result.parents.join(','),fields:'id,parents'});}
 
