@@ -3682,10 +3682,6 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
 const acqYM=(p.acquireDate||'').slice(0,7);
 const newTx={ym,type,amount,desc:result?.description||'',cat,createdAt:new Date().toISOString(),driveFileId:driveResult?.id||null,driveFileName:driveResult?.name||null,driveLink:driveResult?.webViewLink||null,isMiscCost:false};
 p.transactions.push(newTx);
-if(autoMiscCost){
-  const txIdx=p.transactions.length-1;
-  toggleMiscCost(propIdx,txIdx,true);
-}
   
     saveProps();
     showToast(`収支記録：${ym} ${type==='income'?'収入':'支出'} ${amount.toLocaleString()}円`,'success');
