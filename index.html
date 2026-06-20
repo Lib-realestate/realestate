@@ -1387,6 +1387,16 @@ function renderOccupancy(){
   else renderOccProp();
 }
 
+  function toggleExcludeMonth(pi,ym){
+  const p=properties[pi];
+  if(!p.excludedMonths)p.excludedMonths=[];
+  const idx=p.excludedMonths.indexOf(ym);
+  if(idx>=0)p.excludedMonths.splice(idx,1);
+  else p.excludedMonths.push(ym);
+  saveProps();
+  renderOccAll();
+}
+  
 function renderOccAll(){
    const totOcc=MONTH_BASE.map((_,i)=>properties.reduce((s,p)=>s+(p.rooms.filter(r=>r.status==='occupied').length),0));
   const totAll=MONTH_BASE.map((_,i)=>properties.reduce((s,p)=>s+p.rooms.length,0));
@@ -1411,17 +1421,23 @@ function renderOccAll(){
     const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr+1:yr;
     const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;
     const getOcc=(p)=>p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[ym]?.[r.no];return snap&&(snap.status==='occupied'||snap.status==='new'||snap.status==='late');}).length;
-    const to=properties.reduce((s,p)=>s+getOcc(p),0);
-    const ta=properties.reduce((s,p)=>s+p.rooms.length,0);
-    const r=pct(to,ta);
-    let row=`<tr><td class="lbl">${labels[pos]}</td><td class="gsep">${to}/${ta}</td><td><span class="pill ${pillCls(r)}">${r}%</span></td>`;
-    properties.forEach(p=>{const po=getOcc(p),pt=p.rooms.length,pr=pct(po,pt);row+=`<td class="gsep">${po}/${pt}</td><td><span class="pill ${pillCls(pr)}">${pr}%</span></td>`;});
+    const inclProps=properties.filter(p=>!(p.excludedMonths||[]).includes(ym));
+    const to=inclProps.reduce((s,p)=>s+getOcc(p),0);
+    const ta=inclProps.reduce((s,p)=>s+p.rooms.length,0);
+    const r=ta>0?pct(to,ta):0;
+    const allExcluded=inclProps.length===0;
+    let row=`<tr><td class="lbl">${labels[pos]}</td><td class="gsep">${allExcluded?'—':to+'/'+ta}</td><td><span class="pill ${allExcluded?'pill-lo':pillCls(r)}">${allExcluded?'—':r+'%'}</span></td>`;
+    properties.forEach((p,pi2)=>{
+      const po=getOcc(p),pt=p.rooms.length,pr=pct(po,pt);
+      const isExcluded=(p.excludedMonths||[]).includes(ym);
+      row+=`<td class="gsep" style="${isExcluded?'opacity:.3':''}">${po}/${pt}</td><td style="cursor:pointer${isExcluded?';opacity:.3':''}" onclick="toggleExcludeMonth(${pi2},'${ym}')" title="${isExcluded?'クリックで対象に戻す':'クリックで対象外にする'}"><span class="pill ${isExcluded?'pill-lo':pillCls(pr)}">${isExcluded?'対象外':pr+'%'}</span></td>`;
+    });
     return row+'</tr>';
   }).join('');
 
   const yr2=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
   const getOccByYM=(p,ym)=>p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[ym]?.[r.no];return snap&&(snap.status==='occupied'||snap.status==='new'||snap.status==='late');}).length;
-  const validMonths=indices.filter(idx=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr2+1:yr2;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return properties.some(p=>Object.keys(p.monthlySnapshots?.[ym]||{}).length>0);});
+  const validMonths=indices.filter(idx=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr2+1:yr2;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return properties.some(p=>Object.keys(p.monthlySnapshots?.[ym]||{}).length>0&&!(p.excludedMonths||[]).includes(ym));});
   const annTo=validMonths.length>0?Math.round(validMonths.reduce((s,idx)=>{const mo=MONTH_BASE[idx];const adjYr=(yearMode==='fiscal'&&mo<=fiscalMonth)?yr2+1:yr2;const ym=`${adjYr}-${String(mo).padStart(2,'0')}`;return s+properties.reduce((ss,p)=>ss+getOccByYM(p,ym),0);},0)/validMonths.length):0;
   const annTa=properties.reduce((s,p)=>s+p.rooms.length,0);
   const annR=pct(annTo,annTa);
