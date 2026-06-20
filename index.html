@@ -1179,7 +1179,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     if(isAll){
       // 全物件の明細履歴
       const yr2=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
-      const allSorted=(commonTransactions||[]).filter(t=>{const y=t.ym?parseInt(t.ym.slice(0,4)):0;return y===yr2;}).map(t=>({...t,propName:'共通',pi:null})).sort((a,b)=>(a.ym||'').localeCompare(b.ym||''));
+      const allSorted=(commonTransactions||[]).map((t,i)=>({...t,_cidx:i})).filter(t=>{const y=t.ym?parseInt(t.ym.slice(0,4)):0;return y===yr2;}).sort((a,b)=>(a.ym||'').localeCompare(b.ym||''));
       const byMonth={};
       allSorted.forEach(t=>{const ym2=t.ym||'不明';if(!byMonth[ym2])byMonth[ym2]=[];byMonth[ym2].push(t);});
       const tableHead=`<thead style="background:#fafaf8;position:sticky;top:0;z-index:2"><tr>
@@ -1194,7 +1194,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         const monthI=txList.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
         const monthE=txList.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
         const txRows=txList.map(t=>{
-          const cidx=(commonTransactions||[]).indexOf(t);
+          const cidx=t._cidx;
           const linked=t.driveLink?{webViewLink:t.driveLink}:null;
           return`<tr style="border-bottom:0.5px solid #f0f0e8">
             <td style="padding:6px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
