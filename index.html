@@ -3251,7 +3251,7 @@ async function uploadToDrive(file,folderId,fileName){
   // Step2: ファイルアップロード
   const uploadRes=await fetch(uploadUrl,{
     method:'PUT',
-    headers:{'Content-Type':file.type,'Content-Length':file.size},
+    headers:{'Content-Type':file.type},
     body:file
   });
   if(!uploadRes.ok){const err=await uploadRes.text();throw new Error('Upload failed: '+uploadRes.status+' '+err);}
