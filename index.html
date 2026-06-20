@@ -765,15 +765,30 @@ function isFutureIdx(idx){
 }
 function getMonthCF(idx,pi){
   const isAll=pi===null;
+  if(isAll){
+    const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+    const mo2=MONTH_BASE[idx];
+    const ym2=`${yr4}-${String(mo2).padStart(2,'0')}`;
+    const common=(commonTransactions||[]).filter(t=>t.ym===ym2).reduce((s,t)=>s+t.amount,0);
+    return properties.reduce((s,p,i)=>s+getMonthCF(idx,i),0)-common;
+  }
   const inc=getMonthI(idx,pi);
   const exp=getMonthEEx(idx,pi);
-  const common=isAll?(typeof COMMON_MONTHLY!=='undefined'?COMMON_MONTHLY[idx]:0):0;
-  const tax=isAll?(typeof TAX_MONTHLY!=='undefined'?TAX_MONTHLY[idx]:0):0;
-  const repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi);
-  return inc-exp-common-tax-repay;
+  const repay=isFutureIdx(idx)?0:getMonthRepay(idx,pi);
+  return inc-exp-repay;
 }
 
 function getAnnualCF(pi){
+  if(pi===null){
+    // 全物件=各物件の合計 - 共通経費 - 税金等
+    return properties.reduce((s,p,i)=>s+getAnnualCF(i),0)
+      -getFiscalIndices().reduce((s,idx)=>{
+        const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+        const mo2=MONTH_BASE[idx];
+        const ym2=`${yr4}-${String(mo2).padStart(2,'0')}`;
+        return s+(commonTransactions||[]).filter(t=>t.ym===ym2).reduce((ss,t)=>ss+t.amount,0);
+      },0);
+  }
   return getFiscalIndices().reduce((s,i)=>s+getMonthCF(i,pi),0);
 }
 
