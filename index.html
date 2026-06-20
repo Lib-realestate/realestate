@@ -3246,8 +3246,10 @@ async function uploadToDrive(file,folderId,fileName){
     },
     body
   });
-  if(!r.ok){const err=await r.text();throw new Error('Upload failed: '+r.status+' '+err);}
-  return await r.json();
+if(!r.ok){const err=await r.text();throw new Error('Upload failed: '+r.status+' '+err);}
+  const result=await r.json();
+  console.log('uploadToDrive result:', result);
+  return result;
 }
 
 async function moveFileToDrive(fileId,newFolderId){const r=await gapi.client.drive.files.get({fileId,fields:'parents'});await gapi.client.drive.files.update({fileId,addParents:newFolderId,removeParents:r.result.parents.join(','),fields:'id,parents'});}
