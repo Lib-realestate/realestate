@@ -911,7 +911,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
     properties.forEach(p=>{const o=p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[_curYM]?.[r.no];if(!snap)return false;return snap.status==='occupied'||snap.status==='new'||snap.status==='late';}).length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
     const totSf=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
     const yr3=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
-    let totNet=getLifetimeCF(null);
+    let totNet=properties.reduce((s,p,i)=>s+getLifetimeCF(i),0);
     const colRec=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -958,10 +958,11 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <div class="flex-b" style="margin-bottom:4px"><span style="font-size:11px;color:#888">これまでの収益</span><span style="font-size:13px;font-weight:500" class="${pNet>=0?'g':'r'}">${pNet<0?'▲':''}${fmt(pNet)}</span></div>
         <div class="flex-b"><span style="font-size:11px;color:#888">差額</span><span style="font-size:13px;font-weight:500" class="${pNet-pSf>=0?'g':'r'}">${pNet-pSf<0?'▲':''}${fmt(Math.abs(pNet-pSf))}</span></div>
       </div>`;
+    const annRepay=getAnnualRepay(pi);
     summaryHTML=`<div class="summary-grid"><div class="col single"><div class="ct" style="margin-bottom:8px">年間CF <span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
       <div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">${p.name}</span><span style="font-size:14px;font-weight:500" class="${annNet>=0?'g':'r'}">${annNet<0?'▲':''}${fmt(Math.abs(annNet))}</span></div>
-      <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
-      <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div>
+      <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE+annRepay)}%"></div><div class="bar-e" style="width:${pct(annE+annRepay,annI+annE+annRepay)}%"></div></div>
+      <div class="flex" style="gap:10px;font-size:11px;margin-top:2px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span><span class="r" style="font-size:10px">返済▲${fmt(annRepay)}</span></div></div>
       <div class="col">${colRec2}</div></div>`;
   }
 
@@ -1150,10 +1151,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       </thead>
       <tbody>
         ${isAll?`<tr style="border-bottom:0.5px solid #e0e0d8">
-         <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#16a34a">物件CF計</td>
+         <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#16a34a">CF計</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${indices.map((idx,pos)=>{const v=getMonthCF(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#16a34a">${v<0?'▲':''}${fmt(v)}</td>`;}).join('')}
-          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8;color:#16a34a">${(()=>{const v=getAnnualCF(pi);return(v<0?'▲':'')+fmt(v);})()}</td>
+          ${indices.map((idx,pos)=>{const v=properties.reduce((s,p,i)=>s+getMonthCF(idx,i),0);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#16a34a">${v<0?'▲':''}${fmt(v)}</td>`;}).join('')}
+          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8;color:#16a34a">${(()=>{const v=properties.reduce((s,p,i)=>s+getAnnualCF(i),0);return(v<0?'▲':'')+fmt(v);})()}</td>
         </tr>`:`<tr style="border-bottom:0.5px solid #f0f0e8">
           <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#16a34a">収入</td>
           <td style="border-right:1px solid #d0d0c8"></td>
