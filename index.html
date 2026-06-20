@@ -3235,7 +3235,9 @@ async function createFolders(propId){const prop=properties.find(p=>p.id===propId
 
 async function uploadToDrive(file,folderId,fileName){
   const form=new FormData();form.append('metadata',new Blob([JSON.stringify({name:fileName,parents:[folderId]})],{type:'application/json'}));form.append('file',file);
-  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});return await r.json();
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
+  if(!r.ok){const err=await r.text();console.error('uploadToDrive error:',r.status,err);throw new Error('Upload failed: '+r.status+' '+err);}
+  return await r.json();
 }
 
 async function moveFileToDrive(fileId,newFolderId){const r=await gapi.client.drive.files.get({fileId,fields:'parents'});await gapi.client.drive.files.update({fileId,addParents:newFolderId,removeParents:r.result.parents.join(','),fields:'id,parents'});}
