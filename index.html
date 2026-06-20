@@ -1216,13 +1216,13 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           ${(()=>{const tot=getAnnualCF(pi);return`<td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${tot>=0?'g':'r'}">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
         </tr>
         <tr>
-          <td class="left" style="font-size:12px;font-weight:700;position:sticky;left:0;background:#fff;z-index:2">年間累計</td>
+          <td class="left" style="font-size:12px;font-weight:700;position:sticky;left:0;background:#fff;z-index:2">年間CF累計</td>
           <td style="border-right:1px solid #d0d0c8"></td>
           ${(()=>{let ca=0;return indices.map((idx,pos)=>{ca+=getMonthCF(idx,pi);return`<td style="text-align:right;font-size:11px;color:#888${isFutureIdx(idx)?';opacity:.6':''}">${ca<0?'▲':''}${fmt(ca)}</td>`;}).join('');})()}
           ${(()=>{const tot=getAnnualCF(pi);return`<td style="text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
         </tr>
         <tr>
-          <td class="left" style="font-size:11px;color:#888;position:sticky;left:0;background:#fff;z-index:2">取得来累計</td>
+          <td class="left" style="font-size:11px;color:#888;position:sticky;left:0;background:#fff;z-index:2">取得来CF累計</td>
           <td style="border-right:1px solid #d0d0c8;font-size:11px;color:#888;text-align:right">${prevYearNet<0?'▲':''}${fmt(prevYearNet)}</td>
           ${(()=>{let ca=prevYearNet;return indices.map((idx,pos)=>{ca+=getMonthCF(idx,pi);return`<td style="text-align:right;font-size:11px;color:#888${isFutureIdx(idx)?';opacity:.6':''}">${ca<0?'▲':''}${fmt(ca)}</td>`;}).join('');})()}
           ${(()=>{const tot=getLifetimeCF(pi);return`<td style="text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
