@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8">const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi),net=inc-exp-common-tax-repay;
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>不動産収支管理</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1091,7 +1091,8 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       <div class="flex" style="gap:8px;font-size:10px;color:#888">
         <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#16a34a;display:inline-block;border-top:2px dashed #16a34a"></span>収入</span>
           <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#dc2626;display:inline-block;border-top:2px dashed #dc2626"></span>支出</span>
-          <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>純利益</span>
+          <span class="flex" style="gap:3px"><span style="width:8px;height:8px;background:#c084fc;border-radius:2px;display:inline-block"></span>返済</span>
+          <span class="flex" style="gap:3px"><span style="width:16px;height:2px;background:#2563eb;display:inline-block"></span>CF</span>
       </div>
     </div>
     <div style="position:relative;height:200px"><div id="cfChart" style="height:100%;width:100%"></div></div>
@@ -1162,7 +1163,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         ${!isAll?`<tr style="border-bottom:0.5px solid #e0e0d8">
           <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#dc2626">返済</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${indices.map((idx,pos)=>{const v=getMonthRepay(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#dc2626">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
+          ${indices.map((idx,pos)=>{const v=isFutureIdx(idx)?0:getMonthRepay(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#dc2626">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
           <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8;color:#dc2626">${getAnnualRepay(pi)>0?'▲'+fmt(getAnnualRepay(pi)):'—'}</td>
         </tr>
         <tr style="border-bottom:0.5px solid #f0f0e8">
@@ -1180,7 +1181,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <tr style="border-top:1px solid #d0d0c8;background:#fafaf8">
           <td class="left" style="font-weight:700;position:sticky;left:0;background:#fafaf8;z-index:2">CF</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll?0:getMonthRepay(idx,pi),net=inc-exp-common-tax-repay;ca+=net;return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>`;}).join('');})()}
+          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const inc=getMonthI(idx,pi),exp=getMonthEEx(idx,pi),common=isAll?COMMON_MONTHLY[idx]:0,tax=isAll?TAX_MONTHLY[idx]:0,repay=isAll||isFutureIdx(idx)?0:getMonthRepay(idx,pi),net=inc-exp-common-tax-repay;ca+=net;return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>`;}).join('');})()}
           <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${totNet2-getAnnualRepay(pi)>=0?'g':'r'}">${totNet2-getAnnualRepay(pi)<0?'▲':''}${fmt(totNet2-getAnnualRepay(pi))}</td>
         </tr>
         <tr>
@@ -1337,8 +1338,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
 const _drawCfChart=()=>{
   const cfEl=document.getElementById('cfChart');
   if(!cfEl)return;
-    const netData=incData.map((v,i)=>v-expData[i]);
-    const allVals=[...incData,...expData,...netData];
+    const repayData=indices.map(i=>isFutureIdx(i)?0:getMonthRepay(i,pi===null?null:pi));
+const netData=incData.map((v,i)=>v-expData[i]-repayData[i]);
+    const allVals=[...incData,...expData.map((v,i)=>v+(repayData[i]||0)),...netData];
     const rawMax=Math.max(...allVals,0);
     const rawMin=Math.min(...allVals,0);
     const maxVal=rawMax*1.1||1;
@@ -1370,9 +1372,12 @@ const _drawCfChart=()=>{
             const x=xScale(i);
             const barW=gW/labels.length*0.35;
             const zero=yScale(0);
-            const y=yScale(v);
-            const barH=Math.abs(zero-y);
-            return v>0?`<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="#fca5a5" opacity="0.8"/>`:'';
+            const repay=repayData[i]||0;
+            const yE=yScale(v);
+            const yR=yScale(v+repay);
+            const barHE=Math.abs(zero-yE);
+            const barHR=Math.abs(yE-yR);
+            return`${v>0?`<rect x="${x}" y="${yE}" width="${barW}" height="${barHE}" fill="#fca5a5" opacity="0.8"/>`:''}${repay>0?`<rect x="${x}" y="${yR}" width="${barW}" height="${barHR}" fill="#c084fc" opacity="0.8"/>`:''}`;
           }).join('')}
           <polyline points="${netData.map((v,i)=>`${xScale(i)},${yScale(v)}`).join(' ')}" fill="none" stroke="#2563eb" stroke-width="1.5"/>
           ${netData.map((v,i)=>{
@@ -2729,18 +2734,24 @@ function toggleMiscCost(pi,txIdx,checked){
       <select id="etType" style="width:100%">
         <option value="income" ${t.type==='income'?'selected':''}>収入</option>
         <option value="expense" ${t.type==='expense'?'selected':''}>支出</option>
+        <option value="repayment" ${t.type==='repayment'?'selected':''}>返済</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <select id="etCat" style="width:100%">
+        ${t.type==='repayment'?
+          `<option value="元金" ${t.cat==='元金'?'selected':''}>元金</option>
+           <option value="利息" ${t.cat==='利息'?'selected':''}>利息</option>`:
+          SUB_FOLDERS.map(s=>`<option value="${s}" ${t.cat===s?'selected':''}>${s}</option>`).join('')
+        }
       </select>
     </div>
     <div class="form-group">
       <label class="form-label">内容</label>
       <input type="text" id="etDesc" value="${(t.desc||'').replace(/"/g,'&quot;')}" style="width:100%">
     </div>
-    <div class="form-group">
-      <label class="form-label">カテゴリ</label>
-      <select id="etCat" style="width:100%">
-        ${SUB_FOLDERS.map(s=>`<option value="${s}" ${t.cat===s?'selected':''}>${s}</option>`).join('')}
-      </select>
-    </div>
+    
     <div class="form-group">
       <label class="form-label">金額（円）</label>
       <input type="number" id="etAmt" value="${t.amount||0}" style="width:100%">
