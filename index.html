@@ -807,7 +807,7 @@ function getMonthRepay(mi,pi){
   if(pi===null)return 0;
   return (properties[pi].transactions||[]).filter(t=>t.ym===ym&&t.type==='repayment').reduce((s,t)=>s+t.amount,0);
 }
-function getAnnualRepay(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthRepay(i,pi),0);}
+function getAnnualRepay(pi){return getFiscalIndices().reduce((s,i)=>s+(isFutureIdx(i)?0:getMonthRepay(i,pi)),0);}
 
 /* ── ナビ ── */
 function switchProp(){currentProp=document.getElementById('propSel').value;iconPageActive=null;updateIconBtns();buildNav();showTab('cashflow');}
