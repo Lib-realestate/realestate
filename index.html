@@ -2750,8 +2750,10 @@ function saveTxModal(pi,idx){
   // Driveファイル名を更新
   if(t.driveFileId&&accessToken){
     const ext=t.driveFileName?t.driveFileName.slice(t.driveFileName.lastIndexOf('.')):'';
-    const issuerPart=t.issuer?'_'+t.issuer:'';
-    const newName=`${(t.ym||'').replace('-','')}${issuerPart}${t.desc?'_'+t.desc:''}${ext}`;
+    const issuerPart=t.issuer||'';
+    const ymPart=(t.ym||'').replace('-','');
+    const descPart=t.desc||'';
+    const newName=[issuerPart,ymPart,descPart].filter(Boolean).join('_')+ext;
     fetch(`https://www.googleapis.com/drive/v3/files/${t.driveFileId}`,{
       method:'PATCH',
       headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
@@ -3399,7 +3401,7 @@ const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propN
   const d=(result.date||'').slice(0,7).replace('-','');
   const issuer=result.issuer||'';
   const desc=result.description||'';
-  return [d,issuer,desc].filter(Boolean).join('_')+ext;
+  return [issuer,d,desc].filter(Boolean).join('_')+ext;
 }
 
 function showClassifyModal(file,result,detectedPropIdx){
