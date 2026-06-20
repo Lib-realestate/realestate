@@ -889,7 +889,7 @@ function renderCashflow(){
     let colAnn=`<div class="col-header"><span class="ct">年間CF </span><span style="font-size:9px;color:#aaa">${periodLabel}</span></div>
       <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${annCF>=0?'g':'r'}">${annCF<0?'▲':''}${fmt(annCF)}</span></div>
       <div class="bar-wrap" style="height:6px"><div class="bar-i" style="width:${pct(annI,annI+annE)}%"></div><div class="bar-e" style="width:${pct(annE,annI+annE)}%"></div></div>
-      <div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE)}</span></div></div><div class="col-sep"></div>`;
+      <div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(annI)}</span><span class="r">${fmt(annE+getFiscalIndices().reduce((s,idx)=>s+(isFutureIdx(idx)?0:getMonthRepay(idx,null)),0))}</span></div></div><div class="col-sep"></div>`;
     properties.forEach((p,i)=>{const pCF=getAnnualCF(i);colAnn+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="${pCF>=0?'g':'r'}" style="font-size:11px;font-weight:500">${pCF<0?'▲':''}${fmt(pCF)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(getAnnualI(i),getAnnualI(i)+getAnnualEEx(i))}%"></div><div class="bar-e" style="width:${pct(getAnnualEEx(i),getAnnualI(i)+getAnnualEEx(i))}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(getAnnualI(i))}</span><span class="r">${fmt(getAnnualEEx(i))}</span></div></div>`;});
     let colMon=`<div class="col-header"><span class="ct">月間収支 </span><span style="font-size:9px;color:#aaa">${moLabel}</span></div>
       <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500" class="${moNet>=0?'g':'r'}">${moNet<0?'▲':''}${fmt(moNet)}</span></div>
@@ -911,7 +911,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
     properties.forEach(p=>{const o=p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[_curYM]?.[r.no];if(!snap)return false;return snap.status==='occupied'||snap.status==='new'||snap.status==='late';}).length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
     const totSf=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
     const yr3=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
-    let totNet=0;// 後で計算
+    let totNet=getLifetimeCF(null);
     const colRec=`<div class="col-header"><span class="ct">収益状況</span></div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -995,9 +995,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         </tr>
         ${properties.map((p,i)=>{
           const sf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
-          const allTx2=p.transactions||[];
-          const net=allTx2.filter(t=>t.type==='income'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0)
-            -allTx2.filter(t=>t.type==='expense'&&!t.isMiscCost).reduce((s,t)=>s+t.amount,0);
+          const net=getLifetimeCF(i);
           return`<tr style="border-bottom:0.5px solid #f0f0e8">
             <td style="padding:5px 8px;color:#888">${p.name}</td>
             <td style="padding:5px 8px;text-align:right;color:#dc2626;font-size:10px">▲${fmt(sf)}</td>
