@@ -1197,14 +1197,12 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           const cidx=(commonTransactions||[]).indexOf(t);
           const linked=t.driveLink?{webViewLink:t.driveLink}:null;
           return`<tr style="border-bottom:0.5px solid #f0f0e8">
-            <td style="padding:4px 6px;white-space:nowrap"><input type="month" value="${t.ym||''}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px" onchange="updateCommonTxField(${cidx},'ym',this.value)"></td>
-            <td style="padding:4px 6px"><input type="text" value="${t.desc||''}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:100%" onchange="updateCommonTxField(${cidx},'desc',this.value)"></td>
-            <td style="padding:4px 6px"><select style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateCommonTxField(${cidx},'cat',this.value)">
-              ${COMMON_CATS.map(c=>`<option value="${c}" ${t.cat===c?'selected':''}>${c}</option>`).join('')}
-            </select></td>
-            <td style="padding:4px 6px;text-align:right"><input type="number" value="${t.amount}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:90px;text-align:right;color:#dc2626" onchange="updateCommonTxField(${cidx},'amount',parseInt(this.value)||0)"></td>
-            <td style="padding:4px 6px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:t.manualEntry?`<button class="btn-sm" style="font-size:10px">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
-            <td style="padding:4px 6px;text-align:center"><button class="btn-sm" style="color:#dc2626;font-size:10px;white-space:nowrap" onclick="deleteCommonTxByIdx(${cidx})">削除</button></td>
+            <td style="padding:6px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
+            <td style="padding:6px 8px;font-size:12px">${t.desc||'—'}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#888">${t.cat||'—'}</td>
+            <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.amount>0?'▲'+t.amount.toLocaleString():'—'}</td>
+            <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
+            <td style="padding:6px 8px;text-align:center"><button class="btn-sm" style="font-size:10px;white-space:nowrap" onclick="editCommonTxModal(${cidx})">編集</button></td>
           </tr>`;
         }).join('');
         const sumRow=`<tr style="background:#fafaf8;border-bottom:1px solid #d0d0c8;font-weight:500">
@@ -2754,6 +2752,51 @@ function deleteCommonTxByIdx(idx){
   renderCashflow();
 }
 
+  function editCommonTxModal(idx){
+  const t=commonTransactions?.[idx];
+  if(!t)return;
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">共通明細を編集</div>
+    <div class="form-group">
+      <label class="form-label">年月</label>
+      <input type="month" id="ectYM" value="${t.ym||''}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">内容</label>
+      <input type="text" id="ectDesc" value="${(t.desc||'').replace(/"/g,'&quot;')}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <select id="ectCat" style="width:100%">
+        ${COMMON_CATS.map(c=>`<option value="${c}" ${t.cat===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">金額（円）</label>
+      <input type="number" id="ectAmt" value="${t.amount||0}" style="width:100%">
+    </div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='共通明細編集';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" style="color:#dc2626" onclick="if(confirm('削除しますか？')){deleteCommonTxByIdx(${idx});closeModal('classifyModal');}">削除</button>
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
+    <button class="btn btn-primary" onclick="saveCommonTxModal(${idx})">保存</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+function saveCommonTxModal(idx){
+  const t=commonTransactions?.[idx];
+  if(!t)return;
+  t.ym=document.getElementById('ectYM')?.value||t.ym;
+  t.desc=document.getElementById('ectDesc')?.value||'';
+  t.cat=document.getElementById('ectCat')?.value||t.cat;
+  t.amount=parseInt(document.getElementById('ectAmt')?.value)||0;
+  saveProps();
+  closeModal('classifyModal');
+  renderCashflow();
+  showToast('保存しました','success');
+}
+  
 function addManualCommonTx(){
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">共通明細を追加</div>
