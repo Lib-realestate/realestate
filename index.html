@@ -1151,10 +1151,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       </thead>
       <tbody>
         ${isAll?`<tr style="border-bottom:0.5px solid #e0e0d8">
-          <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#16a34a">収支</td>
+         <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#16a34a">CF計</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi)-getMonthEEx(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#16a34a">${v<0?'▲':''}${fmt(v)}</td>`;}).join('')}
-          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8;color:#16a34a">${totI2-totE2<0?'▲':''}${fmt(totI2-totE2)}</td>
+          ${indices.map((idx,pos)=>{const v=getMonthCF(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#16a34a">${v<0?'▲':''}${fmt(v)}</td>`;}).join('')}
+          <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8;color:#16a34a">${(()=>{const v=getAnnualCF(pi);return(v<0?'▲':'')+fmt(v);})()}</td>
         </tr>`:`<tr style="border-bottom:0.5px solid #f0f0e8">
           <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#16a34a">収入</td>
           <td style="border-right:1px solid #d0d0c8"></td>
@@ -1170,8 +1170,8 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         ${isAll?properties.map((p,pi2)=>`<tr style="border-bottom:0.5px solid #f0f0e8">
           <td class="left" style="font-size:11px;color:#888;padding-left:16px;position:sticky;left:0;background:#fff;z-index:2">${p.name}</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${indices.map((idx,pos)=>{const v=getMonthI(idx,pi2)-getMonthEEx(idx,pi2);return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v!==0?(v<0?'▲':'')+fmt(v):'—'}</td>`;}).join('')}
-          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${getAnnualI(pi2)-getAnnualEEx(pi2)>=0?'g':'r'}">${getAnnualI(pi2)-getAnnualEEx(pi2)<0?'▲':''}${fmt(getAnnualI(pi2)-getAnnualEEx(pi2))}</td>
+          ${indices.map((idx,pos)=>{const v=getMonthCF(idx,pi2);return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v!==0?(v<0?'▲':'')+fmt(v):'—'}</td>`;}).join('')}
+          <td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${getAnnualCF(pi2)>=0?'g':'r'}">${getAnnualCF(pi2)<0?'▲':''}${fmt(getAnnualCF(pi2))}</td>
         </tr>`).join(''):''}
         ${isAll?`<tr style="border-bottom:0.5px solid #e0e0d8">
           <td class="left" style="color:#dc2626;font-weight:500;position:sticky;left:0;background:#fff;z-index:2">共通支出</td>
@@ -1233,6 +1233,18 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           ${(()=>{let ca=prevYearNet;return indices.map((idx,pos)=>{ca+=getMonthCF(idx,pi);return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''}" class="${selfFund>0&&pct(ca,selfFund)>=50?'g':'b'}">${selfFund>0?pct(ca,selfFund)+'%':'—'}</td>`;}).join('');})()}
           ${(()=>{const tot=getLifetimeCF(pi);return`<td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${selfFund>0&&pct(tot,selfFund)>=50?'g':'b'}">${selfFund>0?pct(tot,selfFund)+'%':'—'}</td>`;})()}
         </tr>
+        ${isAll?`<tr>
+          <td class="left" style="font-size:11px;color:#888;position:sticky;left:0;background:#fff;z-index:2">元金累計</td>
+          <td style="border-right:1px solid #d0d0c8"></td>
+          ${(()=>{let ca=0;return indices.map((idx,pos)=>{const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());const mo2=MONTH_BASE[idx];const ym2=`${yr4}-${String(mo2).padStart(2,'0')}`;const v=isFutureIdx(idx)?0:properties.reduce((s,p)=>(p.transactions||[]).filter(t=>t.ym===ym2&&t.type==='repayment'&&t.cat==='元金').reduce((ss,t)=>ss+t.amount,s),0);ca+=v;return`<td style="text-align:right;font-size:11px;color:#888${isFutureIdx(idx)?';opacity:.6':''}">${ca>0?fmt(ca):'—'}</td>`;}).join('');})()}
+          <td style="text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${(()=>{const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());return properties.reduce((s,p)=>(p.transactions||[]).filter(t=>t.type==='repayment'&&t.cat==='元金'&&parseInt(t.ym?.slice(0,4))===yr4).reduce((ss,t)=>ss+t.amount,s),0);})()>0?fmt(properties.reduce((s,p)=>(p.transactions||[]).filter(t=>t.type==='repayment'&&t.cat==='元金'&&parseInt(t.ym?.slice(0,4))===parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear())).reduce((ss,t)=>ss+t.amount,s),0)):'—'}</td>
+        </tr>
+        <tr>
+          <td class="left" style="font-size:11px;color:#888;position:sticky;left:0;background:#fff;z-index:2">資産累計</td>
+          <td style="border-right:1px solid #d0d0c8"></td>
+          ${(()=>{let cfCum=prevYearNet,prinCum=0;return indices.map((idx,pos)=>{const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());const mo2=MONTH_BASE[idx];const ym2=`${yr4}-${String(mo2).padStart(2,'0')}`;cfCum+=getMonthCF(idx,pi);const prin=isFutureIdx(idx)?0:properties.reduce((s,p)=>(p.transactions||[]).filter(t=>t.ym===ym2&&t.type==='repayment'&&t.cat==='元金').reduce((ss,t)=>ss+t.amount,s),0);prinCum+=prin;const v=cfCum+prinCum;return`<td style="text-align:right;font-size:11px${isFutureIdx(idx)?';opacity:.6':''}" class="${v>=0?'g':'r'}">${v<0?'▲':''}${fmt(v)}</td>`;}).join('');})()}
+          ${(()=>{const lifeCF=getLifetimeCF(pi);const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());const totalPrin=properties.reduce((s,p)=>(p.transactions||[]).filter(t=>t.type==='repayment'&&t.cat==='元金'&&parseInt(t.ym?.slice(0,4))<=yr4).reduce((ss,t)=>ss+t.amount,s),0);const v=lifeCF+totalPrin;return`<td style="text-align:right;font-size:11px;border-left:1px solid #d0d0c8" class="${v>=0?'g':'r'}">${v<0?'▲':''}${fmt(v)}</td>`;})()}
+        </tr>`:''}
       </tbody>
     </table></div>
   </div>
