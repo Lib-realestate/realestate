@@ -2734,7 +2734,8 @@ function saveTxModal(pi,idx){
   // Driveファイル名を更新
   if(t.driveFileId&&accessToken){
     const ext=t.driveFileName?t.driveFileName.slice(t.driveFileName.lastIndexOf('.')):'';
-    const newName=`${(t.ym||'').replace('-','')}${t.desc?'_'+t.desc:''}${ext}`;
+    const issuerPart=t.issuer?'_'+t.issuer:'';
+    const newName=`${(t.ym||'').replace('-','')}${issuerPart}${t.desc?'_'+t.desc:''}${ext}`;
     fetch(`https://www.googleapis.com/drive/v3/files/${t.driveFileId}`,{
       method:'PATCH',
       headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
@@ -2953,7 +2954,7 @@ async function doUploadTxDoc(file,pi,idx){
   try{
     const up=await ensurePropFolders(p);
     const targetId=up.subFolders[t.cat]||up.subFolders['05_その他'];
-    const finalName=`${(t.ym||'').replace('-','')}_${t.desc||'手動入力'}${file.name.slice(file.name.lastIndexOf('.'))}`;
+    const finalName=`${(t.ym||'').replace('-','')}${t.desc?'_'+t.desc:''}${file.name.slice(file.name.lastIndexOf('.'))}`;
     const driveResult=await uploadToDrive(file,targetId,finalName);
     t.driveFileId=driveResult.id;
     t.driveLink=driveResult.webViewLink;
@@ -3378,9 +3379,10 @@ const detectedPropIdx=propName?properties.findIndex(p=>p.name===propName||(propN
 
   function buildRename(file,result){
   const ext=file.name.includes('.')?file.name.slice(file.name.lastIndexOf('.')):'';
-  const base=file.name.replace(ext,'');
-  const d=(result.date||'').replace(/-/g,'');
-  return [d,base].filter(Boolean).join('_')+ext;
+  const d=(result.date||'').slice(0,7).replace('-','');
+  const issuer=result.issuer||'';
+  const desc=result.description||'';
+  return [d,issuer,desc].filter(Boolean).join('_')+ext;
 }
 
 function showClassifyModal(file,result,detectedPropIdx){
