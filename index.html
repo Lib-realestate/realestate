@@ -1249,7 +1249,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <td style="padding:7px 8px;text-align:right;font-weight:500;font-size:13px;font-variant-numeric:tabular-nums" class="${t.type==='income'?'g':'r'}">${t.type==='income'?'':'▲'}${t.amount.toLocaleString()}</td>
         ${t.type==='expense'?`<td style="padding:7px 8px;text-align:center"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;white-space:nowrap"><input type="checkbox" ${t.isMiscCost?'checked':''} onchange="toggleMiscCost(${pi},${idx},this.checked)" style="width:14px;height:14px"></label></td>`:'<td></td>'}
         <td style="padding:7px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
-        <td style="padding:7px 8px;text-align:center"><button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteTx(${pi},${idx})">削除</button></td>
+        <td style="padding:7px 8px;text-align:center"><button class="btn-sm" style="color:#dc2626;font-size:10px;white-space:nowrap" onclick="deleteTx(${pi},${idx})">削除</button></td>
       </tr>`;
     };
     // 日付順にソート
@@ -1278,16 +1278,14 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         const idx=p.transactions.indexOf(t);
         const linked=t.driveLink?{webViewLink:t.driveLink}:relatedFiles.find(f=>(t.driveFileId&&f.id===t.driveFileId));
         return`<tr style="border-bottom:0.5px solid #f0f0e8">
-          <td style="padding:4px 6px;white-space:nowrap"><input type="month" value="${t.ym||''}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:110px" onchange="updateTxField(${pi},${idx},'ym',this.value)"></td>
-          <td style="padding:4px 6px"><input type="text" value="${(t.desc||'').replace(/"/g,'&quot;')}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:100%" onchange="updateTxField(${pi},${idx},'desc',this.value)"></td>
-          <td style="padding:4px 6px"><select style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateTxCatAndType(${pi},${idx},this.value)">
-            ${SUB_FOLDERS.map(s=>`<option value="${s}" ${t.cat===s?'selected':''}>${s}</option>`).join('')}
-          </select></td>
-          <td style="padding:4px 6px;text-align:right">${t.type==='income'?`<input type="number" value="${t.amount}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:90px;text-align:right;color:#16a34a" onchange="updateTxField(${pi},${idx},'amount',parseInt(this.value)||0)">`:'—'}</td>
-          <td style="padding:4px 6px;text-align:right">${t.type==='expense'?`<input type="number" value="${t.amount}" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:90px;text-align:right;color:#dc2626" onchange="updateTxField(${pi},${idx},'amount',parseInt(this.value)||0)">`:'—'}</td>
-          ${t.type==='expense'?`<td style="padding:4px 6px;text-align:center"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px"><input type="checkbox" ${t.isMiscCost?'checked':''} onchange="toggleMiscCost(${pi},${idx},this.checked)" style="width:14px;height:14px">諸費用</label></td>`:'<td></td>'}
-          <td style="padding:4px 6px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:t.manualEntry?`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
-          <td style="padding:4px 6px;text-align:center"><button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="deleteTx(${pi},${idx})">削除</button></td>
+          <td style="padding:6px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
+          <td style="padding:6px 8px;font-size:12px">${t.desc||'—'}</td>
+          <td style="padding:6px 8px;font-size:11px;color:#888">${t.cat||'—'}</td>
+          <td style="padding:6px 8px;text-align:right;font-size:12px;color:#16a34a">${t.type==='income'?t.amount.toLocaleString():'—'}</td>
+          <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.type==='expense'?'▲'+t.amount.toLocaleString():'—'}</td>
+          <td style="padding:6px 8px;text-align:center">${t.isMiscCost?'✓':'—'}</td>
+          <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:t.manualEntry?`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
+          <td style="padding:4px 6px;text-align:center"><button class="btn-sm" style="font-size:10px;white-space:nowrap" onclick="editTxModal(${pi},${idx})">編集</button></td>
         </tr>`;
       }).join('');
       const sumRow=`<tr style="background:#fafaf8;border-bottom:1px solid #d0d0c8;font-weight:500">
@@ -2672,6 +2670,67 @@ function toggleMiscCost(pi,txIdx,checked){
   properties[pi].transactions[idx][field]=value;
   saveProps();
   renderCashflow();
+}
+
+  function editTxModal(pi,idx){
+  const t=properties[pi]?.transactions?.[idx];
+  if(!t)return;
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">明細を編集</div>
+    <div class="form-group">
+      <label class="form-label">年月</label>
+      <input type="month" id="etYM" value="${t.ym||''}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">種別</label>
+      <select id="etType" style="width:100%">
+        <option value="income" ${t.type==='income'?'selected':''}>収入</option>
+        <option value="expense" ${t.type==='expense'?'selected':''}>支出</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">内容</label>
+      <input type="text" id="etDesc" value="${(t.desc||'').replace(/"/g,'&quot;')}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <select id="etCat" style="width:100%">
+        ${SUB_FOLDERS.map(s=>`<option value="${s}" ${t.cat===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">金額（円）</label>
+      <input type="number" id="etAmt" value="${t.amount||0}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="etMisc" ${t.isMiscCost?'checked':''} style="width:16px;height:16px">
+        <span class="form-label" style="margin:0">諸費用に含める</span>
+      </label>
+    </div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='明細編集';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" style="color:#dc2626" onclick="if(confirm('削除しますか？'))deleteTx(${pi},${idx});closeModal('classifyModal')">削除</button>
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
+    <button class="btn btn-primary" onclick="saveTxModal(${pi},${idx})">保存</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+function saveTxModal(pi,idx){
+  const t=properties[pi]?.transactions?.[idx];
+  if(!t)return;
+  t.ym=document.getElementById('etYM')?.value||t.ym;
+  t.type=document.getElementById('etType')?.value||t.type;
+  t.desc=document.getElementById('etDesc')?.value||'';
+  t.cat=document.getElementById('etCat')?.value||t.cat;
+  t.amount=parseInt(document.getElementById('etAmt')?.value)||0;
+  t.isMiscCost=document.getElementById('etMisc')?.checked||false;
+  if(t.isMiscCost) toggleMiscCost(pi,idx,true);
+  saveProps();
+  closeModal('classifyModal');
+  renderCashflow();
+  showToast('保存しました','success');
 }
   
   function updateTxField(pi,idx,field,value){
