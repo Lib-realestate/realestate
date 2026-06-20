@@ -3923,9 +3923,10 @@ async function analyzeWithAI(file) {
     })
   });
   if (!response.ok){
-  const errText=await response.text();
-  throw new Error('Worker応答エラー: '+response.status+' '+errText);
-}
+    const errText=await response.text();
+    console.error('Worker error detail:', errText);
+    throw new Error('Worker応答エラー: '+response.status+' '+errText);
+  }
   const result = await response.json();
   showToast(`解析完了: ${result.description || result.category}`, 'success');
   return result;
