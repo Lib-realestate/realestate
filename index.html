@@ -2711,7 +2711,7 @@ function toggleMiscCost(pi,txIdx,checked){
   const modal=document.getElementById('classifyModal');
   modal.querySelector('.modal-title').textContent='明細編集';
   modal.querySelector('.modal-actions').innerHTML=`
-    <button class="btn" style="color:#dc2626" onclick="if(confirm('削除しますか？'))deleteTx(${pi},${idx});closeModal('classifyModal')">削除</button>
+    <button class="btn" style="color:#dc2626" onclick="deleteTx(${pi},${idx});closeModal('classifyModal')">削除</button>
     <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
     <button class="btn btn-primary" onclick="saveTxModal(${pi},${idx})">保存</button>`;
   modal.classList.add('open');modal.style.display='flex';
@@ -2794,7 +2794,7 @@ function deleteCommonTxByIdx(idx){
   const modal=document.getElementById('classifyModal');
   modal.querySelector('.modal-title').textContent='共通明細編集';
   modal.querySelector('.modal-actions').innerHTML=`
-    <button class="btn" style="color:#dc2626" onclick="if(confirm('削除しますか？')){deleteCommonTxByIdx(${idx});closeModal('classifyModal');}">削除</button>
+    <button class="btn" style="color:#dc2626" onclick="deleteCommonTxByIdx(${idx});closeModal('classifyModal')">削除</button>
     <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
     <button class="btn btn-primary" onclick="saveCommonTxModal(${idx})">保存</button>`;
   modal.classList.add('open');modal.style.display='flex';
