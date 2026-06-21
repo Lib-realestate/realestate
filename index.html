@@ -3470,21 +3470,36 @@ async function confirmMultiUpload(){
     const date=document.getElementById(`mpDate_${idx}`)?.value;
     if(!propIdx){errorCount++;continue;}
     if(propIdx==='common'){
-      // 全物件共通経費として保存
       const commonCat=document.getElementById(`mpCat_${idx}`)?.value||'共通経費';
       const commonDate=document.getElementById(`mpDate_${idx}`)?.value;
       const commonYM=commonDate?commonDate.slice(0,7):'';
       if(commonYM&&item.result?.amount>0){
         if(!commonTransactions) commonTransactions=[];
+        // Driveに共通フォルダがなければ作成してアップロード
+        let driveFileId=null,driveLink=null,driveFileName=null;
+        try{
+          const commonFolderId=getDriveFolderId();
+          const finalName=buildRename(item.file,item.result);
+          const driveResult=await uploadToDrive(item.file,commonFolderId,finalName);
+          driveFileId=driveResult.id;
+          driveLink=driveResult.webViewLink;
+          driveFileName=driveResult.name;
+          updateProc(item.id,'done',`✓ 共通 / ${commonCat} → ${finalName}`,driveLink);
+        }catch(e){
+          console.warn('共通経費Drive格納失敗:', e);
+          updateProc(item.id,'done',`✓ 共通 / ${commonCat}`);
+        }
         commonTransactions.push({
           ym:commonYM,
           type:'expense',
           amount:item.result.amount,
           desc:item.result.description||'',
+          issuer:item.result.issuer||'',
           cat:commonCat,
           createdAt:new Date().toISOString(),
-          driveFileId:null,
-          driveLink:null
+          driveFileId,
+          driveLink,
+          driveFileName
         });
         saveProps();
         showToast(`共通経費を登録しました: ${item.result.amount.toLocaleString()}円`,'success');
