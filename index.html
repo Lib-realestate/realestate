@@ -1285,7 +1285,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
             <td style="padding:6px 8px;font-size:12px">${t.desc||'—'}</td>
             <td style="padding:6px 8px;font-size:11px;color:#888;white-space:nowrap">${t.cat||'—'}</td>
             <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.amount>0?'▲'+t.amount.toLocaleString():'—'}</td>
-            <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
+            <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:!t.driveLink?`<button class="btn-sm" style="font-size:10px" onclick="uploadCommonTxDoc(${cidx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
             <td style="padding:6px 8px;text-align:center"><button class="btn-sm" style="font-size:10px;white-space:nowrap" onclick="editCommonTxModal(${cidx})">編集</button></td>
           </tr>`;
         }).join('');
@@ -2933,6 +2933,52 @@ function saveCommonTxModal(idx){
   closeModal('classifyModal');
   renderCashflow();
   showToast('保存しました','success');
+}
+
+  function uploadCommonTxDoc(idx){
+  const t=commonTransactions?.[idx];
+  if(!t)return;
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">書類を格納</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px">${t.ym||''}　${t.desc||''}</div>
+    <div id="ctDocDropZone" style="border:2px dashed #d0d0c8;border-radius:8px;padding:32px 16px;text-align:center;cursor:pointer"
+      ondragover="event.preventDefault();this.style.borderColor='#2563eb'"
+      ondragleave="this.style.borderColor='#d0d0c8'"
+      ondrop="handleCtDocDrop(event,${idx})">
+      <div style="font-size:32px;margin-bottom:8px">📄</div>
+      <div style="font-size:13px;color:#666;margin-bottom:8px">ここにファイルをドロップ</div>
+      <button class="btn" onclick="document.getElementById('ctDocFileInput').click()">ファイルを選択</button>
+      <input type="file" id="ctDocFileInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleCtDocFile(event,${idx})">
+    </div>
+    <div id="ctDocStatus" style="margin-top:8px;font-size:11px;color:#888;text-align:center"></div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='書類格納';
+  modal.querySelector('.modal-actions').innerHTML=`<button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+async function handleCtDocFile(e,idx){const file=e.target.files[0];if(file)await doUploadCtDoc(file,idx);}
+async function handleCtDocDrop(e,idx){e.preventDefault();document.getElementById('ctDocDropZone').style.borderColor='#d0d0c8';const file=e.dataTransfer.files[0];if(file)await doUploadCtDoc(file,idx);}
+async function doUploadCtDoc(file,idx){
+  const t=commonTransactions?.[idx];
+  if(!t)return;
+  const status=document.getElementById('ctDocStatus');
+  if(status)status.textContent='アップロード中...';
+  try{
+    const folderId=getDriveFolderId();
+    const ext=file.name.slice(file.name.lastIndexOf('.'));
+    const finalName=`${(t.ym||'').replace('-','')}${t.issuer?'_'+t.issuer:''}${t.desc?'_'+t.desc:''}${ext}`;
+    const driveResult=await uploadToDrive(file,folderId,finalName);
+    t.driveFileId=driveResult.id;
+    t.driveLink=driveResult.webViewLink;
+    t.driveFileName=driveResult.name;
+    saveProps();
+    closeModal('classifyModal');
+    renderCashflow();
+    showToast('書類を格納しました','success');
+  }catch(e){
+    if(status)status.textContent='格納に失敗しました: '+e.message;
+    showToast('格納に失敗しました','error');
+  }
 }
   
 function addManualCommonTx(){
