@@ -758,8 +758,9 @@ function getAnnualEEx(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthEEx(
 
 // ── CF計算コア関数（全箇所から参照）──
 function isFutureIdx(idx){
-  const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
   const mo2=MONTH_BASE[idx];
+  const yr4=(yearMode==='fiscal'&&mo2<=fiscalMonth)?baseYr+1:baseYr;
   const ym4=`${yr4}-${String(mo2).padStart(2,'0')}`;
   return ym4>nowYM();
 }
