@@ -1301,7 +1301,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <span class="ct">明細履歴</span>
         <button class="btn-add" onclick="addManualCommonTx()">＋ 明細追加</button>
       </div>
-        <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:600px">
+        <div style="overflow-x:auto;overflow-y:auto;max-height:400px"><table style="border-collapse:collapse;width:100%;min-width:600px">
           ${tableHead}<tbody>${allSorted.length?rows:`<tr><td colspan="7" style="padding:20px;text-align:center;color:#ccc;font-size:12px">データなし</td></tr>`}</tbody>
         </table></div>
       </div>`;
@@ -1384,7 +1384,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <span class="ct">明細履歴</span>
         <button class="btn-add" onclick="addManualTx(${pi})">＋ 明細追加</button>
       </div>
-      <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:600px">
+      <div style="overflow-x:auto;overflow-y:auto;max-height:400px"><table style="border-collapse:collapse;width:100%;min-width:600px">
         ${unifiedHead}<tbody>${allTxSorted.length?unifiedRows:`<tr><td colspan="8" style="padding:20px;text-align:center;color:#ccc;font-size:12px">データなし</td></tr>`}</tbody>
       </table></div>
     </div>`;
