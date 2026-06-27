@@ -1728,7 +1728,7 @@ else if(!snap.status||snap.status===null) {} // デフォルト（null）は空�
       const annualDiffLabel=annualDiff===0?'±0':annualDiff>0?'+'+annualDiff.toLocaleString():'▲'+Math.abs(annualDiff).toLocaleString();
 
       return`<tr style="border-bottom:0.5px solid #f0f0e8">
-        <td style="position:sticky;left:0;z-index:2;background:#fff;padding:4px 6px;font-weight:500;font-size:11px;white-space:nowrap;min-width:44px;border-right:1px solid #d0d0c8">
+        <td style="position:sticky;left:0;z-index:2;background:#fff;padding:4px 6px;font-weight:500;font-size:10px;min-width:44px;max-width:100px;word-break:break-all;border-right:1px solid #d0d0c8">
   <span style="cursor:pointer;border-bottom:1px dashed #aaa" onclick="editRoomNo(${pi},${ri})" title="クリックで部屋番号を変更">${r.no}${p.type==='1棟'?'号':''}</span>
 </td>
         <td style="padding:4px 4px;min-width:52px;border-right:0.5px solid #e0e0d8">
@@ -1795,7 +1795,7 @@ else if(!snap.status||snap.status===null) {} // デフォルト（null）は空�
       </colgroup>
       <thead style="background:#fafaf8;position:sticky;top:0;z-index:4">
         <tr>
-          <th style="position:sticky;left:0;z-index:5;background:#fafaf8;padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;border-right:1px solid #d0d0c8">部屋</th>
+          <th style="position:sticky;left:0;z-index:5;background:#fafaf8;padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8;border-right:1px solid #d0d0c8;min-width:80px;max-width:120px">部屋</th>
           <th style="padding:5px 4px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e0e0d8">
             間取<br><span style="color:#aaa;font-size:8px">差額計</span>
           </th>
