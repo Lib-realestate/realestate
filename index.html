@@ -3452,10 +3452,11 @@ function showMultiClassifyModal(){
   const rows=multiPendingUploads.map((item,idx)=>{
     const r=item.result;
     const dupBadge=r?.duplicate?`<span class="badge" style="background:#fef9c3;color:#854d0e">⚠重複疑い</span>`:'';
+      const skipCheck=r?.duplicate?`<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#dc2626;cursor:pointer"><input type="checkbox" id="mpSkip_${idx}" style="width:14px;height:14px"> スキップ</label>`:'';
     const detectedProp=item.detectedPropIdx>=0?item.detectedPropIdx:'';
     const detectedCat=SUB_FOLDERS.find(s=>s.includes(r?.category||''))||SUB_FOLDERS[4];
     return`<tr style="border-bottom:0.5px solid #f0f0e8">
-      <td style="padding:6px 8px;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.file.name}${dupBadge}</td>
+      <td style="padding:6px 8px;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.file.name}${dupBadge}${skipCheck}</td>
       <td style="padding:6px 4px;font-size:11px;color:#888">${r?.issuer||'—'}</td>
 <td style="padding:6px 4px;font-size:11px;color:#888">${r?.summary||'—'}</td>
       <td style="padding:6px 4px"><select id="mpProp_${idx}" style="font-size:11px;width:100%" onchange="updateCatOptions(${idx},this.value)"><option value="">— 未分類 —</option>${propOptions.replace(`value="${detectedProp}"`,`value="${detectedProp}" selected`)}</select></td>
@@ -3515,6 +3516,10 @@ async function confirmMultiUpload(){
     const cat=document.getElementById(`mpCat_${idx}`)?.value;
     const date=document.getElementById(`mpDate_${idx}`)?.value;
     if(!propIdx){errorCount++;continue;}
+    if(document.getElementById(`mpSkip_${idx}`)?.checked){
+      updateProc(item.id,'done','スキップしました');
+      continue;
+    }
     if(propIdx==='common'){
       const commonCat=document.getElementById(`mpCat_${idx}`)?.value||'共通経費';
       const commonDate=document.getElementById(`mpDate_${idx}`)?.value;
