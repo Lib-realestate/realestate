@@ -1057,8 +1057,9 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     <td class="g" style="font-weight:700">${selfFund>0?pct(cumNet,selfFund)+'%':'—'}</td>
   </tr>`;
 
-  const incData=indices.map(i=>getMonthI(i,pi));
-  const expData=indices.map(i=>getMonthEEx(i,pi)+(isAll?COMMON_MONTHLY[i]+TAX_MONTHLY[i]:0));
+  const incData=indices.map(i=>isAll?properties.reduce((s,p,pi2)=>s+getMonthI(i,pi2),0):getMonthI(i,pi));
+  const expData=indices.map(i=>isAll?properties.reduce((s,p,pi2)=>s+getMonthEEx(i,pi2)+(isFutureIdx(i)?0:getMonthRepay(i,pi2)),0)+(COMMON_MONTHLY[i]||0):getMonthEEx(i,pi)+(isFutureIdx(i)?0:getMonthRepay(i,pi)));
+  const repayData=indices.map(i=>isFutureIdx(i)?0:(isAll?properties.reduce((s,p,pi2)=>s+getMonthRepay(i,pi2),0):getMonthRepay(i,pi)));
 
   // 列定義：全物件=収入計|支出計|法人税等|共通経費|純利益|年間累計|取得累計|回収率
   //         個別  =収入計|支出計|純利益|年間累計|取得累計|回収率
