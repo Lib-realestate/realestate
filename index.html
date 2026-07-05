@@ -3209,7 +3209,82 @@ function renderExit(){
   if(currentProp==='all')return;
   const p=properties[parseInt(currentProp)];if(!p){document.getElementById('pages').innerHTML='<div class="card" style="text-align:center;padding:32px;color:#888">物件が見つかりません</div>';return;}
 if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style="padding:20px"><div class="ct" style="margin-bottom:8px">出口戦略 − 売却シミュレーション</div><p style="color:#888;font-size:12px">分析タブで取得価格を入力すると売却シミュレーションが表示されます。</p></div>';return;}
-  document.getElementById('pages').innerHTML=`<div class="card"><div class="ct" style="margin-bottom:12px">売却シミュレーション — ${p.name}</div>
+  if(!p.exit) p.exit={};
+  const ex=p.exit;
+  const lifeCF=getLifetimeCF(parseInt(currentProp));
+  const saleGain=ex.salePrice&&p.price?(ex.salePrice-p.price):0;
+  const netProceeds=ex.salePrice?(ex.salePrice-(ex.agentFee||0)-(ex.taxAdj||0)-(ex.remainDebt||0)-(ex.transferTax||0)-(ex.otherAdj||0)):0;
+  const totalReturn=netProceeds+lifeCF;
+  const sf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
+
+  document.getElementById('pages').innerHTML=`
+  <div class="card" style="margin-bottom:10px">
+    <div class="ct" style="margin-bottom:12px">売却実績 — ${p.name}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">売却日</div>
+        <input type="date" value="${ex.saleDate||''}" style="width:100%" onchange="updateExit('saleDate',this.value)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">売却価格（円）</div>
+        <input type="number" value="${ex.salePrice||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('salePrice',parseInt(this.value)||0)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">仲介手数料（円）</div>
+        <input type="number" value="${ex.agentFee||''}" placeholder="自動計算" style="width:100%;text-align:right" onchange="updateExit('agentFee',parseInt(this.value)||0)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">固都税精算金（円）</div>
+        <input type="number" value="${ex.taxAdj||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('taxAdj',parseInt(this.value)||0)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">残債（円）</div>
+        <input type="number" value="${ex.remainDebt||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('remainDebt',parseInt(this.value)||0)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">譲渡税（円）</div>
+        <input type="number" value="${ex.transferTax||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('transferTax',parseInt(this.value)||0)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">その他精算（円）</div>
+        <input type="number" value="${ex.otherAdj||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('otherAdj',parseInt(this.value)||0)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:3px">メモ</div>
+        <input type="text" value="${ex.memo||''}" placeholder="備考" style="width:100%" onchange="updateExit('memo',this.value)">
+      </div>
+    </div>
+    ${ex.salePrice?`
+    <div style="border-top:1px solid #e0e0d8;padding-top:12px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div class="card" style="padding:10px 12px;margin:0">
+          <div style="font-size:10px;color:#888;margin-bottom:3px">売却益</div>
+          <div style="font-size:16px;font-weight:500" class="${saleGain>=0?'g':'r'}">${saleGain<0?'▲':''}${fmt(Math.abs(saleGain))}</div>
+        </div>
+        <div class="card" style="padding:10px 12px;margin:0">
+          <div style="font-size:10px;color:#888;margin-bottom:3px">手取り額</div>
+          <div style="font-size:16px;font-weight:500" class="${netProceeds>=0?'g':'r'}">${netProceeds<0?'▲':''}${fmt(Math.abs(netProceeds))}</div>
+        </div>
+        <div class="card" style="padding:10px 12px;margin:0">
+          <div style="font-size:10px;color:#888;margin-bottom:3px">取得来CF累計</div>
+          <div style="font-size:16px;font-weight:500" class="${lifeCF>=0?'g':'r'}">${lifeCF<0?'▲':''}${fmt(Math.abs(lifeCF))}</div>
+        </div>
+        <div class="card" style="padding:10px 12px;margin:0">
+          <div style="font-size:10px;color:#888;margin-bottom:3px">総合収益（手取り+CF累計）</div>
+          <div style="font-size:16px;font-weight:500" class="${totalReturn>=0?'g':'r'}">${totalReturn<0?'▲':''}${fmt(Math.abs(totalReturn))}</div>
+        </div>
+        <div class="card" style="padding:10px 12px;margin:0">
+          <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金回収率</div>
+          <div style="font-size:16px;font-weight:500" class="${sf>0&&totalReturn/sf>=1?'g':'r'}">${sf>0?Math.round(totalReturn/sf*100)+'%':'—'}</div>
+        </div>
+        <div class="card" style="padding:10px 12px;margin:0">
+          <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金</div>
+          <div style="font-size:16px;font-weight:500">▲${fmt(sf)}</div>
+        </div>
+      </div>
+    </div>`:'<div style="text-align:center;color:#aaa;font-size:12px;padding:16px">売却価格を入力すると収益計算が表示されます</div>'}
+  </div>
+  <div class="card"><div class="ct" style="margin-bottom:12px">売却シミュレーション — ${p.name}</div>
   <div class="grid2" style="margin-bottom:12px">
     <div><div style="font-size:11px;color:#888;margin-bottom:3px">売却想定価格（円）</div><input type="number" id="exitPrice" value="${Math.round(p.price*1.2)}" style="width:100%;font-size:14px;text-align:right" oninput="calcExit()"></div>
     <div><div style="font-size:11px;color:#888;margin-bottom:3px">課税区分</div><select id="taxType" style="width:100%" onchange="calcExit()"><option value="longPersonal">個人 長期（20.315%）</option><option value="shortPersonal">個人 短期（39.63%）</option><option value="corporate">法人（実効税率34%）</option></select></div>
@@ -3240,6 +3315,19 @@ function syncSegToLoan(pi){
   const loanInput=document.querySelector(`#loanseg_${pi}_0`)?.closest('.sec-body')?.querySelector('.nbox.ai[onchange*="loan"]');
   if(loanInput) loanInput.value=total.toLocaleString();
   calcAnalysis(pi);
+}
+  function updateExit(field,value){
+  const pi=parseInt(currentProp);
+  const p=properties[pi];
+  if(!p)return;
+  if(!p.exit)p.exit={};
+  p.exit[field]=value;
+  // 売却価格が入力されたら仲介手数料を自動計算
+  if(field==='salePrice'&&value>0&&!p.exit.agentFee){
+    p.exit.agentFee=Math.round((value*0.03+60000)*1.1);
+  }
+  saveProps();
+  renderExit();
 }
 function calcExit(){
   const pi=parseInt(currentProp),p=properties[pi];if(!p)return;
