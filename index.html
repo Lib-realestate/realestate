@@ -3213,106 +3213,128 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
   const ex=p.exit;
   const pi2=parseInt(currentProp);
   const lifeCF=getLifetimeCF(pi2);
-  // 残債の自動計算（手動上書きがなければ自動）
   const autoRemainDebt=calcRemainDebt(pi2);
   if(!ex._remainDebtManual) ex.remainDebt=autoRemainDebt;
-  // 仲介手数料の自動計算
   if(ex.salePrice&&!ex._agentFeeManual) ex.agentFee=Math.round((ex.salePrice*0.03+60000)*1.1);
-  const saleGain=ex.salePrice&&p.price?(ex.salePrice-p.price):0;
-  const netProceeds=ex.salePrice?(ex.salePrice-(ex.agentFee||0)+(ex.taxAdj||0)-(ex.remainDebt||0)-(ex.transferTax||0)-(ex.otherAdj||0)):0;
-  const totalReturn=netProceeds+lifeCF;
+  if(!ex.otherAdjs) ex.otherAdjs=[];
+
+  // 譲渡税自動計算
+  const acqCost=(p.price||0)+(p.miscCost||0);
+  const transferFee=ex.agentFee||0;
+  const transferIncome=ex.salePrice||0;
+  const taxableGain=Math.max(0,transferIncome-acqCost-transferFee);
+  const taxRates={longPersonal:0.20315,shortPersonal:0.3963,corporate:0.34};
+  const taxRate=taxRates[ex.taxType||'longPersonal'];
+  const autoTransferTax=Math.round(taxableGain*taxRate);
+  if(!ex._transferTaxManual) ex.transferTax=autoTransferTax;
+
+  // ①売却による利益
+  const otherAdjTotal=(ex.otherAdjs||[]).reduce((s,a)=>s+(a.amount||0),0);
+  const saleProfit=ex.salePrice?(ex.salePrice-(ex.agentFee||0)+(ex.taxAdj||0)-(ex.remainDebt||0)+otherAdjTotal):0;
+  // ②トータル利益
+  const totalProfit=saleProfit+lifeCF-(ex.transferTax||0);
+  // 所有期間
+  const acqDate=p.acquireDate?new Date(p.acquireDate):null;
+  const saleDate=ex.saleDate?new Date(ex.saleDate):new Date();
+  const holdDays=acqDate?Math.max(1,Math.round((saleDate-acqDate)/(1000*60*60*24))):0;
+  const holdYears=holdDays/365;
+  const holdLabel=acqDate?`${Math.floor(holdYears)}年${Math.round((holdYears%1)*12)}ヶ月`:'—';
+  // ③年間利益
+  const annualProfit=holdYears>0?Math.round(totalProfit/holdYears):0;
+  // ④自己資金利回り
   const sf=(p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0);
+  const annualYield=sf>0&&holdYears>0?(Math.round(totalProfit/holdYears/sf*1000)/10):0;
 
   document.getElementById('pages').innerHTML=`
   <div class="card" style="margin-bottom:10px">
-    <div class="ct" style="margin-bottom:12px">売却実績 — ${p.name}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+    <div class="ct" style="margin-bottom:10px">売却実績 — ${p.name}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
       <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">売却日</div>
-        <input type="date" value="${ex.saleDate||''}" style="width:100%" onchange="updateExit('saleDate',this.value)">
+        <div style="font-size:10px;color:#888;margin-bottom:2px">売却日</div>
+        <input type="date" value="${ex.saleDate||''}" style="width:100%;font-size:11px" onchange="updateExit('saleDate',this.value)">
       </div>
       <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">売却価格（円）</div>
-        <input type="number" value="${ex.salePrice||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('salePrice',parseInt(this.value)||0)">
+        <div style="font-size:10px;color:#888;margin-bottom:2px">課税区分</div>
+        <select style="width:100%;font-size:11px" onchange="updateExit('taxType',this.value)">
+          <option value="longPersonal" ${(ex.taxType||'longPersonal')==='longPersonal'?'selected':''}>長期（個人）20.3%</option>
+          <option value="shortPersonal" ${ex.taxType==='shortPersonal'?'selected':''}>短期（個人）39.6%</option>
+          <option value="corporate" ${ex.taxType==='corporate'?'selected':''}>法人 34%</option>
+        </select>
       </div>
       <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">仲介手数料（円）</div>
-        <input type="number" value="${ex.agentFee||''}" placeholder="自動計算" style="width:100%;text-align:right" onchange="updateExit('agentFee',parseInt(this.value)||0)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">固都税精算金（円）<span style="font-size:9px;color:#aaa">売主受取＋</span></div>
-        <input type="number" value="${ex.taxAdj||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('taxAdj',parseInt(this.value)||0)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">残債（円）<span style="font-size:9px;color:#aaa">自動計算</span></div>
-        <input type="number" value="${ex.remainDebt||autoRemainDebt||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('remainDebt',parseInt(this.value)||0)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">譲渡税（円）</div>
-        <input type="number" value="${ex.transferTax||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('transferTax',parseInt(this.value)||0)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">その他精算（円）</div>
-        <input type="number" value="${ex.otherAdj||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('otherAdj',parseInt(this.value)||0)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">メモ</div>
-        <input type="text" value="${ex.memo||''}" placeholder="備考" style="width:100%" onchange="updateExit('memo',this.value)">
+        <div style="font-size:10px;color:#888;margin-bottom:2px">所有期間</div>
+        <div style="font-size:13px;font-weight:500;padding:6px 0">${holdLabel}</div>
       </div>
     </div>
-    ${ex.salePrice?`
-    <div style="border-top:1px solid #e0e0d8;padding-top:12px">
-      ${(()=>{
-        // 所有期間計算
-        const acqDate=p.acquireDate?new Date(p.acquireDate):null;
-        const saleDate=ex.saleDate?new Date(ex.saleDate):new Date();
-        const holdDays=acqDate?Math.max(1,Math.round((saleDate-acqDate)/(1000*60*60*24))):0;
-        const holdYears=holdDays/365;
-        const holdLabel=acqDate?`${Math.floor(holdYears)}年${Math.round((holdYears%1)*12)}ヶ月`:'—';
-        // ①売却による利益（手取り額）
-        const saleProfit=netProceeds;
-        // ②トータル利益（手取り+CF累計）
-        const totalProfit=netProceeds+lifeCF;
-        // ③年間利益
-        const annualProfit=holdYears>0?Math.round(totalProfit/holdYears):0;
-        // ④自己資金利回り（年間利益/自己資金）
-        const annualYield=sf>0&&holdYears>0?Math.round(totalProfit/holdYears/sf*1000)/10:0;
-        return`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
-          <div class="card" style="padding:10px 12px;margin:0;grid-column:1/-1">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">所有期間</div>
-            <div style="font-size:16px;font-weight:500">${holdLabel}<span style="font-size:11px;color:#888;margin-left:8px">（${holdDays}日）</span></div>
-          </div>
-          <div class="card" style="padding:10px 12px;margin:0">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">①売却による利益<span style="font-size:9px;margin-left:4px">（手取り額）</span></div>
-            <div style="font-size:16px;font-weight:500" class="${saleProfit>=0?'g':'r'}">${saleProfit<0?'▲':''}${fmt(Math.abs(saleProfit))}</div>
-          </div>
-          <div class="card" style="padding:10px 12px;margin:0">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">取得来CF累計</div>
-            <div style="font-size:16px;font-weight:500" class="${lifeCF>=0?'g':'r'}">${lifeCF<0?'▲':''}${fmt(Math.abs(lifeCF))}</div>
-          </div>
-          <div class="card" style="padding:10px 12px;margin:0;grid-column:1/-1;border:1px solid ${totalProfit>=0?'#16a34a':'#dc2626'}">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">②トータル利益<span style="font-size:9px;margin-left:4px">（手取り+CF累計）</span></div>
-            <div style="font-size:20px;font-weight:700" class="${totalProfit>=0?'g':'r'}">${totalProfit<0?'▲':''}${fmt(Math.abs(totalProfit))}</div>
-          </div>
-          <div class="card" style="padding:10px 12px;margin:0">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">③年間利益<span style="font-size:9px;margin-left:4px">（トータル÷所有年数）</span></div>
-            <div style="font-size:16px;font-weight:500" class="${annualProfit>=0?'g':'r'}">${annualProfit<0?'▲':''}${fmt(Math.abs(annualProfit))}</div>
-          </div>
-          <div class="card" style="padding:10px 12px;margin:0">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">④自己資金利回り<span style="font-size:9px;margin-left:4px">（年間利益÷自己資金）</span></div>
-            <div style="font-size:16px;font-weight:500" class="${annualYield>=0?'g':'r'}">${annualYield}%</div>
-          </div>
-          <div class="card" style="padding:10px 12px;margin:0">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金</div>
-            <div style="font-size:16px;font-weight:500">▲${fmt(sf)}</div>
-          </div>
-          <div class="card" style="padding:10px 12px;margin:0">
-            <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金回収率</div>
-            <div style="font-size:16px;font-weight:500" class="${sf>0&&totalProfit/sf>=1?'g':'r'}">${sf>0?Math.round(totalProfit/sf*100)+'%':'—'}</div>
-          </div>
-        </div>`;
-      })()}
-    </div>`:'<div style="text-align:center;color:#aaa;font-size:12px;padding:16px">売却価格を入力すると収益計算が表示されます</div>'}
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="border-bottom:1px solid #e0e0d8">
+        <th style="text-align:left;padding:4px 6px;font-size:10px;color:#888;font-weight:400">項目</th>
+        <th style="text-align:right;padding:4px 6px;font-size:10px;color:#888;font-weight:400">金額</th>
+        <th style="width:24px"></th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">売却価格</td>
+          <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.salePrice||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateExit('salePrice',parseInt(this.value)||0)"></td>
+          <td></td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">仲介手数料 <span style="font-size:9px;color:#aaa">自動</span></td>
+          <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.agentFee||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;color:#dc2626" onchange="updateExit('agentFee',parseInt(this.value)||0)"></td>
+          <td style="color:#dc2626;font-size:11px">▲</td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">固都税精算金 <span style="font-size:9px;color:#aaa">受取</span></td>
+          <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.taxAdj||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;color:#16a34a" onchange="updateExit('taxAdj',parseInt(this.value)||0)"></td>
+          <td style="color:#16a34a;font-size:11px">＋</td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">残債 <span style="font-size:9px;color:#aaa">自動</span></td>
+          <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.remainDebt||autoRemainDebt||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;color:#dc2626" onchange="updateExit('remainDebt',parseInt(this.value)||0)"></td>
+          <td style="color:#dc2626;font-size:11px">▲</td>
+        </tr>
+        ${(ex.otherAdjs||[]).map((a,i)=>`<tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px"><input type="text" value="${a.label||''}" placeholder="精算項目名" style="font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;width:100px" onchange="updateExitOtherAdj(${i},'label',this.value)"></td>
+          <td style="padding:5px 6px;text-align:right"><input type="number" value="${a.amount||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateExitOtherAdj(${i},'amount',parseInt(this.value)||0)"></td>
+          <td style="text-align:center"><button class="btn-sm" style="color:#dc2626;font-size:10px" onclick="removeExitOtherAdj(${i})">✕</button></td>
+        </tr>`).join('')}
+        <tr>
+          <td colspan="3" style="padding:4px 6px">
+            <button class="btn-sm" onclick="addExitOtherAdj()" style="font-size:10px">＋ その他精算を追加</button>
+          </td>
+        </tr>
+        <tr style="border-top:1px solid #d0d0c8;font-weight:700">
+          <td style="padding:6px 6px">①売却による利益</td>
+          <td style="padding:6px 6px;text-align:right;font-size:14px" class="${saleProfit>=0?'g':'r'}">${saleProfit<0?'▲':''}${fmt(Math.abs(saleProfit))}</td>
+          <td></td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">取得来CF累計</td>
+          <td style="padding:5px 6px;text-align:right" class="${lifeCF>=0?'g':'r'}">${lifeCF<0?'▲':''}${fmt(Math.abs(lifeCF))}</td>
+          <td style="color:${lifeCF>=0?'#16a34a':'#dc2626'};font-size:11px">${lifeCF>=0?'＋':'▲'}</td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">譲渡税 <span style="font-size:9px;color:#aaa">自動</span></td>
+          <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.transferTax||autoTransferTax||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;color:#dc2626" onchange="updateExit('transferTax',parseInt(this.value)||0)"></td>
+          <td style="color:#dc2626;font-size:11px">▲</td>
+        </tr>
+        <tr style="border-top:1px solid #d0d0c8;font-weight:700;background:#fafaf8">
+          <td style="padding:6px 6px">②トータル利益</td>
+          <td style="padding:6px 6px;text-align:right;font-size:14px" class="${totalProfit>=0?'g':'r'}">${totalProfit<0?'▲':''}${fmt(Math.abs(totalProfit))}</td>
+          <td></td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">③年間利益 <span style="font-size:9px;color:#aaa">②÷${holdLabel}</span></td>
+          <td style="padding:5px 6px;text-align:right" class="${annualProfit>=0?'g':'r'}">${annualProfit<0?'▲':''}${fmt(Math.abs(annualProfit))}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td style="padding:5px 6px;color:#888">④自己資金利回り <span style="font-size:9px;color:#aaa">③÷自己資金${fmt(sf)}</span></td>
+          <td style="padding:5px 6px;text-align:right;font-weight:500" class="${annualYield>=0?'g':'r'}">${annualYield}%</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   <div class="card"><div class="ct" style="margin-bottom:12px">売却シミュレーション — ${p.name}</div>
   <div class="grid2" style="margin-bottom:12px">
@@ -3368,8 +3390,31 @@ function updateExit(field,value){
   }
   if(field==='agentFee') p.exit._agentFeeManual=true;
   if(field==='remainDebt') p.exit._remainDebtManual=true;
+  if(field==='transferTax') p.exit._transferTaxManual=true;
   saveProps();
   renderExit();
+}
+  function addExitOtherAdj(){
+  const pi=parseInt(currentProp);
+  const p=properties[pi];
+  if(!p.exit) p.exit={};
+  if(!p.exit.otherAdjs) p.exit.otherAdjs=[];
+  p.exit.otherAdjs.push({label:'',amount:0});
+  saveProps();
+  renderExit();
+}
+function removeExitOtherAdj(idx){
+  const pi=parseInt(currentProp);
+  const p=properties[pi];
+  p.exit.otherAdjs.splice(idx,1);
+  saveProps();
+  renderExit();
+}
+function updateExitOtherAdj(idx,field,value){
+  const pi=parseInt(currentProp);
+  const p=properties[pi];
+  p.exit.otherAdjs[idx][field]=value;
+  saveProps();
 }
 function calcExit(){
   const pi=parseInt(currentProp),p=properties[pi];if(!p)return;
