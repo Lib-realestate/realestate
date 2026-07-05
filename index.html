@@ -3211,7 +3211,13 @@ function renderExit(){
 if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style="padding:20px"><div class="ct" style="margin-bottom:8px">出口戦略 − 売却シミュレーション</div><p style="color:#888;font-size:12px">分析タブで取得価格を入力すると売却シミュレーションが表示されます。</p></div>';return;}
   if(!p.exit) p.exit={};
   const ex=p.exit;
-  const lifeCF=getLifetimeCF(parseInt(currentProp));
+  const pi2=parseInt(currentProp);
+  const lifeCF=getLifetimeCF(pi2);
+  // 残債の自動計算（手動上書きがなければ自動）
+  const autoRemainDebt=calcRemainDebt(pi2);
+  if(!ex._remainDebtManual) ex.remainDebt=autoRemainDebt;
+  // 仲介手数料の自動計算
+  if(ex.salePrice&&!ex._agentFeeManual) ex.agentFee=Math.round((ex.salePrice*0.03+60000)*1.1);
   const saleGain=ex.salePrice&&p.price?(ex.salePrice-p.price):0;
   const netProceeds=ex.salePrice?(ex.salePrice-(ex.agentFee||0)-(ex.taxAdj||0)-(ex.remainDebt||0)-(ex.transferTax||0)-(ex.otherAdj||0)):0;
   const totalReturn=netProceeds+lifeCF;
@@ -3238,8 +3244,8 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
         <input type="number" value="${ex.taxAdj||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('taxAdj',parseInt(this.value)||0)">
       </div>
       <div>
-        <div style="font-size:11px;color:#888;margin-bottom:3px">残債（円）</div>
-        <input type="number" value="${ex.remainDebt||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('remainDebt',parseInt(this.value)||0)">
+        <div style="font-size:11px;color:#888;margin-bottom:3px">残債（円）<span style="font-size:9px;color:#aaa">自動計算</span></div>
+        <input type="number" value="${ex.remainDebt||autoRemainDebt||''}" placeholder="0" style="width:100%;text-align:right" onchange="updateExit('remainDebt',parseInt(this.value)||0)">
       </div>
       <div>
         <div style="font-size:11px;color:#888;margin-bottom:3px">譲渡税（円）</div>
@@ -3266,7 +3272,7 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
           <div style="font-size:16px;font-weight:500" class="${netProceeds>=0?'g':'r'}">${netProceeds<0?'▲':''}${fmt(Math.abs(netProceeds))}</div>
         </div>
         <div class="card" style="padding:10px 12px;margin:0">
-          <div style="font-size:10px;color:#888;margin-bottom:3px">取得来CF累計</div>
+          <div style="font-size:10px;color:#888;margin-bottom:3px">取得来CF累計<span style="font-size:9px;color:#aaa">（現時点）</span></div>
           <div style="font-size:16px;font-weight:500" class="${lifeCF>=0?'g':'r'}">${lifeCF<0?'▲':''}${fmt(Math.abs(lifeCF))}</div>
         </div>
         <div class="card" style="padding:10px 12px;margin:0">
@@ -3316,16 +3322,28 @@ function syncSegToLoan(pi){
   if(loanInput) loanInput.value=total.toLocaleString();
   calcAnalysis(pi);
 }
-  function updateExit(field,value){
+  function calcRemainDebt(pi){
+  const p=properties[pi];
+  if(!p)return 0;
+  const totalLoan=p.loan||0;
+  const repaidPrincipal=(p.transactions||[])
+    .filter(t=>t.type==='repayment'&&t.cat==='元金')
+    .reduce((s,t)=>s+t.amount,0);
+  return Math.max(0,totalLoan-repaidPrincipal);
+}
+
+function updateExit(field,value){
   const pi=parseInt(currentProp);
   const p=properties[pi];
   if(!p)return;
   if(!p.exit)p.exit={};
   p.exit[field]=value;
-  // 売却価格が入力されたら仲介手数料を自動計算
-  if(field==='salePrice'&&value>0&&!p.exit.agentFee){
-    p.exit.agentFee=Math.round((value*0.03+60000)*1.1);
+  if(field==='salePrice'&&value>0){
+    if(!p.exit._agentFeeManual) p.exit.agentFee=Math.round((value*0.03+60000)*1.1);
+    if(!p.exit._remainDebtManual) p.exit.remainDebt=calcRemainDebt(pi);
   }
+  if(field==='agentFee') p.exit._agentFeeManual=true;
+  if(field==='remainDebt') p.exit._remainDebtManual=true;
   saveProps();
   renderExit();
 }
