@@ -3215,7 +3215,7 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
   const lifeCF=getLifetimeCF(pi2);
   const autoRemainDebt=calcRemainDebt(pi2);
   if(!ex._remainDebtManual) ex.remainDebt=autoRemainDebt;
-  if(ex.salePrice&&!ex._agentFeeManual) ex.agentFee=Math.round((ex.salePrice*0.03+60000)*1.1);
+  if(ex.salePrice&&!ex._agentFeeManual){const rate=(ex.agentFeeRate||3)/100;ex.agentFee=Math.round((ex.salePrice*rate+60000)*1.1);}
   if(!ex.otherAdjs) ex.otherAdjs=[];
 
   // 譲渡税自動計算
@@ -3279,7 +3279,12 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
           <td></td>
         </tr>
         <tr style="border-bottom:0.5px solid #f0f0e8">
-          <td style="padding:5px 6px;color:#888">仲介手数料 <span style="font-size:9px;color:#aaa">自動</span></td>
+          <td style="padding:5px 6px;color:#888">仲介手数料率(%)</td>
+          <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.agentFeeRate||3}" step="0.1" min="0" max="10" style="width:60px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="updateExit('agentFeeRate',parseFloat(this.value)||3)">%</td>
+          <td></td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888;padding-left:16px">仲介手数料 <span style="font-size:9px;color:#aaa">自動</span></td>
           <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.agentFee||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;color:#dc2626" onchange="updateExit('agentFee',parseInt(this.value)||0)"></td>
           <td style="color:#dc2626;font-size:11px">▲</td>
         </tr>
@@ -3385,8 +3390,13 @@ function updateExit(field,value){
   if(!p.exit)p.exit={};
   p.exit[field]=value;
   if(field==='salePrice'&&value>0){
-    if(!p.exit._agentFeeManual) p.exit.agentFee=Math.round((value*0.03+60000)*1.1);
+    const rate=(p.exit.agentFeeRate||3)/100;
+    if(!p.exit._agentFeeManual) p.exit.agentFee=Math.round((value*rate+60000)*1.1);
     if(!p.exit._remainDebtManual) p.exit.remainDebt=calcRemainDebt(pi);
+  }
+  if(field==='agentFeeRate'&&p.exit.salePrice){
+    const rate=value/100;
+    if(!p.exit._agentFeeManual) p.exit.agentFee=Math.round((p.exit.salePrice*rate+60000)*1.1);
   }
   if(field==='agentFee') p.exit._agentFeeManual=true;
   if(field==='remainDebt') p.exit._remainDebtManual=true;
