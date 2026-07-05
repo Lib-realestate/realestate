@@ -3262,32 +3262,56 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
     </div>
     ${ex.salePrice?`
     <div style="border-top:1px solid #e0e0d8;padding-top:12px">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <div class="card" style="padding:10px 12px;margin:0">
-          <div style="font-size:10px;color:#888;margin-bottom:3px">売却益</div>
-          <div style="font-size:16px;font-weight:500" class="${saleGain>=0?'g':'r'}">${saleGain<0?'▲':''}${fmt(Math.abs(saleGain))}</div>
-        </div>
-        <div class="card" style="padding:10px 12px;margin:0">
-          <div style="font-size:10px;color:#888;margin-bottom:3px">手取り額</div>
-          <div style="font-size:16px;font-weight:500" class="${netProceeds>=0?'g':'r'}">${netProceeds<0?'▲':''}${fmt(Math.abs(netProceeds))}</div>
-        </div>
-        <div class="card" style="padding:10px 12px;margin:0">
-          <div style="font-size:10px;color:#888;margin-bottom:3px">取得来CF累計<span style="font-size:9px;color:#aaa">（現時点）</span></div>
-          <div style="font-size:16px;font-weight:500" class="${lifeCF>=0?'g':'r'}">${lifeCF<0?'▲':''}${fmt(Math.abs(lifeCF))}</div>
-        </div>
-        <div class="card" style="padding:10px 12px;margin:0">
-          <div style="font-size:10px;color:#888;margin-bottom:3px">総合収益（手取り+CF累計）</div>
-          <div style="font-size:16px;font-weight:500" class="${totalReturn>=0?'g':'r'}">${totalReturn<0?'▲':''}${fmt(Math.abs(totalReturn))}</div>
-        </div>
-        <div class="card" style="padding:10px 12px;margin:0">
-          <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金回収率</div>
-          <div style="font-size:16px;font-weight:500" class="${sf>0&&totalReturn/sf>=1?'g':'r'}">${sf>0?Math.round(totalReturn/sf*100)+'%':'—'}</div>
-        </div>
-        <div class="card" style="padding:10px 12px;margin:0">
-          <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金</div>
-          <div style="font-size:16px;font-weight:500">▲${fmt(sf)}</div>
-        </div>
-      </div>
+      ${(()=>{
+        // 所有期間計算
+        const acqDate=p.acquireDate?new Date(p.acquireDate):null;
+        const saleDate=ex.saleDate?new Date(ex.saleDate):new Date();
+        const holdDays=acqDate?Math.max(1,Math.round((saleDate-acqDate)/(1000*60*60*24))):0;
+        const holdYears=holdDays/365;
+        const holdLabel=acqDate?`${Math.floor(holdYears)}年${Math.round((holdYears%1)*12)}ヶ月`:'—';
+        // ①売却による利益（手取り額）
+        const saleProfit=netProceeds;
+        // ②トータル利益（手取り+CF累計）
+        const totalProfit=netProceeds+lifeCF;
+        // ③年間利益
+        const annualProfit=holdYears>0?Math.round(totalProfit/holdYears):0;
+        // ④自己資金利回り（年間利益/自己資金）
+        const annualYield=sf>0&&holdYears>0?Math.round(totalProfit/holdYears/sf*1000)/10:0;
+        return`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+          <div class="card" style="padding:10px 12px;margin:0;grid-column:1/-1">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">所有期間</div>
+            <div style="font-size:16px;font-weight:500">${holdLabel}<span style="font-size:11px;color:#888;margin-left:8px">（${holdDays}日）</span></div>
+          </div>
+          <div class="card" style="padding:10px 12px;margin:0">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">①売却による利益<span style="font-size:9px;margin-left:4px">（手取り額）</span></div>
+            <div style="font-size:16px;font-weight:500" class="${saleProfit>=0?'g':'r'}">${saleProfit<0?'▲':''}${fmt(Math.abs(saleProfit))}</div>
+          </div>
+          <div class="card" style="padding:10px 12px;margin:0">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">取得来CF累計</div>
+            <div style="font-size:16px;font-weight:500" class="${lifeCF>=0?'g':'r'}">${lifeCF<0?'▲':''}${fmt(Math.abs(lifeCF))}</div>
+          </div>
+          <div class="card" style="padding:10px 12px;margin:0;grid-column:1/-1;border:1px solid ${totalProfit>=0?'#16a34a':'#dc2626'}">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">②トータル利益<span style="font-size:9px;margin-left:4px">（手取り+CF累計）</span></div>
+            <div style="font-size:20px;font-weight:700" class="${totalProfit>=0?'g':'r'}">${totalProfit<0?'▲':''}${fmt(Math.abs(totalProfit))}</div>
+          </div>
+          <div class="card" style="padding:10px 12px;margin:0">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">③年間利益<span style="font-size:9px;margin-left:4px">（トータル÷所有年数）</span></div>
+            <div style="font-size:16px;font-weight:500" class="${annualProfit>=0?'g':'r'}">${annualProfit<0?'▲':''}${fmt(Math.abs(annualProfit))}</div>
+          </div>
+          <div class="card" style="padding:10px 12px;margin:0">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">④自己資金利回り<span style="font-size:9px;margin-left:4px">（年間利益÷自己資金）</span></div>
+            <div style="font-size:16px;font-weight:500" class="${annualYield>=0?'g':'r'}">${annualYield}%</div>
+          </div>
+          <div class="card" style="padding:10px 12px;margin:0">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金</div>
+            <div style="font-size:16px;font-weight:500">▲${fmt(sf)}</div>
+          </div>
+          <div class="card" style="padding:10px 12px;margin:0">
+            <div style="font-size:10px;color:#888;margin-bottom:3px">自己資金回収率</div>
+            <div style="font-size:16px;font-weight:500" class="${sf>0&&totalProfit/sf>=1?'g':'r'}">${sf>0?Math.round(totalProfit/sf*100)+'%':'—'}</div>
+          </div>
+        </div>`;
+      })()}
     </div>`:'<div style="text-align:center;color:#aaa;font-size:12px;padding:16px">売却価格を入力すると収益計算が表示されます</div>'}
   </div>
   <div class="card"><div class="ct" style="margin-bottom:12px">売却シミュレーション — ${p.name}</div>
