@@ -991,7 +991,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
   const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
   const COMMON_MONTHLY=Array.from({length:12},(_,i)=>{
     const ym2=`${yr4}-${String(MONTH_BASE[i]).padStart(2,'0')}`;
-    return (commonTransactions||[]).filter(t=>t.ym===ym2).reduce((s,t)=>s+t.amount,0);
+    return (commonTransactions||[]).filter(t=>t.ym===ym2).reduce((s,t)=>s+t.amount,0)+getRecurringAmount(null,ym2);
   });
   const TAX_MONTHLY=Array.from({length:12},(_,i)=>{
     const ym2=`${yr4}-${String(MONTH_BASE[i]).padStart(2,'0')}`;
