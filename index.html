@@ -3085,28 +3085,11 @@ function saveManualCommonTx(){
 }
 function addRecurringTx(pi){
   const isCommon=pi===null;
-  const existingRules=isCommon?(window.commonRecurringRules||[]):((pi!==null&&properties[pi]?.recurringRules)||[]);
-  const rulesHTML=existingRules.length?`
-    <div style="margin-bottom:12px;border:0.5px solid #e0e0d8;border-radius:8px;overflow:hidden">
-      <div style="padding:8px 12px;background:#fafaf8;font-size:11px;font-weight:500;color:#888">登録済み定期明細</div>
-      ${existingRules.map((r,i)=>`<div style="padding:8px 12px;border-top:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
-        <div>
-          <span style="font-weight:500">${r.desc}</span>
-          <span style="color:#888;margin-left:8px">¥${fmt(r.amount)}/月</span>
-          <span style="color:#888;margin-left:8px">${r.startYM}〜${r.endYM||'継続中'}</span>
-        </div>
-        <div style="display:flex;gap:4px">
-          <button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(${pi},${i})">編集</button>
-          <button class="btn-sm" style="font-size:10px;color:#dc2626" onclick="deleteRecurringRule(${pi},${i})">削除</button>
-        </div>
-      </div>`).join('')}
-    </div>`:'';
   const catOptions=isCommon
     ?COMMON_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')
     :SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
-    ${rulesHTML}
-    <div style="font-size:13px;font-weight:500;margin-bottom:12px">新規追加</div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を追加</div>
     <div class="form-group">
       <label class="form-label">内容</label>
       <input type="text" id="rtDesc" placeholder="例：税理士顧問料" style="width:100%">
