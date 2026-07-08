@@ -1325,12 +1325,29 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         </tr>`;
         return txRows+sumRow;
       }).join('');
-      return`<div class="card" style="padding:0;overflow:hidden;margin-top:10px">
+      const commonRules=window.commonRecurringRules||[];
+      const commonRecurringHTML=commonRules.length?`
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
+        <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
+          <span class="ct" style="font-size:12px">🔁 定期明細 <span class="rtoggle">▼</span></span>
+          <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e;font-size:11px" onclick="event.stopPropagation();addRecurringTx(null)">＋ 追加</button>
+        </div>
+        <div>
+        ${commonRules.map((r,i)=>`<div style="padding:8px 14px;border-top:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
+          <div>
+            <span style="font-weight:500">${r.desc}</span>
+            <span style="color:#dc2626;margin-left:8px">▲${fmt(r.amount)}/月</span>
+            <span style="color:#888;margin-left:8px">${r.startYM}〜${r.endYM||'継続中'}</span>
+          </div>
+          <button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(null,${i})">編集</button>
+        </div>`).join('')}
+        </div>
+      </div>`:'';
+      return`${commonRecurringHTML}<div class="card" style="padding:0;overflow:hidden;margin-top:10px">
         <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
         <span class="ct">明細履歴</span>
         <div style="display:flex;gap:6px">
           <button class="btn-add" onclick="addManualCommonTx()">＋ 明細追加</button>
-          <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="addRecurringTx(null)">🔁 定期追加</button>
         </div>
       </div>
         <div style="overflow-x:auto;overflow-y:auto;max-height:400px"><table style="border-collapse:collapse;width:100%;min-width:600px">
@@ -1455,7 +1472,6 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <span class="ct">明細履歴</span>
         <div style="display:flex;gap:6px">
           <button class="btn-add" onclick="addManualTx(${pi})">＋ 明細追加</button>
-          <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="addRecurringTx(${pi})">🔁 定期追加</button>
         </div>
       </div>
       <div style="overflow-x:auto;overflow-y:auto;max-height:400px"><table style="border-collapse:collapse;width:100%;min-width:600px">
