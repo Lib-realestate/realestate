@@ -1300,7 +1300,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       return`<div class="card" style="padding:0;overflow:hidden;margin-top:10px">
         <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
         <span class="ct">明細履歴</span>
-        <button class="btn-add" onclick="addManualCommonTx()">＋ 明細追加</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-add" onclick="addManualCommonTx()">＋ 明細追加</button>
+          <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="addRecurringTx(null)">🔁 定期追加</button>
+        </div>
       </div>
         <div style="overflow-x:auto;overflow-y:auto;max-height:400px"><table style="border-collapse:collapse;width:100%;min-width:600px">
           ${tableHead}<tbody>${allSorted.length?rows:`<tr><td colspan="7" style="padding:20px;text-align:center;color:#ccc;font-size:12px">データなし</td></tr>`}</tbody>
@@ -1383,7 +1386,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     <div class="card" style="padding:0;overflow:hidden">
       <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
         <span class="ct">明細履歴</span>
-        <button class="btn-add" onclick="addManualTx(${pi})">＋ 明細追加</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-add" onclick="addManualTx(${pi})">＋ 明細追加</button>
+          <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="addRecurringTx(${pi})">🔁 定期追加</button>
+        </div>
       </div>
       <div style="overflow-x:auto;overflow-y:auto;max-height:400px"><table style="border-collapse:collapse;width:100%;min-width:600px">
         ${unifiedHead}<tbody>${allTxSorted.length?unifiedRows:`<tr><td colspan="8" style="padding:20px;text-align:center;color:#ccc;font-size:12px">データなし</td></tr>`}</tbody>
@@ -3031,6 +3037,93 @@ function saveManualCommonTx(){
   closeModal('classifyModal');
   renderCashflow();
   showToast('共通明細を追加しました','success');
+}
+function addRecurringTx(pi){
+  const isCommon=pi===null;
+  const catOptions=isCommon
+    ?COMMON_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')
+    :SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('');
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を一括追加</div>
+    <div class="form-group">
+      <label class="form-label">内容</label>
+      <input type="text" id="rtDesc" placeholder="例：税理士顧問料" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <select id="rtCat" style="width:100%">${catOptions}</select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">月額（円）</label>
+      <input type="number" id="rtAmt" placeholder="0" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">開始年月</label>
+      <input type="month" id="rtStart" value="${nowYM()}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">終了年月 <span style="font-size:10px;color:#888">（空欄=現在月まで）</span></label>
+      <input type="month" id="rtEnd" style="width:100%">
+    </div>
+    <div id="rtPreview" style="font-size:11px;color:#888;margin-top:8px"></div>`;
+  // プレビュー更新
+  const update=()=>{
+    const start=document.getElementById('rtStart')?.value;
+    const end=document.getElementById('rtEnd')?.value||nowYM();
+    const amt=parseInt(document.getElementById('rtAmt')?.value)||0;
+    if(start&&amt){
+      const months=Math.max(0,mdiff(start,end)+1);
+      document.getElementById('rtPreview').textContent=`→ ${months}ヶ月分 合計${fmt(amt*months)}円を登録します`;
+    }
+  };
+  setTimeout(()=>{
+    document.getElementById('rtStart')?.addEventListener('input',update);
+    document.getElementById('rtEnd')?.addEventListener('input',update);
+    document.getElementById('rtAmt')?.addEventListener('input',update);
+  },0);
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='定期明細追加';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
+    <button class="btn btn-primary" onclick="saveRecurringTx(${pi})">一括追加</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+function saveRecurringTx(pi){
+  const isCommon=pi===null;
+  const desc=document.getElementById('rtDesc')?.value||'';
+  const cat=document.getElementById('rtCat')?.value;
+  const amount=parseInt(document.getElementById('rtAmt')?.value)||0;
+  const start=document.getElementById('rtStart')?.value;
+  const end=document.getElementById('rtEnd')?.value||nowYM();
+  if(!start||amount<=0){showToast('開始年月と金額を入力してください','error');return;}
+  const months=Math.max(0,mdiff(start,end)+1);
+  if(months<=0){showToast('開始年月が終了年月より後になっています','error');return;}
+
+  let count=0;
+  for(let m=0;m<months;m++){
+    const ym=addMonths(start,m);
+    const tx={
+      ym,type:'expense',amount,desc,cat,
+      isMiscCost:false,manualEntry:true,
+      _recurring:true,
+      createdAt:new Date().toISOString(),
+      driveFileId:null,driveLink:null,driveFileName:null
+    };
+    if(isCommon){
+      if(!commonTransactions)commonTransactions=[];
+      // 重複チェック
+      const dup=commonTransactions.find(t=>t.ym===ym&&t.desc===desc&&t.amount===amount&&t._recurring);
+      if(!dup){commonTransactions.push(tx);count++;}
+    } else {
+      if(!properties[pi].transactions)properties[pi].transactions=[];
+      const dup=properties[pi].transactions.find(t=>t.ym===ym&&t.desc===desc&&t.amount===amount&&t._recurring);
+      if(!dup){properties[pi].transactions.push(tx);count++;}
+    }
+  }
+  saveProps();
+  closeModal('classifyModal');
+  renderCashflow();
+  showToast(`${count}ヶ月分の定期明細を追加しました`,'success');
 }
 let _mtDocFile=null;
 function handleMtDocFile(e){
