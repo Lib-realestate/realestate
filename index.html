@@ -1313,7 +1313,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
             <td style="padding:6px 8px;color:#888;font-size:11px;white-space:nowrap">${t.ym||'—'}</td>
             <td style="padding:6px 8px;font-size:12px">${t.desc||'—'}${t._recurring?'<span style="background:#fef9c3;color:#854d0e;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:6px">定期</span>':''}</td>
           <td style="padding:6px 8px;font-size:11px;color:#888;white-space:nowrap">${t.cat||'—'}</td>
-            <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.amount>0?'▲'+t.amount.toLocaleString():'—'}</td>
+            <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.amount>0?'▲'+t.amount.toLocaleString():t.amount<0?'+'+Math.abs(t.amount).toLocaleString():'—'}</td>
             <td style="padding:6px 8px;text-align:center">${t._recurring?`<button class="btn-sm" style="font-size:10px" onclick="uploadRecurringDoc(null,${t._ruleIdx||0},'${t.ym}')">格納</button>`:linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:!t.driveLink?`<button class="btn-sm" style="font-size:10px" onclick="uploadCommonTxDoc(${cidx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
             <td style="padding:6px 8px;text-align:center;white-space:nowrap">
               ${t._recurring?`<button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(null,${t._ruleIdx||0})">編集</button>`:`<button class="btn-sm" style="font-size:10px" onclick="editCommonTxModal(${cidx})">編集</button>`}
@@ -1431,7 +1431,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <td style="padding:6px 8px;font-size:12px">${t.desc||'—'}${t._recurring?'<span style="background:#fef9c3;color:#854d0e;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:6px">定期</span>':''}</td>
           <td style="padding:6px 8px;font-size:11px;color:#888;white-space:nowrap">${t.cat||'—'}</td>
           <td style="padding:6px 8px;text-align:right;font-size:12px;color:#16a34a">${t.type==='income'?t.amount.toLocaleString():'—'}</td>
-          <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.type==='expense'?'▲'+t.amount.toLocaleString():'—'}</td>
+          <td style="padding:6px 8px;text-align:right;font-size:12px" class="${t.type==='expense'&&t.amount<0?'g':t.type==='expense'?'r':''}">${t.type==='expense'?(t.amount<0?'+'+Math.abs(t.amount).toLocaleString():'▲'+t.amount.toLocaleString()):'—'}</td>
           <td style="padding:6px 8px;text-align:center">${t.isMiscCost?'✓':'—'}</td>
           <td style="padding:6px 8px;text-align:center">${t._recurring?`<button class="btn-sm" style="font-size:10px" onclick="uploadRecurringDoc(${pi},${t._ruleIdx||0},'${t.ym}')">格納</button>`:linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`}</td>
           <td style="padding:4px 6px;text-align:center;white-space:nowrap">
