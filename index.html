@@ -1484,7 +1484,8 @@ const _drawCfChart=()=>{
   if(!cfEl)return;
     const repayData=indices.map(i=>isFutureIdx(i)?0:getMonthRepay(i,pi===null?null:pi));
 const netData=indices.map((idx,i)=>getMonthCF(idx,pi));
-    const allVals=[...incData,...expData.map((v,i)=>v+(repayData[i]||0)),...netData];
+const graphExpData=indices.map(i=>isAll?properties.reduce((s,p,pi2)=>s+getMonthEEx(i,pi2),0)+(COMMON_MONTHLY[i]||0):getMonthEEx(i,pi));
+    const allVals=[...incData,...graphExpData,...netData];
     const rawMax=Math.max(...allVals,0);
     const rawMin=Math.min(...allVals,0);
     const maxVal=rawMax*1.1||1;
@@ -1512,7 +1513,7 @@ const netData=indices.map((idx,i)=>getMonthCF(idx,pi));
             const barH=Math.abs(zero-y);
             return v>0?`<rect x="${x-barW}" y="${y}" width="${barW}" height="${barH}" fill="#86efac" opacity="0.8"/>`:'';
           }).join('')}
-          ${expData.map((v,i)=>{
+          ${graphExpData.map((v,i)=>{
             const x=xScale(i);
             const barW=gW/labels.length*0.35;
             const zero=yScale(0);
