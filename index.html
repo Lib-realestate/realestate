@@ -894,6 +894,8 @@ function updateIconBtns(){
 
 /* ── 収支タブ ── */
 function renderCashflow(){
+  const _scrollY=window.scrollY;
+  setTimeout(()=>window.scrollTo(0,_scrollY),0);
   const isAll=currentProp==='all';
   const pi=isAll?null:parseInt(currentProp);
   const mi=getMonthlyIdx();
