@@ -3221,20 +3221,6 @@ function getRecurringAmount(pi,ym){
   const rules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
   return rules.filter(r=>r.startYM<=ym&&(!r.endYM||r.endYM>=ym)).reduce((s,r)=>s+r.amount,0);
 }
-function deleteRecurringRule(pi,idx){
-  if(!confirm('この定期明細を削除しますか？'))return;
-  const isCommon=pi===null;
-  if(isCommon)window.commonRecurringRules.splice(idx,1);
-  else properties[pi].recurringRules.splice(idx,1);
-  saveProps();
-  renderCashflow();
-  showToast('定期明細を削除しました','success');
-}
-
-function getRecurringAmount(pi,ym){
-  const rules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
-  return rules.filter(r=>r.startYM<=ym&&(!r.endYM||r.endYM>=ym)).reduce((s,r)=>s+r.amount,0);
-}
 function editRecurringRule(pi,idx){
   const isCommon=pi===null;
   const rules=isCommon?window.commonRecurringRules:(properties[pi]?.recurringRules||[]);
