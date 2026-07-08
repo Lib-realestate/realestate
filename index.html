@@ -3208,6 +3208,15 @@ function editRecurringRule(pi,idx){
     <button class="btn btn-primary" onclick="saveRecurringTx(${pi},${idx})">保存</button>`;
   modal.classList.add('open');modal.style.display='flex';
 }
+function deleteRecurringRule(pi,idx){
+  if(!confirm('この定期明細を削除しますか？'))return;
+  const isCommon=pi===null;
+  if(isCommon)window.commonRecurringRules.splice(idx,1);
+  else properties[pi].recurringRules.splice(idx,1);
+  saveProps();
+  renderCashflow();
+  showToast('定期明細を削除しました','success');
+}
 function getRecurringAmount(pi,ym){
   // 定期ルールから指定月の金額を計算
   const rules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
