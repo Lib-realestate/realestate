@@ -3294,6 +3294,7 @@ function editRecurringRule(pi,idx){
   const modal=document.getElementById('classifyModal');
   modal.querySelector('.modal-title').textContent='定期明細編集';
   modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" style="color:#dc2626" onclick="deleteRecurringRule(${pi},${idx})">削除</button>
     <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
     <button class="btn btn-primary" onclick="saveRecurringTx(${pi},${idx})">保存</button>`;
   modal.classList.add('open');modal.style.display='flex';
