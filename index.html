@@ -3475,7 +3475,7 @@ function saveManualTx(pi){
   const desc=document.getElementById('mtDesc')?.value||'';
   const cat=document.getElementById('mtCat')?.value;
   const amount=parseInt(document.getElementById('mtAmt')?.value)||0;
-  if(!ym||amount<=0){showToast('年月と金額を入力してください','error');return;}
+  if(!ym||amount===0){showToast('年月と金額を入力してください','error');return;}
   const p=properties[pi];
   if(!p.transactions)p.transactions=[];
   const isMisc=document.getElementById('mtMisc')?.checked||false;
