@@ -429,6 +429,7 @@ async function tryAutoLogin(){
       document.getElementById('authScreen').style.display='none';
       document.getElementById('appScreen').style.display='block';
       // ローカルを最優先で読み込む
+      window.commonRecurringRules=JSON.parse(localStorage.getItem('re_common_recurring')||'[]');
 const localRaw=localStorage.getItem('re_props');
 if(localRaw){
   try{
@@ -686,6 +687,7 @@ const driveTime=new Date(json.savedAt||0).getTime();
       }
       localStorage.setItem('re_props',JSON.stringify(properties));
       return true;
+         }
   }catch(e){console.warn('Drive load error:',e);}
   return false;
 }
