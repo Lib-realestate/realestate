@@ -1275,7 +1275,22 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     if(isAll){
       // 全物件の明細履歴
       const yr2=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
-      const allSorted=(commonTransactions||[]).map((t,i)=>({...t,_cidx:i})).filter(t=>{const y=t.ym?parseInt(t.ym.slice(0,4)):0;return y===yr2;}).sort((a,b)=>(a.ym||'').localeCompare(b.ym||''));
+      const commonExpanded=[];
+    (window.commonRecurringRules||[]).forEach(r=>{
+      const endYM=r.endYM||nowYM();
+      let ym2=r.startYM;
+      while(ym2<=endYM){
+        if(parseInt(ym2.slice(0,4))===yr2){
+          commonExpanded.push({
+            ym:ym2,type:'expense',amount:r.amount,desc:r.desc,cat:r.cat,
+            isMiscCost:false,_recurring:true,manualEntry:false,
+            driveFileId:null,driveLink:null,_cidx:-1
+          });
+        }
+        ym2=addMonths(ym2,1);
+      }
+    });
+    const allSorted=[...(commonTransactions||[]).map((t,i)=>({...t,_cidx:i})).filter(t=>{const y=t.ym?parseInt(t.ym.slice(0,4)):0;return y===yr2;}),...commonExpanded].sort((a,b)=>(a.ym||'').localeCompare(b.ym||''));
       const byMonth={};
       allSorted.forEach(t=>{const ym2=t.ym||'不明';if(!byMonth[ym2])byMonth[ym2]=[];byMonth[ym2].push(t);});
       const tableHead=`<thead style="background:#fafaf8;position:sticky;top:0;z-index:2"><tr>
@@ -1352,7 +1367,23 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       </tr>`;
     };
     // 日付順にソート
-    const allTxSorted=[...txsAll].sort((a,b)=>(a.ym||'').localeCompare(b.ym||''));
+    // 定期ルールを明細に展開
+    const recurringExpanded=[];
+    (properties[pi]?.recurringRules||[]).forEach(r=>{
+      const endYM=r.endYM||nowYM();
+      let ym2=r.startYM;
+      while(ym2<=endYM){
+        if(parseInt(ym2.slice(0,4))===yr2){
+          recurringExpanded.push({
+            ym:ym2,type:'expense',amount:r.amount,desc:r.desc,cat:r.cat,
+            isMiscCost:false,_recurring:true,_ruleIdx:0,manualEntry:false,
+            driveFileId:null,driveLink:null
+          });
+        }
+        ym2=addMonths(ym2,1);
+      }
+    });
+    const allTxSorted=[...txsAll,...recurringExpanded].sort((a,b)=>(a.ym||'').localeCompare(b.ym||''));
     // 月ごとにグループ化
     const byMonth={};
     allTxSorted.forEach(t=>{
