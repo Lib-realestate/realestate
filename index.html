@@ -1483,7 +1483,7 @@ const _drawCfChart=()=>{
   const cfEl=document.getElementById('cfChart');
   if(!cfEl)return;
     const repayData=indices.map(i=>isFutureIdx(i)?0:getMonthRepay(i,pi===null?null:pi));
-const netData=incData.map((v,i)=>v-expData[i]-repayData[i]);
+const netData=indices.map((idx,i)=>getMonthCF(idx,pi));
     const allVals=[...incData,...expData.map((v,i)=>v+(repayData[i]||0)),...netData];
     const rawMax=Math.max(...allVals,0);
     const rawMin=Math.min(...allVals,0);
@@ -3254,6 +3254,20 @@ function stopRecurringTx(pi,desc,amount,endYM){
   showToast(`${endYM}以降の定期明細を削除しました`,'success');
 }
 function saveRecurringTx(pi,editIdx=null){
+  // 物件選択が変わった場合は移動
+  const selProp=document.getElementById('rtProp')?.value;
+  if(selProp!==undefined){
+    const newPi=selProp==='null'?null:parseInt(selProp);
+    if(newPi!==pi&&editIdx!==null){
+      // 古いルールを削除
+      const oldRules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
+      oldRules.splice(editIdx,1);
+      pi=newPi;
+      editIdx=null;
+    } else {
+      pi=newPi;
+    }
+  }
   const isCommon=pi===null;
   const desc=document.getElementById('rtDesc')?.value||'';
   const cat=document.getElementById('rtCat')?.value;
@@ -3284,8 +3298,11 @@ function editRecurringRule(pi,idx){
   const catOptions=isCommon
     ?(window.COMMON_CATS||['共通経費','税金等']).map(c=>`<option value="${c}" ${r.cat===c?'selected':''}>${c}</option>`).join('')
     :SUB_FOLDERS.map(s=>`<option value="${s}" ${r.cat===s?'selected':''}>${s}</option>`).join('');
+  const propOptions=`<option value="null" ${isCommon?'selected':''}>全物件（共通）</option>`
+    +properties.map((p,i)=>`<option value="${i}" ${!isCommon&&pi===i?'selected':''}>${p.name}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を編集</div>
+    <div class="form-group"><label class="form-label">物件</label><select id="rtProp" style="width:100%">${propOptions}</select></div>
     <div class="form-group"><label class="form-label">内容</label><input type="text" id="rtDesc" value="${r.desc||''}" style="width:100%"></div>
     <div class="form-group"><label class="form-label">カテゴリ</label><select id="rtCat" style="width:100%">${catOptions}</select></div>
     <div class="form-group"><label class="form-label">月額（円）</label><input type="number" id="rtAmt" value="${r.amount||0}" style="width:100%"></div>
