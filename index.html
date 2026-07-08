@@ -2858,6 +2858,10 @@ function toggleMiscCost(pi,txIdx,checked){
         <span class="form-label" style="margin:0">諸費用に含める</span>
       </label>
     </div>
+    ${t._recurring?`<div class="form-group">
+      <label class="form-label">定期明細の終了年月 <span style="font-size:10px;color:#888">（空欄=継続中）</span></label>
+      <input type="month" id="etRecurringEnd" style="width:100%">
+    </div>`:''}
     <div class="form-group">
       <label class="form-label">書類（任意）</label>
       <div id="mtDocDropZone" style="border:2px dashed #d0d0c8;border-radius:8px;padding:16px;text-align:center;cursor:pointer"
@@ -2889,6 +2893,14 @@ function saveTxModal(pi,idx){
   t.amount=parseInt(document.getElementById('etAmt')?.value)||0;
   t.isMiscCost=document.getElementById('etMisc')?.checked||false;
   if(t.isMiscCost) toggleMiscCost(pi,idx,true);
+  // 定期明細の終了月設定
+  if(t._recurring){
+    const endYM=document.getElementById('etRecurringEnd')?.value||'';
+    // recurringRulesの対応するルールを更新
+    const rules=properties[pi]?.recurringRules||[];
+    const rule=rules.find(r=>r.desc===t.desc&&r.amount===t.amount);
+    if(rule&&endYM) rule.endYM=endYM;
+  }
   saveProps();
   closeModal('classifyModal');
   renderCashflow();
