@@ -546,8 +546,10 @@ async function syncFromDrive(){
     if(!localSavedAt||!driveSavedAt||(driveSavedAt>localSavedAt)){
       properties=json.properties;
       if(json.commonTransactions)commonTransactions=json.commonTransactions;
+      if(json.commonRecurringRules)window.commonRecurringRules=json.commonRecurringRules;
       localStorage.setItem('re_props',JSON.stringify(properties));
       localStorage.setItem('re_common',JSON.stringify(commonTransactions));
+      localStorage.setItem('re_common_recurring',JSON.stringify(window.commonRecurringRules||[]));
       _driveSavedAt=driveSavedAt;
       const prevProp=currentProp;
       buildPropSelector();buildYearSel();
@@ -676,9 +678,14 @@ const driveTime=new Date(json.savedAt||0).getTime();
         commonTransactions=json.commonTransactions;
         localStorage.setItem('re_common',JSON.stringify(commonTransactions));
       }
+      if(json.commonRecurringRules){
+        window.commonRecurringRules=json.commonRecurringRules;
+        localStorage.setItem('re_common_recurring',JSON.stringify(window.commonRecurringRules));
+      } else {
+        window.commonRecurringRules=JSON.parse(localStorage.getItem('re_common_recurring')||'[]');
+      }
       localStorage.setItem('re_props',JSON.stringify(properties));
       return true;
-    }
   }catch(e){console.warn('Drive load error:',e);}
   return false;
 }
