@@ -3217,10 +3217,6 @@ function deleteRecurringRule(pi,idx){
   renderCashflow();
   showToast('定期明細を削除しました','success');
 }
-function getRecurringAmount(pi,ym){
-  const rules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
-  return rules.filter(r=>r.startYM<=ym&&(!r.endYM||r.endYM>=ym)).reduce((s,r)=>s+r.amount,0);
-}
 function editRecurringRule(pi,idx){
   const isCommon=pi===null;
   const rules=isCommon?window.commonRecurringRules:(properties[pi]?.recurringRules||[]);
