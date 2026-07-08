@@ -2877,8 +2877,14 @@ function toggleMiscCost(pi,txIdx,checked){
   function editTxModal(pi,idx){
   const t=properties[pi]?.transactions?.[idx];
   if(!t)return;
+  const propOptions=`<option value="common">全物件（共通）</option>`
+    +properties.map((p,i)=>`<option value="${i}" ${i===pi?'selected':''}>${p.name}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">明細を編集</div>
+    <div class="form-group">
+      <label class="form-label">物件</label>
+      <select id="etProp" style="width:100%">${propOptions}</select>
+    </div>
     <div class="form-group">
       <label class="form-label">年月</label>
       <input type="month" id="etYM" value="${t.ym||''}" style="width:100%">
@@ -2942,7 +2948,9 @@ function toggleMiscCost(pi,txIdx,checked){
 }
 
 function saveTxModal(pi,idx){
-  const t=properties[pi]?.transactions?.[idx];
+  const newProp=document.getElementById('etProp')?.value;
+  const p=properties[pi];
+  const t=p?.transactions?.[idx];
   if(!t)return;
   t.ym=document.getElementById('etYM')?.value||t.ym;
   t.type=document.getElementById('etType')?.value||t.type;
@@ -2954,10 +2962,20 @@ function saveTxModal(pi,idx){
   // 定期明細の終了月設定
   if(t._recurring){
     const endYM=document.getElementById('etRecurringEnd')?.value||'';
-    // recurringRulesの対応するルールを更新
     const rules=properties[pi]?.recurringRules||[];
     const rule=rules.find(r=>r.desc===t.desc&&r.amount===t.amount);
     if(rule&&endYM) rule.endYM=endYM;
+  }
+  if(newProp&&newProp!==String(pi)){
+    if(newProp==='common'){
+      if(!commonTransactions)commonTransactions=[];
+      commonTransactions.push({...t});
+    } else {
+      const newPi=parseInt(newProp);
+      if(!properties[newPi].transactions)properties[newPi].transactions=[];
+      properties[newPi].transactions.push({...t});
+    }
+    p.transactions.splice(idx,1);
   }
   saveProps();
   closeModal('classifyModal');
@@ -3005,8 +3023,14 @@ function deleteCommonTxByIdx(idx){
   function editCommonTxModal(idx){
   const t=commonTransactions?.[idx];
   if(!t)return;
+  const propOptions=`<option value="common" selected>全物件（共通）</option>`
+    +properties.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">共通明細を編集</div>
+    <div class="form-group">
+      <label class="form-label">物件</label>
+      <select id="ectProp" style="width:100%">${propOptions}</select>
+    </div>
     <div class="form-group">
       <label class="form-label">年月</label>
       <input type="month" id="ectYM" value="${t.ym||''}" style="width:100%">
@@ -3019,6 +3043,7 @@ function deleteCommonTxByIdx(idx){
       <label class="form-label">カテゴリ</label>
       <select id="ectCat" style="width:100%">
         ${COMMON_CATS.map(c=>`<option value="${c}" ${t.cat===c?'selected':''}>${c}</option>`).join('')}
+        ${SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('')}
       </select>
     </div>
     <div class="form-group">
@@ -3037,10 +3062,20 @@ function deleteCommonTxByIdx(idx){
 function saveCommonTxModal(idx){
   const t=commonTransactions?.[idx];
   if(!t)return;
-  t.ym=document.getElementById('ectYM')?.value||t.ym;
-  t.desc=document.getElementById('ectDesc')?.value||'';
-  t.cat=document.getElementById('ectCat')?.value||t.cat;
-  t.amount=parseInt(document.getElementById('ectAmt')?.value)||0;
+  const newProp=document.getElementById('ectProp')?.value;
+  const ym=document.getElementById('ectYM')?.value||t.ym;
+  const desc=document.getElementById('ectDesc')?.value||'';
+  const cat=document.getElementById('ectCat')?.value||t.cat;
+  const amount=parseInt(document.getElementById('ectAmt')?.value)||0;
+  if(newProp&&newProp!=='common'){
+    // 個別物件に移動
+    const pi=parseInt(newProp);
+    if(!properties[pi].transactions)properties[pi].transactions=[];
+    properties[pi].transactions.push({...t,ym,desc,cat,amount});
+    commonTransactions.splice(idx,1);
+  } else {
+    t.ym=ym;t.desc=desc;t.cat=cat;t.amount=amount;
+  }
   saveProps();
   closeModal('classifyModal');
   renderCashflow();
