@@ -1048,7 +1048,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     return`<tr class="${isFuture?'future':''}">
       <td class="left">${labels[pos]}${isFuture?' <span style="font-size:9px;opacity:.5">予測</span>':''}</td>
       <td class="g">${fmt(income)}</td>
-      <td class="r">▲${fmt(exp)}</td>
+      <td class="${exp<0?'g':'r'}">${exp<0?'+'+fmt(Math.abs(exp)):'▲'+fmt(exp)}</td>
       ${isAll?thCommon:''}
       <td class="${net>=0?'g':'r'}" style="font-weight:500">${net<0?'▲':''}${fmt(net)}</td>
       <td style="color:#888">${cumNet<0?'▲':''}${fmt(cumNet)}</td>
@@ -1189,7 +1189,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <tr style="border-bottom:0.5px solid #e0e0d8">
           <td class="left" style="font-weight:500;position:sticky;left:0;background:#fff;z-index:2;color:#dc2626">支出</td>
           <td style="border-right:1px solid #d0d0c8"></td>
-          ${indices.map((idx,pos)=>{const v=getMonthEEx(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''};color:#dc2626">${v>0?'▲'+fmt(v):'—'}</td>`;}).join('')}
+　　　　　　${indices.map((idx,pos)=>{const v=getMonthEEx(idx,pi);return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${v<0?'g':'r'}">${v>0?'▲'+fmt(v):v<0?'+'+fmt(Math.abs(v)):'—'}</td>`;}).join('')}
           <td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8;color:#dc2626">${totE2>0?'▲'+fmt(totE2):'—'}</td>
         </tr>`}
         ${isAll?properties.map((p,pi2)=>`<tr style="border-bottom:0.5px solid #f0f0e8">
