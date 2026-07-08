@@ -1329,7 +1329,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       const commonRecurringHTML=commonRules.length?`
       <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
         <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
-          <span class="ct" style="font-size:12px">🔁 定期明細 <span class="rtoggle">▼</span></span>
+          <span class="ct">🔁 定期明細 <span class="rtoggle" style="font-size:11px">▼</span></span>
           <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e;font-size:11px" onclick="event.stopPropagation();addRecurringTx(null)">＋ 追加</button>
         </div>
         <div>
@@ -1431,7 +1431,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <td style="padding:6px 8px;text-align:right;font-size:12px;color:#16a34a">${t.type==='income'?t.amount.toLocaleString():'—'}</td>
           <td style="padding:6px 8px;text-align:right;font-size:12px;color:#dc2626">${t.type==='expense'?'▲'+t.amount.toLocaleString():'—'}</td>
           <td style="padding:6px 8px;text-align:center">${t.isMiscCost?'✓':'—'}</td>
-          <td style="padding:6px 8px;text-align:center">${t._recurring?'—':linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:t.manualEntry?`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
+          <td style="padding:6px 8px;text-align:center">${t._recurring?'—':linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`}</td>
           <td style="padding:4px 6px;text-align:center;white-space:nowrap">
             ${t._recurring?
               `<button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(${pi},${t._ruleIdx||0})">編集</button>`
@@ -1451,7 +1451,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const recurringHTML=recurringRules.length?`
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
       <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
-        <span class="ct" style="font-size:12px">🔁 定期明細 <span class="rtoggle">▼</span></span>
+        <span class="ct">🔁 定期明細 <span class="rtoggle" style="font-size:11px">▼</span></span>
         <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="event.stopPropagation();addRecurringTx(${pi})">＋ 追加</button>
       </div>
       <div>
