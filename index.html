@@ -1291,8 +1291,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
             <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:!t.driveLink?`<button class="btn-sm" style="font-size:10px" onclick="uploadCommonTxDoc(${cidx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
             <td style="padding:6px 8px;text-align:center;white-space:nowrap">
               <button class="btn-sm" style="font-size:10px" onclick="editCommonTxModal(${cidx})">編集</button>
-              ${t._recurring?`<button class="btn-sm" style="font-size:10px;color:#dc2626;margin-left:2px" onclick="stopRecurringTx(null,'${(t.desc||'').replace(/'/g,"\\'")}',${t.amount},'${t.ym}')">終了</button>`:''}
-            </td>
+              </td>
           </tr>`;
         }).join('');
         const sumRow=`<tr style="background:#fafaf8;border-bottom:1px solid #d0d0c8;font-weight:500">
@@ -1378,8 +1377,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:t.manualEntry?`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
           <td style="padding:4px 6px;text-align:center;white-space:nowrap">
             <button class="btn-sm" style="font-size:10px" onclick="editTxModal(${pi},${idx})">編集</button>
-            ${t._recurring?`<button class="btn-sm" style="font-size:10px;color:#dc2626;margin-left:2px" onclick="stopRecurringTx(${pi},'${(t.desc||'').replace(/'/g,"\\'")}',${t.amount},'${t.ym}')">終了</button>`:''}
-          </td>
+             </td>
         </tr>`;
       }).join('');
       const sumRow=`<tr style="background:#fafaf8;border-bottom:1px solid #d0d0c8;font-weight:500">
