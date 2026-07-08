@@ -1369,14 +1369,14 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     // 日付順にソート
     // 定期ルールを明細に展開
     const recurringExpanded=[];
-    (properties[pi]?.recurringRules||[]).forEach(r=>{
+    (properties[pi]?.recurringRules||[]).forEach((r,ruleIdx)=>{
       const endYM=r.endYM||nowYM();
       let ym2=r.startYM;
       while(ym2<=endYM){
         if(parseInt(ym2.slice(0,4))===yr2){
           recurringExpanded.push({
             ym:ym2,type:'expense',amount:r.amount,desc:r.desc,cat:r.cat,
-            isMiscCost:false,_recurring:true,_ruleIdx:0,manualEntry:false,
+            isMiscCost:false,_recurring:true,_ruleIdx:ruleIdx,manualEntry:false,
             driveFileId:null,driveLink:null
           });
         }
@@ -1416,8 +1416,10 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <td style="padding:6px 8px;text-align:center">${t.isMiscCost?'✓':'—'}</td>
           <td style="padding:6px 8px;text-align:center">${linked?`<a href="${linked.webViewLink}" target="_blank" style="font-size:11px;color:#2563eb;text-decoration:none">開く</a>`:t.manualEntry?`<button class="btn-sm" style="font-size:10px" onclick="uploadTxDoc(${pi},${idx})">格納</button>`:'<span style="font-size:10px;color:#ccc">—</span>'}</td>
           <td style="padding:4px 6px;text-align:center;white-space:nowrap">
-            <button class="btn-sm" style="font-size:10px" onclick="editTxModal(${pi},${idx})">編集</button>
-             </td>
+            ${t._recurring?
+              `<button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(${pi},${t._ruleIdx||0})">編集</button>`
+              :`<button class="btn-sm" style="font-size:10px" onclick="editTxModal(${pi},${idx})">編集</button>`}
+          </td>
         </tr>`;
       }).join('');
       const sumRow=`<tr style="background:#fafaf8;border-bottom:1px solid #d0d0c8;font-weight:500">
@@ -1431,19 +1433,20 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     const recurringRules=properties[pi]?.recurringRules||[];
     const recurringHTML=recurringRules.length?`
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
-      <div style="padding:8px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
-        <span class="ct" style="font-size:12px">🔁 定期明細</span>
-        <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="addRecurringTx(${pi})">＋ 追加</button>
+      <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
+        <span class="ct" style="font-size:12px">🔁 定期明細 <span class="rtoggle">▼</span></span>
+        <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="event.stopPropagation();addRecurringTx(${pi})">＋ 追加</button>
       </div>
-      ${recurringRules.map((r,i)=>`<div style="padding:8px 14px;border-bottom:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
+      <div>
+      ${recurringRules.map((r,i)=>`<div style="padding:8px 14px;border-top:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
         <div>
           <span style="font-weight:500">${r.desc}</span>
           <span style="color:#dc2626;margin-left:8px">▲${fmt(r.amount)}/月</span>
           <span style="color:#888;margin-left:8px">${r.startYM}〜${r.endYM||'継続中'}</span>
-          <span style="background:#fef9c3;color:#854d0e;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px">定期</span>
         </div>
         <button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(${pi},${i})">編集</button>
       </div>`).join('')}
+      </div>
     </div>`:'';
     return`
     ${recurringHTML}
