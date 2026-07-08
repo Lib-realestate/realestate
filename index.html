@@ -3475,7 +3475,7 @@ function saveManualTx(pi){
   const desc=document.getElementById('mtDesc')?.value||'';
   const cat=document.getElementById('mtCat')?.value;
   const amount=parseInt(document.getElementById('mtAmt')?.value)||0;
-  if(!ym||amount===0){showToast('年月と金額を入力してください','error');return;}
+  if(amount===0)return;showToast('年月と金額を入力してください','error');return;}
   const p=properties[pi];
   if(!p.transactions)p.transactions=[];
   const isMisc=document.getElementById('mtMisc')?.checked||false;
@@ -4545,7 +4545,7 @@ function applyFileDataToApp(propIdx,cat,result,date,driveResult){
   const ym=date?date.slice(0,7):'';
   if(!ym)return;
   const amount=result?.amount||0;
-  if(amount<=0)return;
+  if(amount===0)return;
   const type=cat.includes('収入')?'income':cat.includes('返済')?'repayment':'expense';
   // 返済予定表の場合は月ごとに展開
   if(type==='repayment'&&result?.items?.length>0){
