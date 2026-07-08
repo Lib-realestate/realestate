@@ -1390,7 +1390,6 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       </tr>`;
       return rows+sumRow;
     }).join('');
-    return`
     const recurringRules=properties[pi]?.recurringRules||[];
     const recurringHTML=recurringRules.length?`
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
