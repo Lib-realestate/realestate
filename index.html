@@ -583,6 +583,7 @@ function saveProps(){
   _localSavedAt=new Date();
   localStorage.setItem('re_props',JSON.stringify(properties));
   localStorage.setItem('re_common',JSON.stringify(commonTransactions));
+  localStorage.setItem('re_common_recurring',JSON.stringify(window.commonRecurringRules||[]));
   localStorage.setItem('re_props_backup',JSON.stringify(properties));
   localStorage.setItem('re_props_backup_at',_localSavedAt.toISOString());
   savePropsToD().catch(()=>{});
@@ -610,7 +611,7 @@ async function savePropsToD(){
   if(!properties||properties.length===0)return;
   _savePending=true;
   try{
-    const data=JSON.stringify({properties,commonTransactions,savedAt:new Date().toISOString()});
+    const data=JSON.stringify({properties,commonTransactions,commonRecurringRules:window.commonRecurringRules||[],savedAt:new Date().toISOString()});
     const blob=new Blob([data],{type:'application/json'});
     if(_appdataFileId){
       // 既存ファイルを上書き
@@ -750,7 +751,7 @@ function getMonthEEx(mi,pi){
   const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;
   const ym=`${yr}-${String(mo).padStart(2,'0')}`;
   if(pi===null)return properties.reduce((s,p)=>s+getTx(p,ym,'expense',true),0);
-  return getTx(properties[pi],ym,'expense',true);
+  return getTx(properties[pi],ym,'expense',true)+getRecurringAmount(pi,ym);
 }
 function getAnnualI(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthI(i,pi),0);}
 function getAnnualE(pi){return getFiscalIndices().reduce((s,i)=>s+getMonthE(i,pi),0);}
@@ -770,7 +771,8 @@ function getMonthCF(idx,pi){
     const yr4=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
     const mo2=MONTH_BASE[idx];
     const ym2=`${yr4}-${String(mo2).padStart(2,'0')}`;
-    const common=(commonTransactions||[]).filter(t=>t.ym===ym2).reduce((s,t)=>s+t.amount,0);
+    const common=(commonTransactions||[]).filter(t=>t.ym===ym2).reduce((s,t)=>s+t.amount,0)
+      +getRecurringAmount(null,ym2);
     return properties.reduce((s,p,i)=>s+getMonthCF(idx,i),0)-common;
   }
   const inc=getMonthI(idx,pi);
@@ -1389,6 +1391,25 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       return rows+sumRow;
     }).join('');
     return`
+    const recurringRules=properties[pi]?.recurringRules||[];
+    const recurringHTML=recurringRules.length?`
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
+      <div style="padding:8px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
+        <span class="ct" style="font-size:12px">🔁 定期明細</span>
+        <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="addRecurringTx(${pi})">＋ 追加</button>
+      </div>
+      ${recurringRules.map((r,i)=>`<div style="padding:8px 14px;border-bottom:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
+        <div>
+          <span style="font-weight:500">${r.desc}</span>
+          <span style="color:#dc2626;margin-left:8px">▲${fmt(r.amount)}/月</span>
+          <span style="color:#888;margin-left:8px">${r.startYM}〜${r.endYM||'継続中'}</span>
+          <span style="background:#fef9c3;color:#854d0e;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px">定期</span>
+        </div>
+        <button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(${pi},${i})">編集</button>
+      </div>`).join('')}
+    </div>`:'';
+    return`
+    ${recurringHTML}
     <div class="card" style="padding:0;overflow:hidden">
       <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
         <span class="ct">明細履歴</span>
@@ -3046,11 +3067,28 @@ function saveManualCommonTx(){
 }
 function addRecurringTx(pi){
   const isCommon=pi===null;
+  const existingRules=isCommon?(window.commonRecurringRules||[]):((pi!==null&&properties[pi]?.recurringRules)||[]);
+  const rulesHTML=existingRules.length?`
+    <div style="margin-bottom:12px;border:0.5px solid #e0e0d8;border-radius:8px;overflow:hidden">
+      <div style="padding:8px 12px;background:#fafaf8;font-size:11px;font-weight:500;color:#888">登録済み定期明細</div>
+      ${existingRules.map((r,i)=>`<div style="padding:8px 12px;border-top:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
+        <div>
+          <span style="font-weight:500">${r.desc}</span>
+          <span style="color:#888;margin-left:8px">¥${fmt(r.amount)}/月</span>
+          <span style="color:#888;margin-left:8px">${r.startYM}〜${r.endYM||'継続中'}</span>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(${pi},${i})">編集</button>
+          <button class="btn-sm" style="font-size:10px;color:#dc2626" onclick="deleteRecurringRule(${pi},${i})">削除</button>
+        </div>
+      </div>`).join('')}
+    </div>`:'';
   const catOptions=isCommon
     ?COMMON_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')
     :SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
-    <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を一括追加</div>
+    ${rulesHTML}
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">新規追加</div>
     <div class="form-group">
       <label class="form-label">内容</label>
       <input type="text" id="rtDesc" placeholder="例：税理士顧問料" style="width:100%">
@@ -3068,7 +3106,7 @@ function addRecurringTx(pi){
       <input type="month" id="rtStart" value="${nowYM()}" style="width:100%">
     </div>
     <div class="form-group">
-      <label class="form-label">終了年月 <span style="font-size:10px;color:#888">（空欄=現在月まで）</span></label>
+      <label class="form-label">終了年月 <span style="font-size:10px;color:#888">（空欄=継続中）</span></label>
       <input type="month" id="rtEnd" style="width:100%">
     </div>
     <div id="rtPreview" style="font-size:11px;color:#888;margin-top:8px"></div>`;
@@ -3107,42 +3145,103 @@ function stopRecurringTx(pi,desc,amount,endYM){
   renderCashflow();
   showToast(`${endYM}以降の定期明細を削除しました`,'success');
 }
-function saveRecurringTx(pi){
+function saveRecurringTx(pi,editIdx=null){
   const isCommon=pi===null;
   const desc=document.getElementById('rtDesc')?.value||'';
   const cat=document.getElementById('rtCat')?.value;
   const amount=parseInt(document.getElementById('rtAmt')?.value)||0;
-  const start=document.getElementById('rtStart')?.value;
-  const end=document.getElementById('rtEnd')?.value||nowYM();
-  if(!start||amount<=0){showToast('開始年月と金額を入力してください','error');return;}
-  const months=Math.max(0,mdiff(start,end)+1);
-  if(months<=0){showToast('開始年月が終了年月より後になっています','error');return;}
-
-  let count=0;
-  for(let m=0;m<months;m++){
-    const ym=addMonths(start,m);
-    const tx={
-      ym,type:'expense',amount,desc,cat,
-      isMiscCost:false,manualEntry:true,
-      _recurring:true,
-      createdAt:new Date().toISOString(),
-      driveFileId:null,driveLink:null,driveFileName:null
-    };
-    if(isCommon){
-      if(!commonTransactions)commonTransactions=[];
-      // 重複チェック
-      const dup=commonTransactions.find(t=>t.ym===ym&&t.desc===desc&&t.amount===amount&&t._recurring);
-      if(!dup){commonTransactions.push(tx);count++;}
-    } else {
-      if(!properties[pi].transactions)properties[pi].transactions=[];
-      const dup=properties[pi].transactions.find(t=>t.ym===ym&&t.desc===desc&&t.amount===amount&&t._recurring);
-      if(!dup){properties[pi].transactions.push(tx);count++;}
-    }
+  const startYM=document.getElementById('rtStart')?.value;
+  const endYM=document.getElementById('rtEnd')?.value||'';
+  if(!startYM||amount<=0){showToast('開始年月と金額を入力してください','error');return;}
+  const rule={desc,cat,amount,startYM,endYM,createdAt:new Date().toISOString()};
+  if(isCommon){
+    if(!window.commonRecurringRules)window.commonRecurringRules=[];
+    if(editIdx!==null)window.commonRecurringRules[editIdx]=rule;
+    else window.commonRecurringRules.push(rule);
+  } else {
+    if(!properties[pi].recurringRules)properties[pi].recurringRules=[];
+    if(editIdx!==null)properties[pi].recurringRules[editIdx]=rule;
+    else properties[pi].recurringRules.push(rule);
   }
   saveProps();
   closeModal('classifyModal');
   renderCashflow();
-  showToast(`${count}ヶ月分の定期明細を追加しました`,'success');
+  showToast('定期明細を登録しました','success');
+}
+function editRecurringRule(pi,idx){
+  const isCommon=pi===null;
+  const rules=isCommon?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
+  const r=rules[idx];
+  if(!r)return;
+  const catOptions=isCommon
+    ?COMMON_CATS.map(c=>`<option value="${c}" ${r.cat===c?'selected':''}>${c}</option>`).join('')
+    :SUB_FOLDERS.map(s=>`<option value="${s}" ${r.cat===s?'selected':''}>${s}</option>`).join('');
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を編集</div>
+    <div class="form-group"><label class="form-label">内容</label><input type="text" id="rtDesc" value="${r.desc||''}" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">カテゴリ</label><select id="rtCat" style="width:100%">${catOptions}</select></div>
+    <div class="form-group"><label class="form-label">月額（円）</label><input type="number" id="rtAmt" value="${r.amount||0}" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">開始年月</label><input type="month" id="rtStart" value="${r.startYM||''}" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">終了年月 <span style="font-size:10px;color:#888">（空欄=継続中）</span></label><input type="month" id="rtEnd" value="${r.endYM||''}" style="width:100%"></div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='定期明細編集';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
+    <button class="btn btn-primary" onclick="saveRecurringTx(${pi},${idx})">保存</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+function deleteRecurringRule(pi,idx){
+  if(!confirm('この定期明細を削除しますか？'))return;
+  const isCommon=pi===null;
+  if(isCommon)window.commonRecurringRules.splice(idx,1);
+  else properties[pi].recurringRules.splice(idx,1);
+  saveProps();
+  renderCashflow();
+  showToast('定期明細を削除しました','success');
+}
+
+function getRecurringAmount(pi,ym){
+  const rules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
+  return rules.filter(r=>r.startYM<=ym&&(!r.endYM||r.endYM>=ym)).reduce((s,r)=>s+r.amount,0);
+}
+function editRecurringRule(pi,idx){
+  const isCommon=pi===null;
+  const rules=isCommon?window.commonRecurringRules:(properties[pi]?.recurringRules||[]);
+  const r=rules[idx];
+  if(!r)return;
+  const catOptions=isCommon
+    ?COMMON_CATS.map(c=>`<option value="${c}" ${r.cat===c?'selected':''}>${c}</option>`).join('')
+    :SUB_FOLDERS.map(s=>`<option value="${s}" ${r.cat===s?'selected':''}>${s}</option>`).join('');
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を編集</div>
+    <div class="form-group"><label class="form-label">内容</label><input type="text" id="rtDesc" value="${r.desc||''}" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">カテゴリ</label><select id="rtCat" style="width:100%">${catOptions}</select></div>
+    <div class="form-group"><label class="form-label">月額（円）</label><input type="number" id="rtAmt" value="${r.amount||0}" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">開始年月</label><input type="month" id="rtStart" value="${r.startYM||''}" style="width:100%"></div>
+    <div class="form-group"><label class="form-label">終了年月 <span style="font-size:10px;color:#888">（空欄=継続中）</span></label><input type="month" id="rtEnd" value="${r.endYM||''}" style="width:100%"></div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='定期明細編集';
+  modal.querySelector('.modal-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('classifyModal')">キャンセル</button>
+    <button class="btn btn-primary" onclick="saveRecurringTx(${pi},${idx})">保存</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+
+function deleteRecurringRule(pi,idx){
+  if(!confirm('この定期明細を削除しますか？'))return;
+  const isCommon=pi===null;
+  if(isCommon)window.commonRecurringRules.splice(idx,1);
+  else properties[pi].recurringRules.splice(idx,1);
+  saveProps();
+  renderCashflow();
+  showToast('定期明細を削除しました','success');
+}
+
+function getRecurringAmount(pi,ym){
+  // 定期ルールから指定月の金額を計算
+  const rules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
+  return rules.filter(r=>r.startYM<=ym&&(!r.endYM||r.endYM>=ym)).reduce((s,r)=>s+r.amount,0);
 }
 let _mtDocFile=null;
 function handleMtDocFile(e){
