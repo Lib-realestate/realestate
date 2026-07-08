@@ -1330,7 +1330,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
         <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
           <span class="ct">🔁 定期明細 <span class="rtoggle" style="font-size:11px">▼</span></span>
-          <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e;font-size:11px" onclick="event.stopPropagation();addRecurringTx(null)">＋ 追加</button>
+          <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e;font-size:11px" onclick="event.stopPropagation();addRecurringTx(null)">＋ 定期追加</button>
         </div>
         <div>
         ${commonRules.map((r,i)=>`<div style="padding:8px 14px;border-top:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
@@ -1452,7 +1452,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
       <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
         <span class="ct">🔁 定期明細 <span class="rtoggle" style="font-size:11px">▼</span></span>
-        <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e" onclick="event.stopPropagation();addRecurringTx(${pi})">＋ 追加</button>
+        <button class="btn-add" style="background:#fef9c3;border-color:#fde68a;color:#854d0e;font-size:11px" onclick="event.stopPropagation();addRecurringTx(${pi})">＋ 定期追加</button>
       </div>
       <div>
       ${recurringRules.map((r,i)=>`<div style="padding:8px 14px;border-top:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;font-size:11px">
