@@ -3193,7 +3193,7 @@ function saveManualCommonTx(){
 function addRecurringTx(pi){
   const isCommon=pi===null;
   const catOptions=isCommon
-    ?COMMON_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')
+    ?(window.COMMON_CATS||['共通経費','税金等']).map(c=>`<option value="${c}">${c}</option>`).join('')
     :SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を追加</div>
@@ -3282,7 +3282,7 @@ function editRecurringRule(pi,idx){
   const r=rules[idx];
   if(!r)return;
   const catOptions=isCommon
-    ?COMMON_CATS.map(c=>`<option value="${c}" ${r.cat===c?'selected':''}>${c}</option>`).join('')
+    ?(window.COMMON_CATS||['共通経費','税金等']).map(c=>`<option value="${c}" ${r.cat===c?'selected':''}>${c}</option>`).join('')
     :SUB_FOLDERS.map(s=>`<option value="${s}" ${r.cat===s?'selected':''}>${s}</option>`).join('');
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">定期明細を編集</div>
@@ -3992,7 +3992,7 @@ async function analyzeMultipleFiles(files){
   showMultiClassifyModal();
 }
 
-  const COMMON_CATS=['共通経費','税金等'];
+  window.COMMON_CATS=['共通経費','税金等'];
 function updateCatOptions(idx,propVal){
   const sel=document.getElementById(`mpCat_${idx}`);
   if(!sel)return;
