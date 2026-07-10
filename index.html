@@ -772,7 +772,10 @@ function isFutureIdx(idx){
   const mo2=MONTH_BASE[idx];
   const yr4=(yearMode==='fiscal'&&mo2<=fiscalMonth)?baseYr+1:baseYr;
   const ym4=`${yr4}-${String(mo2).padStart(2,'0')}`;
-  return ym4>nowYM();
+  const now=nowYM();
+  const [ny,nm]=now.split('-').map(Number);
+  const prevYM=`${nm===1?ny-1:ny}-${String(nm===1?12:nm-1).padStart(2,'0')}`;
+  return ym4>prevYM;
 }
 function getMonthCF(idx,pi){
   const isAll=pi===null;
