@@ -160,6 +160,36 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
 #settings .box{background:#fff;border-radius:10px;max-width:520px;margin:40px auto;padding:18px}
 #settings h2{font-size:16px;color:var(--blue);margin-bottom:12px;font-family:"Shippori Mincho",serif}
 #settings label.f{margin-top:10px}
+/* ===== A4印刷レポート ===== */
+#btnPdf{margin-bottom:16px}
+#printReport{display:none;font-size:10.5px;line-height:1.5;color:var(--ink)}
+#printReport .rp-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px double var(--blue);padding-bottom:6px;margin-bottom:8px}
+#printReport .rp-title{font-family:"Shippori Mincho",serif;font-weight:800;font-size:19px;color:var(--blue);letter-spacing:.12em}
+#printReport .rp-sub{font-size:9px;color:#5B7286;letter-spacing:.15em}
+#printReport .rp-meta{font-size:9px;color:#5B7286;text-align:right}
+#printReport .rp-addr{font-size:12.5px;font-weight:700;margin-bottom:8px}
+#printReport .rp-sec{border:1px solid var(--blue-line);border-radius:4px;margin-bottom:8px;overflow:hidden;break-inside:avoid}
+#printReport .rp-sec>.h{background:var(--blue-pale);border-bottom:1px solid var(--blue-line);padding:3px 8px;font-weight:700;font-size:10px;color:var(--blue);letter-spacing:.08em}
+#printReport .rp-sec>.b{padding:7px 9px}
+#printReport .rp-2col{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#printReport table.rp-t{width:100%;border-collapse:collapse;font-size:10px}
+#printReport table.rp-t th{text-align:left;font-weight:500;color:#5B7286;padding:2.5px 6px 2.5px 0;border-bottom:1px solid var(--blue-pale);white-space:nowrap;width:42%;vertical-align:top}
+#printReport table.rp-t td{padding:2.5px 0;border-bottom:1px solid var(--blue-pale);font-variant-numeric:tabular-nums;vertical-align:top}
+#printReport .rp-big{font-family:"Shippori Mincho",serif;font-size:19px;font-weight:800;color:var(--blue)}
+#printReport .rp-big small{font-size:9.5px;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:500;color:#5B7286}
+#printReport .stamp{width:66px;height:66px;font-size:11px;border-width:2px}
+#printReport ul.reasons{font-size:9.5px}
+#printReport ul.reasons li{padding:1.5px 0 1.5px 12px}
+#printReport .rp-foot{font-size:8.5px;color:#7A8B99;border-top:1px dashed var(--blue-line);padding-top:5px;line-height:1.55}
+@media print{
+  @page{size:A4 portrait;margin:9mm 11mm}
+  html,body{background:#fff!important;background-image:none!important}
+  .wrap{max-width:none;padding:0}
+  .wrap>*:not(#printReport){display:none!important}
+  #settings,#loading{display:none!important}
+  #printReport{display:block}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 .hidden{display:none!important}
 </style>
 </head>
@@ -253,6 +283,9 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
     <div class="bd" id="judgeBody"></div>
   </section>
   </div>
+
+  <button class="sub hidden" id="btnPdf">📄 結果をPDFで保存（A4・1枚）</button>
+  <div id="printReport"></div>
 </div>
 
 <!-- 設定 -->
@@ -617,6 +650,8 @@ $("btnRun").addEventListener("click", async ()=>{
     const {year, pts} = await landPoints(geo.lat, geo.lng);
     renderValuation(input, geo, year, pts);
     renderJudge(input, pts);
+    lastRun = {input, geo, year, pts};
+    $("btnPdf").classList.remove("hidden");
     $("valCard").classList.remove("hidden");
     $("judgeCard").classList.remove("hidden");
     $("valCard").scrollIntoView({behavior:"smooth"});
@@ -700,6 +735,87 @@ function renderJudge(input, pts){
   html += `</table>
   <div class="note">※ 机上判定です。42条道路種別・セットバック・43条許可・私道承諾・地区計画・高度地区等は、必ず役所（建築指導課・都市計画課）調査と道路台帳で確定してください。</div>`;
   el.innerHTML = html;
+}
+
+/* ================= PDF(A4)レポート ================= */
+let lastRun = null;
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+$("btnPdf").addEventListener("click", ()=>{
+  if(!lastRun) return;
+  buildReport(lastRun);
+  window.print();
+});
+function buildReport({input, geo, year, pts}){
+  const r = judge(input);
+  const top = pts.slice(0,3);
+  const wsum = top.reduce((s,p)=>s+1/Math.max(p.dist,50),0);
+  const unit = Math.round(top.reduce((s,p)=>s+p.priceYen/Math.max(p.dist,50),0)/wsum);
+  const kouji = input.land!=null ? unit*input.land : null;
+  const today = new Date().toLocaleDateString("ja-JP");
+  const roadKindTxt = {public:"公道",private:"私道"}[input.roadKind]||"不明";
+  const roadLawTxt = {"42-1":"42条1項道路","42-2":"42条2項道路(セットバック要)","43":"43条但し書き","none":"建基法上の道路でない"}[input.roadLaw]||"記載なし";
+  let h = `
+  <div class="rp-head">
+    <div><div class="rp-title">マイソク即査定 調査報告</div>
+    <div class="rp-sub">MAISOKU INSTANT APPRAISAL ／ 机上評価・再建築判定</div></div>
+    <div class="rp-meta">作成日 ${today}<br>地価データ: 地価公示・地価調査（${year}年）</div>
+  </div>
+  <div class="rp-addr">所在地　${esc(input.addr)}</div>
+
+  <div class="rp-sec"><div class="h">物件概要</div><div class="b rp-2col">
+    <table class="rp-t">
+      <tr><th>販売価格</th><td>${input.price!=null?input.price.toLocaleString()+" 万円":"—"}</td></tr>
+      <tr><th>土地面積</th><td>${fmt(input.land)} ㎡</td></tr>
+      <tr><th>延床面積</th><td>${fmt(input.bldg)} ㎡</td></tr>
+      <tr><th>用途地域</th><td>${esc(input.use)||"—"}</td></tr>
+      <tr><th>区域区分</th><td>${esc(input.city)||"不明"}</td></tr>
+    </table>
+    <table class="rp-t">
+      <tr><th>建蔽率／容積率</th><td>${input.bcr??"—"}% ／ ${input.far??"—"}%</td></tr>
+      <tr><th>前面道路幅員</th><td>${input.roadW!=null?input.roadW+" m":"—"}（${roadKindTxt}）</td></tr>
+      <tr><th>接道長さ</th><td>${input.frontage!=null?input.frontage+" m":"—"}</td></tr>
+      <tr><th>道路種別</th><td>${roadLawTxt}</td></tr>
+      <tr><th>備考</th><td>${esc(input.notes)||"—"}</td></tr>
+    </table>
+  </div></div>
+
+  <div class="rp-2col">
+    <div class="rp-sec"><div class="h">土地評価（地価公示・地価調査ベース）</div><div class="b">`;
+  if(kouji!=null){
+    h += `<div class="rp-big">${fmtMan(kouji)}<small> 万円（公示価格ベース）</small></div>
+    <table class="rp-t" style="margin-top:4px">
+      <tr><th>採用単価（距離加重）</th><td>${unit.toLocaleString()} 円/㎡</td></tr>
+      <tr><th>相続税路線価水準（×0.8）</th><td>${fmtMan(kouji*0.8)} 万円</td></tr>
+      <tr><th>固定資産税評価水準（×0.7）</th><td>${fmtMan(kouji*0.7)} 万円</td></tr>
+      ${input.price!=null?`<tr><th>販売価格に対する土地値</th><td><b>${fmt(kouji/(input.price*10000)*100)}%</b></td></tr>`:""}
+    </table>`;
+  }else{
+    h += `<div class="rp-big">${unit.toLocaleString()}<small> 円/㎡（周辺単価・距離加重平均）</small></div>`;
+  }
+  h += `</div></div>
+    <div class="rp-sec"><div class="h">再建築・法規判定</div><div class="b">
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div class="stamp ${r.cls==="ng"?"":r.cls}">${r.verdict}</div>
+        <ul class="reasons">${r.reasons.map(x=>`<li class="${x.c}">${esc(x.t)}</li>`).join("")}</ul>
+      </div>`;
+  if(r.farInfo && r.farInfo.roadFar!=null){
+    h += `<table class="rp-t" style="margin-top:4px">
+      <tr><th>基準容積率（道路制限後）</th><td>${r.farInfo.base}%（指定${r.farInfo.specified}%／道路制限${r.farInfo.roadFar}%）</td></tr>
+      ${r.farInfo.usedFar!=null?`<tr><th>現況容積消化</th><td>${fmt(r.farInfo.usedFar)}%（延床上限目安 ${fmt(r.farInfo.maxFloor)}㎡）</td></tr>`:""}
+    </table>`;
+  }
+  h += `</div></div>
+  </div>
+
+  <div class="rp-sec"><div class="h">近隣の標準地・基準地</div><div class="b">
+    <table class="rp-t">
+      <tr><td style="font-weight:700;color:#5B7286">地点</td><td style="font-weight:700;color:#5B7286">所在</td><td style="font-weight:700;color:#5B7286">単価</td><td style="font-weight:700;color:#5B7286">距離</td><td style="font-weight:700;color:#5B7286">法規制</td></tr>
+      ${top.map(p=>`<tr><td>${esc(p.type)} ${esc(p.name)}</td><td>${esc(p.location)}</td><td>${p.priceYen.toLocaleString()}円/㎡</td><td>${Math.round(p.dist)}m</td><td>${esc(p.useDist)||"—"} 建${p.bcr||"—"}/容${p.far||"—"}</td></tr>`).join("")}
+    </table>
+  </div></div>
+
+  <div class="rp-foot">本書は地価公示・地価調査（国土交通省 不動産情報ライブラリ）の周辺地点単価を面積按分した机上評価であり、個別の画地条件（角地・不整形・道路条件等）は未補正。再建築・法規判定はマイソク記載情報に基づく参考判定であり、42条道路種別・セットバック・43条許可・私道承諾・地区計画・高度地区等は役所調査および道路台帳により確定すること。固定資産税路線価・相続税路線価の実額は全国地価マップ・財産評価基準書を参照。</div>`;
+  $("printReport").innerHTML = h;
 }
 </script>
 </body>
