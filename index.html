@@ -2298,6 +2298,12 @@ ${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfc
             <option value="equal_principal" ${seg.repayType==='equal_principal'?'selected':''}>元金均等</option>
           </select></div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+        <div><div style="font-size:10px;color:#888;margin-bottom:3px">初回元金 <span style="font-size:9px;color:#aaa">（実績値・任意）</span></div>
+          <input type="number" value="${seg.firstPrincipal||''}" placeholder="自動計算" style="width:100%;height:30px;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updateLoanSegCalc(${pi},${i},'firstPrincipal',parseInt(this.value)||0)"></div>
+        <div><div style="font-size:10px;color:#888;margin-bottom:3px">初回利息 <span style="font-size:9px;color:#aaa">（実績値・任意）</span></div>
+          <input type="number" value="${seg.firstInterest||''}" placeholder="自動計算" style="width:100%;height:30px;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updateLoanSegCalc(${pi},${i},'firstInterest',parseInt(this.value)||0)"></div>
+      </div>
       <div style="margin-top:8px">
         <button class="btn btn-b" style="font-size:11px" onclick="generateRepaySchedule(${pi},${i})">📅 返済スケジュールをCFに反映</button>
         <span style="font-size:10px;color:#888;margin-left:8px">※返済予定表アップ済みの月は上書きしません</span>
@@ -3824,16 +3830,21 @@ function updateExitOtherAdj(idx,field,value){
 
   for(let m=0;m<totalMonths;m++){
     const ym=addMonths(startYM,m);
-    if(existingRepay.has(ym))continue; // アップロード済みはスキップ
+    if(existingRepay.has(ym))continue;
 
     let principal,interest;
-    interest=Math.round(balance*monthlyRate);
 
-    if(repayType==='equal_payment'){
-      principal=monthlyPayment-interest;
+    if(m===0&&seg.firstPrincipal&&seg.firstInterest){
+      // 初回実績値を使用
+      principal=seg.firstPrincipal;
+      interest=seg.firstInterest;
     } else {
-      // 元金均等
-      principal=Math.round(loan/totalMonths);
+      interest=Math.round(balance*monthlyRate);
+      if(repayType==='equal_payment'){
+        principal=monthlyPayment-interest;
+      } else {
+        principal=Math.round(loan/totalMonths);
+      }
     }
     if(principal<=0)break;
     balance=Math.max(0,balance-principal);
