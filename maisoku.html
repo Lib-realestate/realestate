@@ -146,6 +146,9 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
 .pt .mt{color:#5B7286}
 
 .note{font-size:11.5px;color:#7A8B99;line-height:1.6;margin-top:10px;border-top:1px dashed var(--blue-line);padding-top:8px}
+.badge{display:inline-block;font-size:11px;border-radius:4px;padding:1px 8px;font-weight:700;vertical-align:middle}
+.badge.ok{background:#E3F1EA;color:var(--ok)}
+.badge.warn{background:#F7EEDC;color:var(--warn)}
 .err{background:#FBEDEC;border:1px solid #E3B7B4;color:var(--shu);border-radius:6px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:none}
 #loading{
   display:none;text-align:center;padding:16px;color:var(--blue);font-weight:700;font-size:14px;letter-spacing:.08em;
@@ -208,14 +211,14 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
     <div class="bd">
       <div class="uploadbox" id="dropZone">
         <b>マイソクを読み込む</b>
-        写真(JPEG/PNG)・PDFに対応。複数画像(表面・裏面)可、PDFは1ファイル。<br>
+        写真(JPEG/PNG)・PDFに対応（1ファイル）。新しく読み込むと前のファイルと判定結果はリセットされます。<br>
         PCはドラッグ&ドロップ／スクリーンショットの貼り付け(Ctrl+V)もできます。
         <div class="upbtns">
           <button type="button" class="upbtn" id="camBtn" onclick="document.getElementById('camInput').click()">📷 カメラで撮影</button>
           <button type="button" class="upbtn" onclick="document.getElementById('fileInput').click()">📁 ファイルをアップロード</button>
         </div>
         <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none">
-        <input type="file" id="fileInput" accept="image/*,.pdf" multiple style="display:none">
+        <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none">
       </div>
       <div class="thumbs" id="thumbs"></div>
       <button class="primary" id="btnExtract" style="margin-top:12px" disabled>AIで物件情報を抽出</button>
@@ -235,6 +238,7 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
         <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
         <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
         <div><label class="f">容積率（%）</label><input type="number" id="fFar" inputmode="numeric"></div>
+        <div class="full"><label class="f">相続税路線価（千円/㎡・任意）<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">路線価図↗</a></label><input type="number" id="fRosenka" inputmode="decimal" placeholder="路線価図の値を入力→実額計算（未入力は公示×0.8で推計）"></div>
         <div class="full"><label class="f">区域区分</label>
           <select id="fCity">
             <option value="">不明</option>
@@ -338,18 +342,33 @@ let files = []; // [{media_type, data(base64), isPdf, name}]
 async function addFiles(list){
   err("");
   try{
-    for(const f of list){
-      if(f.type === "application/pdf" || /\.pdf$/i.test(f.name||"")){
-        files = [{ media_type:"application/pdf", data:await toBase64(f), isPdf:true, name:f.name||"maisoku.pdf" }];
-        break; // PDFは単独で扱う
-      }
-      if(!/^image\//.test(f.type)) continue;
-      if(files.some(x=>x.isPdf)) files = []; // PDFと画像は混在させない
-      if(files.length >= 4){ err("画像は最大4枚までです。"); break; }
-      files.push({ media_type:"image/jpeg", data:await resizeImage(f,1600,.85), isPdf:false, name:f.name||"貼り付け画像" });
+    const f = [...list].find(x=>x.type==="application/pdf" || /\.pdf$/i.test(x.name||"") || /^image\//.test(x.type));
+    if(!f) return;
+    // 新しいファイルで完全に置き換え、以前の抽出結果・判定もリセット
+    resetDownstream();
+    if(f.type==="application/pdf" || /\.pdf$/i.test(f.name||"")){
+      files = [{ media_type:"application/pdf", data:await toBase64(f), isPdf:true, name:f.name||"maisoku.pdf" }];
+    }else{
+      files = [{ media_type:"image/jpeg", data:await resizeImage(f,1600,.85), isPdf:false, name:f.name||"貼り付け画像" }];
     }
     renderThumbs();
   }catch(ex){ err("ファイル読込に失敗: "+ex.message); }
+}
+function resetDownstream(){
+  files = [];
+  renderThumbs();
+  // 02 物件情報フォームを全クリア
+  ["fAddress","fPrice","fLand","fBldg","fUse","fBcr","fFar","fRosenka","fRoadW","fFront","fNotes"]
+    .forEach(id=>{ $(id).value=""; });
+  ["fCity","fRoadKind","fRoadLaw"].forEach(id=>{ $(id).value=""; });
+  $("manualCard").classList.add("hidden");
+  // 03/04 結果とPDFを非表示・破棄
+  $("valCard").classList.add("hidden");
+  $("judgeCard").classList.add("hidden");
+  $("btnPdf").classList.add("hidden");
+  $("valBody").innerHTML=""; $("judgeBody").innerHTML="";
+  $("printReport").innerHTML="";
+  lastRun = null;
 }
 function renderThumbs(){
   const t = $("thumbs"); t.innerHTML = "";
@@ -554,6 +573,52 @@ async function landPoints(lat,lng){
   throw new Error("周辺に地価公示・地価調査地点が見つかりませんでした。");
 }
 
+/* ================= 住所精度判定 ================= */
+function addrPrecision(addr){
+  if(/[○◯〇●＊*■□？?×]/.test(addr))
+    return {level:"masked", label:"概算（住所に伏せ字あり）", cls:"warn",
+      hint:"正確な住所を入力して再実行すると確定値になります。"};
+  const detail = /(\d+|[一二三四五六七八九十]+)\s*(番地?|号)|\d+\s*[-ー−‐－]\s*\d+/;
+  if(detail.test(addr))
+    return {level:"full", label:"住所確定（番地まで特定）", cls:"ok", hint:""};
+  return {level:"partial", label:"概算（丁目・大字レベル）", cls:"warn",
+    hint:"番地まで入力して再実行すると確定値になります。"};
+}
+
+/* ================= 用途地域(都市計画GIS XKT002) ================= */
+function pointInGeom(g,lng,lat){
+  const inRing = ring=>{
+    let inside=false;
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
+      if(((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/(yj-yi)+xi)) inside=!inside;
+    }
+    return inside;
+  };
+  const inPoly = poly => inRing(poly[0]) && !poly.slice(1).some(h=>inRing(h));
+  if(g.type==="Polygon") return inPoly(g.coordinates);
+  if(g.type==="MultiPolygon") return g.coordinates.some(inPoly);
+  return false;
+}
+async function fetchZoning(lat,lng){
+  try{
+    const z=14, t=tileXY(lat,lng,z);
+    const r = await fetch(`${CFG.worker}/reinfolib?api=XKT002&response_format=geojson&z=${z}&x=${t.x}&y=${t.y}`);
+    if(!r.ok) return null;
+    const j = await r.json();
+    const hit = (j.features||[]).find(f=>f.geometry && pointInGeom(f.geometry,lng,lat));
+    if(!hit) return null;
+    const p = hit.properties||{};
+    let use=null,bcr=null,far=null;
+    for(const [k,v] of Object.entries(p)){
+      if(use==null && typeof v==="string" && /(住居|商業|工業|田園)/.test(v)) use=v;
+      if(bcr==null && /coverage|kenpei|建蔽|建ぺい/i.test(k)){ const n=parseFloat(String(v).replace(/[^\d.]/g,"")); if(n) bcr=n; }
+      if(far==null && /floor_?area|youseki|容積/i.test(k)){ const n=parseFloat(String(v).replace(/[^\d.]/g,"")); if(n) far=n; }
+    }
+    return (use||bcr||far) ? {use,bcr,far} : null;
+  }catch(e){ return null; }
+}
+
 /* ================= 判定ロジック ================= */
 function isResidentialZone(use){ return /住居|田園/.test(use||""); }
 
@@ -639,18 +704,28 @@ $("btnRun").addEventListener("click", async ()=>{
   const input = {
     addr, price:num("fPrice"), land:num("fLand"), bldg:num("fBldg"),
     use:$("fUse").value.trim(), bcr:num("fBcr"), far:num("fFar"),
+    rosenka:num("fRosenka"),
     city:$("fCity").value, roadW:num("fRoadW"), frontage:num("fFront"),
     roadKind:$("fRoadKind").value, roadLaw:$("fRoadLaw").value,
     notes:$("fNotes").value
   };
-  loading(true,"座標特定 → 地価データ取得中");
+  loading(true,"座標特定 → 地価・都市計画データ取得中");
   $("btnRun").disabled=true;
   try{
     const geo = await geocode(addr);
-    const {year, pts} = await landPoints(geo.lat, geo.lng);
-    renderValuation(input, geo, year, pts);
-    renderJudge(input, pts);
-    lastRun = {input, geo, year, pts};
+    const precision = addrPrecision(addr);
+    const [lp, zoning] = await Promise.all([ landPoints(geo.lat, geo.lng), fetchZoning(geo.lat, geo.lng) ]);
+    const {year, pts} = lp;
+    // 公式GISで補完（マイソク記載がない項目のみ）
+    const eff = {...input};
+    if(zoning){
+      if(!eff.use && zoning.use) eff.use = zoning.use;
+      if(eff.bcr==null && zoning.bcr!=null) eff.bcr = zoning.bcr;
+      if(eff.far==null && zoning.far!=null) eff.far = zoning.far;
+    }
+    renderValuation(eff, geo, year, pts, precision);
+    renderJudge(eff, pts, zoning, input);
+    lastRun = {input:eff, geo, year, pts, zoning, precision};
     $("btnPdf").classList.remove("hidden");
     $("valCard").classList.remove("hidden");
     $("judgeCard").classList.remove("hidden");
@@ -659,21 +734,26 @@ $("btnRun").addEventListener("click", async ()=>{
   finally{ loading(false); $("btnRun").disabled=false; }
 });
 
-function renderValuation(input, geo, year, pts){
+function renderValuation(input, geo, year, pts, precision){
   const top = pts.slice(0,3);
   // 距離加重平均単価(近いほど重い)
   const wsum = top.reduce((s,p)=>s+1/Math.max(p.dist,50),0);
   const unit = Math.round(top.reduce((s,p)=>s+p.priceYen/Math.max(p.dist,50),0)/wsum);
   const el = $("valBody");
-  let html = "";
+  let html = `<div style="margin-bottom:8px"><span class="badge ${precision.cls}">${precision.label}</span>${precision.hint?`<span style="font-size:11.5px;color:#7A8B99;margin-left:6px">${precision.hint}</span>`:""}</div>`;
   if(input.land!=null){
-    const kouji = unit*input.land, kotei = kouji*0.7, rosen = kouji*0.8;
+    const kouji = unit*input.land, kotei = kouji*0.7;
     html += `<div class="big">${fmtMan(kouji)}<small> 万円（公示価格ベース土地評価額）</small></div>
     <table class="rt" style="margin-top:8px">
       <tr><th>採用単価（距離加重平均）</th><td>${unit.toLocaleString()} <span class="unit">円/㎡</span>（${(unit*3.30578).toLocaleString("ja-JP",{maximumFractionDigits:0})} 円/坪）</td></tr>
-      <tr><th>土地面積</th><td>${fmt(input.land)} ㎡</td></tr>
-      <tr><th>相続税路線価水準（×0.8）</th><td>${fmtMan(rosen)} 万円</td></tr>
-      <tr><th>固定資産税評価水準（×0.7）</th><td>${fmtMan(kotei)} 万円</td></tr>`;
+      <tr><th>土地面積</th><td>${fmt(input.land)} ㎡</td></tr>`;
+    if(input.rosenka!=null){
+      const rosenkaVal = input.rosenka*1000*input.land;
+      html += `<tr><th>相続税路線価評価額<span class="badge ok" style="margin-left:4px">実額</span></th><td><b>${fmtMan(rosenkaVal)} 万円</b>（路線価 ${input.rosenka.toLocaleString()}千円/㎡ × ${fmt(input.land)}㎡）<br><span class="unit">※奥行価格補正等の画地補正は未適用</span></td></tr>`;
+    }else{
+      html += `<tr><th>相続税路線価水準<span class="badge warn" style="margin-left:4px">推計×0.8</span></th><td>${fmtMan(kouji*0.8)} 万円<br><span class="unit">※<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener">路線価図</a>の実額をフォームに入力すると実額計算に切替</span></td></tr>`;
+    }
+    html += `<tr><th>固定資産税評価水準（×0.7）</th><td>${fmtMan(kotei)} 万円</td></tr>`;
     if(input.price!=null){
       const ratio = kouji/(input.price*10000)*100;
       html += `<tr><th>販売価格に対する土地値</th><td><b>${fmt(ratio)}%</b>（販売 ${input.price.toLocaleString()} 万円）</td></tr>`;
@@ -698,7 +778,7 @@ function renderValuation(input, geo, year, pts){
   el.innerHTML = html;
 }
 
-function renderJudge(input, pts){
+function renderJudge(input, pts, zoning, orig){
   const r = judge(input);
   const el = $("judgeBody");
   let html = `<div class="stamp-row">
@@ -707,6 +787,18 @@ function renderJudge(input, pts){
   </div>`;
 
   html += `<table class="rt">`;
+  // 公式GIS(用途地域)とマイソク記載のクロスチェック
+  if(zoning){
+    let cmp = "";
+    if(orig && (orig.bcr!=null || orig.far!=null || orig.use)){
+      const m = (orig.use ? (zoning.use ? orig.use.replace(/\s/g,"").includes(zoning.use.replace(/地域|\s/g,"").slice(0,4)) || zoning.use.includes(orig.use.slice(0,4)) : true) : true)
+        && (orig.bcr==null || zoning.bcr==null || orig.bcr===zoning.bcr)
+        && (orig.far==null || zoning.far==null || orig.far===zoning.far);
+      cmp = m ? `<span style="color:var(--ok);font-weight:700">（マイソク記載と一致）</span>`
+              : `<span style="color:var(--warn);font-weight:700">（マイソク記載と相違 → 用途地域境の可能性、要確認）</span>`;
+    }
+    html += `<tr><th>公式用途地域（都市計画GIS）</th><td>${zoning.use||"—"} 建${zoning.bcr??"—"}/容${zoning.far??"—"} ${cmp}</td></tr>`;
+  }
   if(input.bcr!=null){
     html += `<tr><th>指定建蔽率</th><td>${input.bcr}%${input.land!=null?`（建築面積の上限目安 ${fmt(input.land*input.bcr/100)}㎡）`:""}</td></tr>`;
   }
@@ -743,9 +835,16 @@ const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">
 $("btnPdf").addEventListener("click", ()=>{
   if(!lastRun) return;
   buildReport(lastRun);
+  // PDFの既定ファイル名はブラウザがdocument.titleを使うため、住所に差し替えて印刷
+  const orig = document.title;
+  const addr = (lastRun.input.addr||"マイソク即査定").replace(/[\\/:*?"<>|]/g,"").replace(/\s+/g,"").trim();
+  document.title = addr + "_査定" + new Date().toISOString().slice(0,10).replace(/-/g,"");
+  const restore = ()=>{ document.title = orig; window.removeEventListener("afterprint", restore); };
+  window.addEventListener("afterprint", restore);
   window.print();
+  setTimeout(restore, 4000); // afterprint非発火ブラウザ向けの保険
 });
-function buildReport({input, geo, year, pts}){
+function buildReport({input, geo, year, pts, zoning, precision}){
   const r = judge(input);
   const top = pts.slice(0,3);
   const wsum = top.reduce((s,p)=>s+1/Math.max(p.dist,50),0);
@@ -760,7 +859,7 @@ function buildReport({input, geo, year, pts}){
     <div class="rp-sub">MAISOKU INSTANT APPRAISAL ／ 机上評価・再建築判定</div></div>
     <div class="rp-meta">作成日 ${today}<br>地価データ: 地価公示・地価調査（${year}年）</div>
   </div>
-  <div class="rp-addr">所在地　${esc(input.addr)}</div>
+  <div class="rp-addr">所在地　${esc(input.addr)} <span class="badge ${precision?precision.cls:"warn"}" style="font-size:9px">${precision?precision.label:""}</span></div>
 
   <div class="rp-sec"><div class="h">物件概要</div><div class="b rp-2col">
     <table class="rp-t">
@@ -785,7 +884,7 @@ function buildReport({input, geo, year, pts}){
     h += `<div class="rp-big">${fmtMan(kouji)}<small> 万円（公示価格ベース）</small></div>
     <table class="rp-t" style="margin-top:4px">
       <tr><th>採用単価（距離加重）</th><td>${unit.toLocaleString()} 円/㎡</td></tr>
-      <tr><th>相続税路線価水準（×0.8）</th><td>${fmtMan(kouji*0.8)} 万円</td></tr>
+      ${input.rosenka!=null?`<tr><th>相続税路線価評価額【実額】</th><td><b>${fmtMan(input.rosenka*1000*input.land)} 万円</b>（${input.rosenka.toLocaleString()}千円/㎡・画地補正未適用）</td></tr>`:`<tr><th>相続税路線価水準【推計×0.8】</th><td>${fmtMan(kouji*0.8)} 万円</td></tr>`}
       <tr><th>固定資産税評価水準（×0.7）</th><td>${fmtMan(kouji*0.7)} 万円</td></tr>
       ${input.price!=null?`<tr><th>販売価格に対する土地値</th><td><b>${fmt(kouji/(input.price*10000)*100)}%</b></td></tr>`:""}
     </table>`;
@@ -798,12 +897,14 @@ function buildReport({input, geo, year, pts}){
         <div class="stamp ${r.cls==="ng"?"":r.cls}">${r.verdict}</div>
         <ul class="reasons">${r.reasons.map(x=>`<li class="${x.c}">${esc(x.t)}</li>`).join("")}</ul>
       </div>`;
+  h += `<table class="rp-t" style="margin-top:4px">
+      ${zoning?`<tr><th>公式用途地域（都市計画GIS）</th><td>${esc(zoning.use)||"—"} 建${zoning.bcr??"—"}/容${zoning.far??"—"}</td></tr>`:""}`;
   if(r.farInfo && r.farInfo.roadFar!=null){
-    h += `<table class="rp-t" style="margin-top:4px">
+    h += `
       <tr><th>基準容積率（道路制限後）</th><td>${r.farInfo.base}%（指定${r.farInfo.specified}%／道路制限${r.farInfo.roadFar}%）</td></tr>
-      ${r.farInfo.usedFar!=null?`<tr><th>現況容積消化</th><td>${fmt(r.farInfo.usedFar)}%（延床上限目安 ${fmt(r.farInfo.maxFloor)}㎡）</td></tr>`:""}
-    </table>`;
+      ${r.farInfo.usedFar!=null?`<tr><th>現況容積消化</th><td>${fmt(r.farInfo.usedFar)}%（延床上限目安 ${fmt(r.farInfo.maxFloor)}㎡）</td></tr>`:""}`;
   }
+  h += `</table>`;
   h += `</div></div>
   </div>
 
