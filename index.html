@@ -3589,8 +3589,10 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
   // ①売却による利益
   const otherAdjTotal=(ex.otherAdjs||[]).reduce((s,a)=>s+(a.amount||0),0);
   const saleProfit=ex.salePrice?(ex.salePrice-(ex.agentFee||0)+(ex.taxAdj||0)-(ex.remainDebt||0)+otherAdjTotal):0;
+  // 諸費用合計（isMiscCost:true のtransactions）
+  const miscTotal=(p.transactions||[]).filter(t=>t.isMiscCost).reduce((s,t)=>s+t.amount,0);
   // ②トータル利益
-  const totalProfit=saleProfit+lifeCF-(ex.transferTax||0);
+  const totalProfit=saleProfit+lifeCF-miscTotal-(ex.transferTax||0);
   // 所有期間
   const acqDate=p.acquireDate?new Date(p.acquireDate):null;
   const saleDate=ex.saleDate?new Date(ex.saleDate):new Date();
@@ -3675,6 +3677,11 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
           <td style="padding:5px 6px;color:#888">取得来CF累計</td>
           <td style="padding:5px 6px;text-align:right" class="${lifeCF>=0?'g':'r'}">${lifeCF<0?'▲':''}${fmt(Math.abs(lifeCF))}</td>
           <td style="color:${lifeCF>=0?'#16a34a':'#dc2626'};font-size:11px">${lifeCF>=0?'＋':'▲'}</td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888">諸費用合計</td>
+          <td style="padding:5px 6px;text-align:right;color:#dc2626">${miscTotal>0?'▲'+fmt(miscTotal):'—'}</td>
+          <td style="color:#dc2626;font-size:11px">${miscTotal>0?'▲':''}</td>
         </tr>
         <tr style="border-bottom:0.5px solid #f0f0e8">
           <td style="padding:5px 6px;color:#888">譲渡税 <span style="font-size:9px;color:#aaa">自動</span></td>
