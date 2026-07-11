@@ -925,8 +925,16 @@ function renderCashflow(){
       <div class="flex" style="gap:10px;font-size:11px"><span class="g">${fmt(moI)}</span><span class="r">${fmt(moE)}</span></div></div><div class="col-sep"></div>`;
     properties.forEach((p,i)=>{const pI=getMonthI(mi,i),pE=getMonthE(mi,i);colMon+=`<div class="col-row"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px">${p.name} <span class="badge bz">${p.type}</span></span><span class="${(pI-pE)>=0?'g':'r'}" style="font-size:11px;font-weight:500">${(pI-pE)<0?'▲':''}${fmt(pI-pE)}</span></div><div class="bar-wrap" style="height:4px"><div class="bar-i" style="width:${pct(pI,pI+pE)}%"></div><div class="bar-e" style="width:${pct(pE,pI+pE)}%"></div></div><div class="flex" style="gap:8px;font-size:10px"><span class="g">${fmt(pI)}</span><span class="r">${fmt(pE)}</span></div></div>`;});
     const _curYM=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+const getSnapForOcc=(p,no,ym)=>{
+  if(p.paymentTiming==='prev'){
+    const [y,m]=ym.split('-').map(Number);
+    const prevYM=`${m===1?y-1:y}-${String(m===1?12:m-1).padStart(2,'0')}`;
+    return p.monthlySnapshots?.[prevYM]?.[no];
+  }
+  return p.monthlySnapshots?.[ym]?.[no];
+};
 const totOcc=properties.reduce((s,p)=>s+p.rooms.filter(r=>{
-  const snap=p.monthlySnapshots?.[_curYM]?.[r.no];
+  const snap=getSnapForOcc(p,r.no,_curYM);
   if(!snap)return false;
   return snap.status==='occupied'||snap.status==='new'||snap.status==='late';
 }).length,0);
@@ -936,7 +944,7 @@ const totRooms=properties.reduce((s,p)=>s+p.rooms.length,0);
       <div class="col-total"><div class="flex-b" style="margin-bottom:2px"><span style="font-size:11px;color:#888">全物件合計</span><span style="font-size:14px;font-weight:500;color:${occR>=75?'#16a34a':'#dc2626'}">${occR}%</span></div>
       <div class="bar-bg" style="height:6px"><div style="height:6px;width:${occR}%;background:${occR>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div>
       <div style="font-size:11px;color:#888;margin-top:2px">${totOcc}/${totRooms}室 稼働中</div></div><div class="col-sep"></div>`;
-    properties.forEach(p=>{const o=p.rooms.filter(r=>{const snap=p.monthlySnapshots?.[_curYM]?.[r.no];if(!snap)return false;return snap.status==='occupied'||snap.status==='new'||snap.status==='late';}).length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
+    properties.forEach(p=>{const o=p.rooms.filter(r=>{const snap=getSnapForOcc(p,r.no,_curYM);if(!snap)return false;return snap.status==='occupied'||snap.status==='new'||snap.status==='late';}).length,t=p.rooms.length,r=pct(o,t);colOcc+=`<div class="col-row"><div class="flex-b"><span style="font-size:11px">${p.name}</span><span style="font-size:11px;font-weight:500;color:${r>=75?'#16a34a':'#dc2626'}">${r}%</span></div><div class="bar-bg" style="height:4px"><div style="height:4px;width:${r}%;background:${r>=75?'#16a34a':'#dc2626'};border-radius:3px"></div></div><div style="font-size:10px;color:#888">${o}/${t}室</div></div>`;});
     const totSf=properties.reduce((s,p)=>s+((p.price||0)+(p.reform||0)+(p.miscCost||0)-(p.loan||0)),0);
     const yr3=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
     let totNet=properties.reduce((s,p,i)=>s+getLifetimeCF(i),0);
@@ -1669,7 +1677,15 @@ function renderOccProp(){
   const yr=parseInt(document.getElementById('yearSel').value||new Date().getFullYear());
   const MONTHS=Array.from({length:12},(_,i)=>({mo:i+1,ym:`${yr}-${String(i+1).padStart(2,'0')}`}));
 
-  const getSnap=(no,ym)=>p.monthlySnapshots?.[ym]?.[no]||null;
+  const getSnap=(no,ym)=>{
+    // 前月入金の物件は前月のスナップショットが当月の入居状況を表す
+    if(p.paymentTiming==='prev'){
+      const [y,m]=ym.split('-').map(Number);
+      const prevYM=`${m===1?y-1:y}-${String(m===1?12:m-1).padStart(2,'0')}`;
+      return p.monthlySnapshots?.[prevYM]?.[no]||null;
+    }
+    return p.monthlySnapshots?.[ym]?.[no]||null;
+  };
   const getContract=(r,ym)=>getContractItems(r,ym,pi);
 const contractTotal=(r,ym)=>getContractTotal(r,ym);
   const snapTotal=(snap)=>snap?snap.items.reduce((s,it)=>s+(it.amt||0),0):null;
@@ -2332,6 +2348,12 @@ ${i>0?`<span class="badge" style="background:${seg.segType==='additional'?'#dcfc
       <div class="info-rows">
         <div class="ir"><div class="ic lbl">物件種別</div><div class="ic amt" style="text-align:left">
   <input type="text" value="${p.type||''}" style="width:120px;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updatePropField(${pi},'type',this.value)">
+</div></div>
+        <div class="ir"><div class="ic lbl">家賃入金タイミング</div><div class="ic amt" style="text-align:left">
+  <select style="font-size:12px" onchange="updatePropField(${pi},'paymentTiming',this.value)">
+    <option value="current" ${(p.paymentTiming||'current')==='current'?'selected':''}>当月入金（当月分を当月に入金）</option>
+    <option value="prev" ${p.paymentTiming==='prev'?'selected':''}>前月入金（当月分を前月に入金）</option>
+  </select>
 </div></div>
         <div class="ir"><div class="ic lbl">所在地 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="text" value="${p.addr||''}" style="width:200px" onchange="updatePropField(${pi},'addr',this.value)"></div></div>
         <div class="ir"><div class="ic lbl">物件取得年月日 <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:9px">AI</span></div><div class="ic amt" style="text-align:left"><input type="date" value="${p.acquireDate||''}" style="width:140px;height:30px;font-size:12px;border:0.5px solid #d0d0c8;border-radius:6px;padding:4px 8px" onchange="updatePropField(${pi},'acquireDate',this.value)"></div></div>
