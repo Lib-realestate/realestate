@@ -1980,6 +1980,10 @@ function toggleOccDetail2(pi){
 
   function editSnapItems(pi,roomNo,ym){
   const p=properties[pi];
+  if(p.paymentTiming==='prev'){
+    const [y,m]=ym.split('-').map(Number);
+    ym=`${m===1?y-1:y}-${String(m===1?12:m-1).padStart(2,'0')}`;
+  }
   if(!p.monthlySnapshots?.[ym]?.[roomNo]){
     if(!p.monthlySnapshots) p.monthlySnapshots={};
     if(!p.monthlySnapshots[ym]) p.monthlySnapshots[ym]={};
