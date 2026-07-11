@@ -1980,6 +1980,7 @@ function toggleOccDetail2(pi){
 
   function editSnapItems(pi,roomNo,ym){
   const p=properties[pi];
+  const dispYM=ym;
   if(p.paymentTiming==='prev'){
     const [y,m]=ym.split('-').map(Number);
     ym=`${m===1?y-1:y}-${String(m===1?12:m-1).padStart(2,'0')}`;
@@ -2000,7 +2001,7 @@ function toggleOccDetail2(pi){
   }).join('');
   document.getElementById('classifyContent').innerHTML=`
     <div style="font-size:13px;font-weight:500;margin-bottom:4px">${roomNo}号室 入金額編集</div>
-    <div style="font-size:11px;color:#888;margin-bottom:12px">${ym.replace('-','年')}月分</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px">${dispYM.replace('-','年')}月分（${p.paymentTiming==='prev'?ym.replace('-','年')+'月入金':'当月入金'}）</div>
     ${fields}`;
   const modal=document.getElementById('classifyModal');
   modal.querySelector('.modal-title').textContent='入金額を編集';
