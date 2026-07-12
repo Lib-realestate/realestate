@@ -256,7 +256,7 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
         <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
         <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
         <div><label class="f">容積率（%）</label><input type="number" id="fFar" inputmode="numeric"></div>
-        <div class="full"><label class="f">相続税路線価（千円/㎡・任意）<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">路線価図↗</a></label><input type="number" id="fRosenka" inputmode="decimal" placeholder="路線価図の値を入力→実額計算（未入力は公示×0.8で推計）"></div>
+        <div class="full"><label class="f">固定資産税路線価（千円/㎡・任意）<a href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">全国地価マップ↗</a></label><input type="number" id="fKotei" inputmode="decimal" placeholder="地価マップの値を入力→実額計算（未入力は公示×0.7で推計）"></div>
         <div class="full"><label class="f">区域区分</label>
           <select id="fCity">
             <option value="">不明</option>
@@ -382,7 +382,7 @@ function resetDownstream(){
   files = [];
   renderThumbs();
   // 02 物件情報フォームを全クリア
-  ["fAddress","fPrice","fLand","fBldg","fBuilt","fYield","fYieldMkt","fWalk","fUse","fBcr","fFar","fRosenka","fRoadW","fFront","fNotes"]
+  ["fAddress","fPrice","fLand","fBldg","fBuilt","fYield","fYieldMkt","fWalk","fUse","fBcr","fFar","fKotei","fRoadW","fFront","fNotes"]
     .forEach(id=>{ $(id).value=""; });
   ["fCity","fRoadKind","fRoadLaw","fStruct"].forEach(id=>{ $(id).value=""; });
   $("manualCard").classList.add("hidden");
@@ -866,7 +866,7 @@ $("btnRun").addEventListener("click", async ()=>{
   const input = {
     addr, price:num("fPrice"), land:num("fLand"), bldg:num("fBldg"),
     use:$("fUse").value.trim(), bcr:num("fBcr"), far:num("fFar"),
-    rosenka:num("fRosenka"),
+    kotei:num("fKotei"),
     struct:$("fStruct").value, built:num("fBuilt"), gyield:num("fYield"), walk:num("fWalk"),
     city:$("fCity").value, roadW:num("fRoadW"), frontage:num("fFront"),
     roadKind:$("fRoadKind").value, roadLaw:$("fRoadLaw").value,
@@ -928,13 +928,14 @@ function renderValuation(input, geo, year, pts, precision){
     <table class="rt" style="margin-top:8px">
       <tr><th>採用単価（距離加重平均）</th><td>${unit.toLocaleString()} <span class="unit">円/㎡</span>（${(unit*3.30578).toLocaleString("ja-JP",{maximumFractionDigits:0})} 円/坪）</td></tr>
       <tr><th>土地面積</th><td>${fmt(input.land)} ㎡</td></tr>`;
-    if(input.rosenka!=null){
-      const rosenkaVal = input.rosenka*1000*input.land;
-      html += `<tr><th>相続税路線価評価額<span class="badge ok" style="margin-left:4px">実額</span></th><td><b>${fmtMan(rosenkaVal)} 万円</b>（路線価 ${input.rosenka.toLocaleString()}千円/㎡ × ${fmt(input.land)}㎡）<br><span class="unit">※奥行価格補正等の画地補正は未適用</span></td></tr>`;
+    const vsPrice = v => input.price!=null ? `（販売価格の ${fmt(v/(input.price*10000)*100)}%）` : "";
+    html += `<tr><th>相続税路線価水準<span class="badge warn" style="margin-left:4px">概算×0.8</span></th><td>${fmtMan(kouji*0.8)} 万円 ${vsPrice(kouji*0.8)}</td></tr>`;
+    if(input.kotei!=null){
+      const koteiVal = input.kotei*1000*input.land;
+      html += `<tr><th>固定資産税路線価評価額<span class="badge ok" style="margin-left:4px">実額</span></th><td><b>${fmtMan(koteiVal)} 万円</b> ${vsPrice(koteiVal)}<br><span class="unit">路線価 ${input.kotei.toLocaleString()}千円/㎡ × ${fmt(input.land)}㎡ ※画地補正未適用</span></td></tr>`;
     }else{
-      html += `<tr><th>相続税路線価水準<span class="badge warn" style="margin-left:4px">推計×0.8</span></th><td>${fmtMan(kouji*0.8)} 万円<br><span class="unit">※<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener">路線価図</a>の実額をフォームに入力すると実額計算に切替</span></td></tr>`;
+      html += `<tr><th>固定資産税評価水準<span class="badge warn" style="margin-left:4px">推計×0.7</span></th><td>${fmtMan(kotei)} 万円 ${vsPrice(kotei)}<br><span class="unit">※<a href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener">全国地価マップ</a>の固定資産税路線価をフォームに入力すると実額計算に切替</span></td></tr>`;
     }
-    html += `<tr><th>固定資産税評価水準（×0.7）</th><td>${fmtMan(kotei)} 万円</td></tr>`;
     if(input.price!=null){
       const ratio = kouji/(input.price*10000)*100;
       html += `<tr><th>販売価格に対する土地値</th><td><b>${fmt(ratio)}%</b>（販売 ${input.price.toLocaleString()} 万円）</td></tr>`;
@@ -1077,8 +1078,10 @@ function buildReport({input, geo, year, pts, zoning, precision}){
     h += `<div class="rp-big">${fmtMan(kouji)}<small> 万円（公示価格ベース）</small></div>
     <table class="rp-t" style="margin-top:4px">
       <tr><th>採用単価（距離加重）</th><td>${unit.toLocaleString()} 円/㎡</td></tr>
-      ${input.rosenka!=null?`<tr><th>相続税路線価評価額【実額】</th><td><b>${fmtMan(input.rosenka*1000*input.land)} 万円</b>（${input.rosenka.toLocaleString()}千円/㎡・画地補正未適用）</td></tr>`:`<tr><th>相続税路線価水準【推計×0.8】</th><td>${fmtMan(kouji*0.8)} 万円</td></tr>`}
-      <tr><th>固定資産税評価水準（×0.7）</th><td>${fmtMan(kouji*0.7)} 万円</td></tr>
+      <tr><th>相続税路線価水準【概算×0.8】</th><td>${fmtMan(kouji*0.8)} 万円${input.price!=null?`（販売価格の ${fmt(kouji*0.8/(input.price*10000)*100)}%）`:""}</td></tr>
+      ${input.kotei!=null
+        ?`<tr><th>固定資産税路線価評価額【実額】</th><td><b>${fmtMan(input.kotei*1000*input.land)} 万円</b>${input.price!=null?`（販売価格の ${fmt(input.kotei*1000*input.land/(input.price*10000)*100)}%）`:""}　${input.kotei.toLocaleString()}千円/㎡・画地補正未適用</td></tr>`
+        :`<tr><th>固定資産税評価水準【推計×0.7】</th><td>${fmtMan(kouji*0.7)} 万円${input.price!=null?`（販売価格の ${fmt(kouji*0.7/(input.price*10000)*100)}%）`:""}</td></tr>`}
       ${input.price!=null?`<tr><th>販売価格に対する土地値</th><td><b>${fmt(kouji/(input.price*10000)*100)}%</b></td></tr>`:""}
     </table>`;
   }else{
