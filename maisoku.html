@@ -185,6 +185,8 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
 #printReport .stamp{width:66px;height:66px;font-size:11px;border-width:2px}
 #printReport ul.reasons{font-size:9.5px}
 #printReport ul.reasons li{padding:1.5px 0 1.5px 12px}
+#printReport .rp-links{font-size:9.5px;margin-bottom:5px}
+#printReport .rp-links a{color:var(--blue);text-decoration:underline;font-weight:700}
 #printReport .rp-foot{font-size:8.5px;color:#7A8B99;border-top:1px dashed var(--blue-line);padding-top:5px;line-height:1.55}
 @media print{
   @page{size:A4 portrait;margin:9mm 11mm}
@@ -1113,6 +1115,11 @@ function buildReport({input, geo, year, pts, zoning, precision}){
     </table>
   </div></div>
 
+  <div class="rp-links">参考リンク:
+    <a href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">ハザードマップ（物件地点）</a> ／
+    <a href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">全国地価マップ（固定資産税路線価）</a> ／
+    <a href="https://www.rosenka.nta.go.jp/">国税庁 路線価図</a>
+  </div>
   <div class="rp-foot">本書は地価公示・地価調査（国土交通省 不動産情報ライブラリ）の周辺地点単価を面積按分した机上評価であり、個別の画地条件（角地・不整形・道路条件等）は未補正。再建築・法規判定はマイソク記載情報に基づく参考判定であり、42条道路種別・セットバック・43条許可・私道承諾・地区計画・高度地区等は役所調査および道路台帳により確定すること。固定資産税路線価・相続税路線価の実額は全国地価マップ・財産評価基準書を参照。</div>`;
   $("printReport").innerHTML = h;
 }
