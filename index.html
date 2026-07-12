@@ -1774,7 +1774,8 @@ else if(!snap.status||snap.status===null) {} // デフォルト（null）は空�
     const yMonths=Array.from({length:12},(_,i)=>({mo:i+1,ym:`${y}-${String(i+1).padStart(2,'0')}`}));
     const yLate=p.rooms.reduce((s,r)=>{
       return s+yMonths.reduce((ss,{ym:ym2})=>{
-        const snap=p.monthlySnapshots?.[ym2]?.[r.no];
+        const snapYM2=p.paymentTiming==='prev'?(()=>{const [sy,sm]=ym2.split('-').map(Number);return`${sm===1?sy-1:sy}-${String(sm===1?12:sm-1).padStart(2,'0')}`;})():ym2;
+        const snap=p.monthlySnapshots?.[snapYM2]?.[r.no];
         if(!snap||snap.status==='vacant'||snap.status==='new')return ss;
         const actual=snap.items.reduce((sss,it)=>sss+(it.amt||0),0);
         const contract=getContractTotal(r,ym2);
