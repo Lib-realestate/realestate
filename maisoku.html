@@ -146,6 +146,8 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
 .pt .mt{color:#5B7286}
 
 .note{font-size:11.5px;color:#7A8B99;line-height:1.6;margin-top:10px;border-top:1px dashed var(--blue-line);padding-top:8px}
+.extlink{display:inline-block;padding:7px 12px;border:1px solid var(--blue);border-radius:20px;background:#fff;color:var(--blue);font-size:12.5px;font-weight:700;text-decoration:none;font-family:inherit;cursor:pointer}
+.extlink:active{background:var(--blue-pale)}
 .badge{display:inline-block;font-size:11px;border-radius:4px;padding:1px 8px;font-weight:700;vertical-align:middle}
 .badge.ok{background:#E3F1EA;color:var(--ok)}
 .badge.warn{background:#F7EEDC;color:var(--warn)}
@@ -235,6 +237,20 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
         <div><label class="f">販売価格（万円）</label><input type="number" id="fPrice" inputmode="numeric"></div>
         <div><label class="f">土地面積（㎡）</label><input type="number" id="fLand" inputmode="decimal" step="0.01"></div>
         <div><label class="f">延床面積（㎡）</label><input type="number" id="fBldg" inputmode="decimal" step="0.01"></div>
+        <div><label class="f">構造</label>
+          <select id="fStruct">
+            <option value="">不明</option>
+            <option value="RC">RC</option>
+            <option value="SRC">SRC</option>
+            <option value="S">鉄骨</option>
+            <option value="LGS">軽量鉄骨</option>
+            <option value="W">木造</option>
+          </select>
+        </div>
+        <div><label class="f">築年（西暦）</label><input type="number" id="fBuilt" inputmode="numeric" placeholder="1995"></div>
+        <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
+        <div><label class="f">周辺相場利回り（%・空欄=AI検索）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等の相場値"></div>
+        <div><label class="f">最寄駅 徒歩（分）</label><input type="number" id="fWalk" inputmode="numeric"></div>
         <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
         <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
         <div><label class="f">容積率（%）</label><input type="number" id="fFar" inputmode="numeric"></div>
@@ -287,6 +303,12 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
     <div class="bd" id="judgeBody"></div>
   </section>
   </div>
+
+  <!-- 5. 総合スコア -->
+  <section class="card hidden" id="scoreCard">
+    <div class="ttl"><span class="no">05</span>総合スコア（各5点満点・参考値）</div>
+    <div class="bd" id="scoreBody"></div>
+  </section>
 
   <button class="sub hidden" id="btnPdf">📄 結果をPDFで保存（A4・1枚）</button>
   <div id="printReport"></div>
@@ -358,15 +380,16 @@ function resetDownstream(){
   files = [];
   renderThumbs();
   // 02 物件情報フォームを全クリア
-  ["fAddress","fPrice","fLand","fBldg","fUse","fBcr","fFar","fRosenka","fRoadW","fFront","fNotes"]
+  ["fAddress","fPrice","fLand","fBldg","fBuilt","fYield","fYieldMkt","fWalk","fUse","fBcr","fFar","fRosenka","fRoadW","fFront","fNotes"]
     .forEach(id=>{ $(id).value=""; });
-  ["fCity","fRoadKind","fRoadLaw"].forEach(id=>{ $(id).value=""; });
+  ["fCity","fRoadKind","fRoadLaw","fStruct"].forEach(id=>{ $(id).value=""; });
   $("manualCard").classList.add("hidden");
   // 03/04 結果とPDFを非表示・破棄
   $("valCard").classList.add("hidden");
   $("judgeCard").classList.add("hidden");
   $("btnPdf").classList.add("hidden");
-  $("valBody").innerHTML=""; $("judgeBody").innerHTML="";
+  $("scoreCard").classList.add("hidden");
+  $("valBody").innerHTML=""; $("judgeBody").innerHTML=""; $("scoreBody").innerHTML="";
   $("printReport").innerHTML="";
   lastRun = null;
 }
@@ -443,6 +466,10 @@ const EXTRACT_PROMPT = `あなたは不動産マイソク(物件販売図面)の
  "road_law": "42-1/42-2/43/none/不明 (建築基準法上の道路種別。42条2項・セットバック要の記載→42-2)",
  "setback": "要/済/不要/不明",
  "rebuild_flag_text": "再建築不可・建築不可等の記載があれば原文、なければnull",
+ "structure": "RC/SRC/S/軽量鉄骨/木造/その他のいずれか",
+ "built_year": 築年(西暦の数値),
+ "gross_yield_pct": 表面利回り%,
+ "station_walk_min": 最寄駅までの徒歩分,
  "land_right": "所有権/借地権等",
  "notes": "再建築や法規リスクに関わるその他記載(43条但し書き、位置指定道路、通行掘削承諾、既存不適格など)を簡潔に"
 }`;
@@ -491,6 +518,11 @@ function fillForm(j){
   $("fFront").value = j.frontage_m ?? "";
   $("fRoadKind").value = j.road_is_public===true?"public":(j.road_is_public===false?"private":"");
   $("fRoadLaw").value = ["42-1","42-2","43","none"].includes(j.road_law)?j.road_law:"";
+  const st=String(j.structure||"");
+  $("fStruct").value = /SRC/i.test(st)?"SRC":/RC/i.test(st)?"RC":/軽量/.test(st)?"LGS":/鉄骨|S造|^S$/i.test(st)?"S":/木/.test(st)?"W":"";
+  $("fBuilt").value = j.built_year ?? "";
+  $("fYield").value = j.gross_yield_pct ?? "";
+  $("fWalk").value = j.station_walk_min ?? "";
   const extra=[];
   if(j.rebuild_flag_text) extra.push(j.rebuild_flag_text);
   if(j.setback && j.setback!=="不明") extra.push("セットバック:"+j.setback);
@@ -552,6 +584,7 @@ async function landPoints(lat,lng){
         const priceYen = parseInt(String(p.u_current_years_price_ja||"").replace(/[^\d]/g,""))||null;
         return {
           name: p.standard_lot_number_ja || p.place_name_ja || "",
+          cityCode: p.city_code || "",
           location: p.location || p.location_number_ja || "",
           type: (p.land_price_type===1||/調査/.test(p.target_year_name_ja||""))?"地価調査":"地価公示",
           typeRaw: p.land_price_type,
@@ -617,6 +650,159 @@ async function fetchZoning(lat,lng){
     }
     return (use||bcr||far) ? {use,bcr,far} : null;
   }catch(e){ return null; }
+}
+
+/* ================= 取引事例(XIT001)と総合スコア ================= */
+function subjectTypeOf(input){
+  if(input.bldg!=null && input.land!=null) return "宅地(土地と建物)";
+  if(input.bldg!=null) return "中古マンション等";
+  return "宅地(土地)";
+}
+function districtOf(addr){
+  let t = addr.replace(/^.+?[都道府県]/,"");
+  t = t.replace(/^.{1,8}?[市郡]/,"");
+  t = t.replace(/^.{1,8}?区/,"");
+  const m = t.match(/^([^0-9０-９]+?)(?=[0-9０-９]|[一二三四五六七八九十]+丁目|$)/);
+  return m ? m[1].trim() : "";
+}
+function parseBuiltYear(str){
+  if(!str) return null;
+  let m = String(str).match(/(19|20)\d{2}/); if(m) return +m[0];
+  m = String(str).match(/令和(元|\d+)/); if(m) return 2018+(m[1]==="元"?1:+m[1]);
+  m = String(str).match(/平成(元|\d+)/); if(m) return 1988+(m[1]==="元"?1:+m[1]);
+  m = String(str).match(/昭和(元|\d+)/); if(m) return 1925+(m[1]==="元"?1:+m[1]);
+  return null;
+}
+async function fetchComps(cityCode, subjectType){
+  const all = [];
+  const nowY = new Date().getFullYear();
+  for(let y=nowY; y>nowY-3; y--){
+    try{
+      const r = await fetch(`${CFG.worker}/reinfolib?api=XIT001&year=${y}&area=${cityCode.slice(0,2)}&city=${cityCode}`);
+      if(!r.ok) continue;
+      const j = await r.json();
+      (j.data||[]).forEach(d=>{
+        if(d.Type!==subjectType) return;
+        const price=+d.TradePrice, area=+d.Area;
+        if(!price || !area) return;
+        all.push({price, area, unit:price/area, district:d.DistrictName||"", built:parseBuiltYear(d.BuildingYear)});
+      });
+    }catch(e){}
+    if(all.length>=30) break;
+  }
+  return all;
+}
+function median(a){const s2=[...a].sort((x,y)=>x-y);const m=Math.floor(s2.length/2);return s2.length%2?s2[m]:(s2[m-1]+s2[m])/2;}
+const STARS = n => "★★★★★".slice(0,n)+"☆☆☆☆☆".slice(0,5-n);
+const DUR = {RC:47, SRC:47, S:34, LGS:27, W:22};
+const DUR_NAME = {RC:"RC(47年)", SRC:"SRC(47年)", S:"鉄骨(34年)", LGS:"軽量鉄骨(27年)", W:"木造(22年)"};
+
+async function fetchMarketYield(input, addr){
+  try{
+    let type;
+    if(input.bldg!=null && input.land!=null) type = (input.struct==="W"||input.struct==="LGS") ? "一棟アパート" : "一棟マンション";
+    else if(input.bldg!=null) type = "区分マンション";
+    else return null;
+    const cm = addr.match(/^(.+?[都道府県])?(.+?[市区町村])/);
+    const areaTxt = cm ? cm[0] : addr.slice(0,12);
+    const prompt = areaTxt+"の中古"+type+"の現在の表面利回り相場(中央値)を、楽待・健美家・ノムコム等の収益物件市場データをweb検索して調べてください。回答はJSONのみ: {\"market_yield_pct\": 数値, \"basis\": \"出典を15字以内\"}";
+    const resp = await fetch(CFG.worker+"/anthropic",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ model:CFG.model, max_tokens:2000,
+        tools:[{type:"web_search_20250305", name:"web_search", max_uses:3}],
+        messages:[{role:"user", content:prompt}] })
+    });
+    const data = await resp.json();
+    if(data.error) return null;
+    const text = (data.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
+    const m = text.match(/\{[\s\S]*?\}/);
+    if(!m) return null;
+    const j = JSON.parse(m[0]);
+    if(typeof j.market_yield_pct==="number" && j.market_yield_pct>1 && j.market_yield_pct<30) return j;
+    return null;
+  }catch(e){ return null; }
+}
+
+function computeScore(input, r, kouji, comps, district, mkt){
+  const M = [];
+  const skipped = [];
+  // 1) 相場割安度(取引事例比較)
+  (()=>{
+    const type = subjectTypeOf(input);
+    const basisArea = type==="中古マンション等" ? input.bldg : input.land;
+    if(input.price==null || !basisArea){ skipped.push("相場割安度（価格または面積が未入力）"); return; }
+    if(!comps || comps.length<5){ skipped.push("相場割安度（近隣の取引事例が不足）"); return; }
+    const subjUnit = input.price*10000/basisArea;
+    let pool = comps, scope = "同一市区町村";
+    if(district){
+      const near = comps.filter(c=>c.district===district || c.district.startsWith(district) || district.startsWith(c.district));
+      if(near.length>=5){ pool=near; scope="同一町名("+district+")"; }
+    }
+    const med = median(pool.map(c=>c.unit));
+    const ratio = subjUnit/med;
+    const sc = ratio<=0.70?5 : ratio<=0.85?4 : ratio<=1.00?3 : ratio<=1.15?2 : 1;
+    M.push({name:"相場割安度（取引事例比較）", score:sc,
+      basis:`本物件 ${Math.round(subjUnit).toLocaleString()}円/㎡ vs 相場中央値 ${Math.round(med).toLocaleString()}円/㎡（比 ${(ratio*100).toFixed(0)}%）｜相場換算 ${fmtMan(med*basisArea)}万円 vs 販売 ${input.price.toLocaleString()}万円（${scope}・${type}・${pool.length}件）`});
+  })();
+  // 2) 積算(土地値比率)
+  if(kouji!=null && input.price!=null){
+    const ratio = kouji/(input.price*10000);
+    const sc = ratio>=1.0?5 : ratio>=0.8?4 : ratio>=0.6?3 : ratio>=0.4?2 : 1;
+    const diff = kouji - input.price*10000;
+    M.push({name:"積算評価（公示ベース土地値比率）", score:sc,
+      basis:`土地評価 ${fmtMan(kouji)}万円 vs 販売 ${input.price.toLocaleString()}万円（土地値比率 ${(ratio*100).toFixed(0)}%・差額 ${diff>=0?"+":"△"}${fmtMan(Math.abs(diff))}万円）`});
+  }else skipped.push("積算評価（価格または土地面積が未入力）");
+  // 3) 表面利回り（周辺相場中央値=3点、±1ptごとに増減）
+  if(input.gyield!=null){
+    if(mkt && mkt.pct!=null){
+      const d = input.gyield - mkt.pct;
+      const sc = d>=2?5 : d>=1?4 : d>=-1?3 : d>=-2?2 : 1;
+      M.push({name:"表面利回り（周辺相場比）", score:sc,
+        basis:`本物件 ${input.gyield}% − 周辺相場中央値 ${mkt.pct}% = ${d>=0?"+":""}${d.toFixed(1)}pt（±1pt=3点/＋1pt毎に+1点${mkt.src?"・相場出典:"+mkt.src:""}）`});
+    }else{
+      const y2=input.gyield;
+      const sc = y2>=10?5 : y2>=8?4 : y2>=6.5?3 : y2>=5?2 : 1;
+      M.push({name:"表面利回り（絶対値・相場未取得）", score:sc, basis:`本物件 ${y2}%（周辺相場が取得できなかったため絶対基準: 10%=5点/8%=4点/6.5%=3点/5%=2点）`});
+    }
+  }else skipped.push("表面利回り（未入力・実需物件は対象外）");
+  // 4) 法規・再建築リスク
+  {
+    let sc = r.cls==="ok"?5 : r.cls==="warn"?3 : 1;
+    let over = "";
+    if(r.farInfo && r.farInfo.usedFar!=null && r.farInfo.usedFar > r.farInfo.base+0.5){ sc=Math.max(1,sc-1); over="・容積オーバーで減点"; }
+    const farTxt = r.farInfo ? `｜基準容積率 ${r.farInfo.base}%${r.farInfo.usedFar!=null?`・現況消化 ${fmt(r.farInfo.usedFar)}%`:""}` : "";
+    M.push({name:"法規・再建築リスク", score:sc, basis:`判定「${r.verdict}」${over}${farTxt}`});
+  }
+  // 5) 残存法定耐用年数
+  if(input.struct && DUR[input.struct] && input.built!=null){
+    const rem = DUR[input.struct] - (new Date().getFullYear() - input.built);
+    const sc = rem>=20?5 : rem>=10?4 : rem>=5?3 : rem>0?2 : 1;
+    M.push({name:"残存法定耐用年数（融資期間目線）", score:sc, basis:`${DUR_NAME[input.struct]} 築${new Date().getFullYear()-input.built}年 → 残存 ${rem}年`});
+  }else skipped.push("残存耐用年数（構造・築年が未入力）");
+  // 6) 駅近・流動性
+  if(input.walk!=null){
+    const sc = input.walk<=5?5 : input.walk<=10?4 : input.walk<=15?3 : input.walk<=20?2 : 1;
+    M.push({name:"駅近・流動性", score:sc, basis:`最寄駅 徒歩${input.walk}分`});
+  }else skipped.push("駅近・流動性（駅徒歩が未入力）");
+
+  const total = M.length ? Math.round(M.reduce((s2,m)=>s2+m.score,0)/M.length*10)/10 : null;
+  return {metrics:M, skipped, total};
+}
+function renderScore(sc){
+  if(!sc || !sc.metrics.length){ return; }
+  let html = `<div class="big">${sc.total.toFixed(1)}<small> / 5.0（${sc.metrics.length}指標の平均）</small></div>
+  <table class="rt" style="margin-top:8px">`;
+  sc.metrics.forEach(m=>{
+    html += `<tr><th>${m.name}</th><td><span style="color:var(--blue);letter-spacing:2px">${STARS(m.score)}</span> <b>${m.score}</b><br><span class="unit">${m.basis}</span></td></tr>`;
+  });
+  html += `</table>`;
+  if(sc.skipped.length){
+    html += `<div class="note">未評価: ${sc.skipped.join("／")}。フォームに入力して再実行すると採点対象になります。<br>※相場は国交省の不動産取引価格情報(アンケートベース・直近数年)の中央値との単純比較で、階数・接道・個別条件は未補正の参考値です。</div>`;
+  }else{
+    html += `<div class="note">※相場は国交省の不動産取引価格情報(アンケートベース・直近数年)の中央値との単純比較で、個別条件は未補正の参考値です。</div>`;
+  }
+  $("scoreBody").innerHTML = html;
+  $("scoreCard").classList.remove("hidden");
 }
 
 /* ================= 判定ロジック ================= */
@@ -705,6 +891,7 @@ $("btnRun").addEventListener("click", async ()=>{
     addr, price:num("fPrice"), land:num("fLand"), bldg:num("fBldg"),
     use:$("fUse").value.trim(), bcr:num("fBcr"), far:num("fFar"),
     rosenka:num("fRosenka"),
+    struct:$("fStruct").value, built:num("fBuilt"), gyield:num("fYield"), walk:num("fWalk"),
     city:$("fCity").value, roadW:num("fRoadW"), frontage:num("fFront"),
     roadKind:$("fRoadKind").value, roadLaw:$("fRoadLaw").value,
     notes:$("fNotes").value
@@ -725,8 +912,31 @@ $("btnRun").addEventListener("click", async ()=>{
     }
     renderValuation(eff, geo, year, pts, precision);
     renderJudge(eff, pts, zoning, input);
-    lastRun = {input:eff, geo, year, pts, zoning, precision};
+    lastRun = {input:eff, geo, year, pts, zoning, precision, score:null};
     $("btnPdf").classList.remove("hidden");
+    // 取引事例の取得とスコアリング(追加で数秒かかる)
+    loading(true,"取引事例(相場)を取得中");
+    try{
+      const cityCode = (pts[0]&&pts[0].cityCode)||"";
+      let comps = null;
+      if(cityCode) comps = await fetchComps(cityCode, subjectTypeOf(eff));
+      // 周辺相場利回り: 手入力優先、なければAI検索して欄に反映
+      let mkt = null;
+      const mktIn = $("fYieldMkt").value;
+      if(mktIn!==""){ mkt = {pct:Number(mktIn), src:"手入力"}; }
+      else if(eff.gyield!=null){
+        loading(true,"周辺の利回り相場をAI検索中");
+        const mj = await fetchMarketYield(eff, addr);
+        if(mj){ mkt = {pct:mj.market_yield_pct, src:mj.basis||"AI検索"}; $("fYieldMkt").value = mj.market_yield_pct; }
+      }
+      const top3 = pts.slice(0,3);
+      const w = top3.reduce((s2,p)=>s2+1/Math.max(p.dist,50),0);
+      const u = Math.round(top3.reduce((s2,p)=>s2+p.priceYen/Math.max(p.dist,50),0)/w);
+      const kj = eff.land!=null ? u*eff.land : null;
+      const score = computeScore(eff, judge(eff), kj, comps, districtOf(addr), mkt);
+      lastRun.score = score;
+      renderScore(score);
+    }catch(e){ /* スコアは補助機能: 失敗しても本体結果は維持 */ }
     $("valCard").classList.remove("hidden");
     $("judgeCard").classList.remove("hidden");
     $("valCard").scrollIntoView({behavior:"smooth"});
@@ -774,8 +984,20 @@ function renderValuation(input, geo, year, pts, precision){
       <div class="mt">距離 ${Math.round(p.dist)}m ／ ${p.use.replace(/^\d+,/,"")} ／ 前年比 ${p.yoy??"—"}%${p.useDist?` ／ ${p.useDist} 建${p.bcr||"—"}/容${p.far||"—"}`:""}</div>
     </div>`;
   });
+  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+    <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップで物件地点を開く</a>
+    <a class="extlink" target="_blank" rel="noopener" href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">🗾 全国地価マップ（固定資産税路線価）</a>
+    <button type="button" class="extlink" id="copyAddr">📋 住所をコピー</button>
+  </div>`;
   html += `<div class="note">※ 公示・調査地点の単価をそのまま面積按分した机上値です。個別の画地条件(角地・不整形・道路幅員等)は未補正。固定資産税路線価・相続税路線価の実額は<a href="https://www.chikamap.jp/chikamap/Portal?mid=216" target="_blank" rel="noopener">全国地価マップ</a>・<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener">財産評価基準書</a>で確認してください。座標: ${geo.title}</div>`;
   el.innerHTML = html;
+  const cb = document.getElementById("copyAddr");
+  if(cb) cb.onclick = ()=>{
+    navigator.clipboard.writeText(input.addr).then(()=>{
+      cb.textContent = "✓ コピーしました";
+      setTimeout(()=>{ cb.textContent = "📋 住所をコピー"; }, 1500);
+    }).catch(()=>{ err("コピーに失敗しました。住所欄から手動でコピーしてください。"); });
+  };
 }
 
 function renderJudge(input, pts, zoning, orig){
@@ -907,6 +1129,13 @@ function buildReport({input, geo, year, pts, zoning, precision}){
   h += `</table>`;
   h += `</div></div>
   </div>
+
+  ${(lastRun&&lastRun.score&&lastRun.score.metrics.length)?`
+  <div class="rp-sec"><div class="h">総合スコア（各5点満点・参考値）　総合 ${lastRun.score.total.toFixed(1)} / 5.0</div><div class="b">
+    <table class="rp-t">
+      ${lastRun.score.metrics.map(m=>`<tr><th>${m.name}</th><td>${STARS(m.score)} ${m.score}　<span style="color:#7A8B99">${esc(m.basis)}</span></td></tr>`).join("")}
+    </table>
+  </div></div>`:""}
 
   <div class="rp-sec"><div class="h">近隣の標準地・基準地</div><div class="b">
     <table class="rp-t">
