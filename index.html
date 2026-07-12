@@ -358,7 +358,12 @@ const getRoomOccStatus=r=>{const t=_todayStr();if(!r.since)return r.status||'vac
   function getContractItems(r, ym, pi){
   // その月限定のoverride（スナップショット内）を優先
   if(pi!==undefined){
-    const override=properties[pi]?.monthlySnapshots?.[ym]?.[r.no]?.contractOverride;
+    let snapYM=ym;
+    if(properties[pi]?.paymentTiming==='prev'){
+      const [y,m]=ym.split('-').map(Number);
+      snapYM=`${m===1?y-1:y}-${String(m===1?12:m-1).padStart(2,'0')}`;
+    }
+    const override=properties[pi]?.monthlySnapshots?.[snapYM]?.[r.no]?.contractOverride;
     if(override) return override;
   }
   // 変更履歴から最も近い月を探す
