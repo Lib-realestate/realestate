@@ -1777,7 +1777,7 @@ else if(!snap.status||snap.status===null) {} // デフォルト（null）は空�
         const snap=p.monthlySnapshots?.[ym2]?.[r.no];
         if(!snap||snap.status==='vacant'||snap.status==='new')return ss;
         const actual=snap.items.reduce((sss,it)=>sss+(it.amt||0),0);
-        const contract=contractTotal(r,ym2);
+        const contract=getContractTotal(r,ym2);
         return ss+actual-contract;
       },0);
     },0);
