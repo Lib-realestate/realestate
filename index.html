@@ -2184,10 +2184,15 @@ function saveContractItems(pi,ri,targetYM){
   }
   else {
     // この月のみ：スナップショットのcontractOverrideに記録
+    let snapYM=targetYM;
+    if(properties[pi].paymentTiming==='prev'){
+      const [y,m]=targetYM.split('-').map(Number);
+      snapYM=`${m===1?y-1:y}-${String(m===1?12:m-1).padStart(2,'0')}`;
+    }
     if(!properties[pi].monthlySnapshots) properties[pi].monthlySnapshots={};
-    if(!properties[pi].monthlySnapshots[targetYM]) properties[pi].monthlySnapshots[targetYM]={};
-    if(!properties[pi].monthlySnapshots[targetYM][r.no]) properties[pi].monthlySnapshots[targetYM][r.no]={status:'occupied',since:'',items:[]};
-    properties[pi].monthlySnapshots[targetYM][r.no].contractOverride=newItems;
+    if(!properties[pi].monthlySnapshots[snapYM]) properties[pi].monthlySnapshots[snapYM]={};
+    if(!properties[pi].monthlySnapshots[snapYM][r.no]) properties[pi].monthlySnapshots[snapYM][r.no]={status:'occupied',since:'',items:[]};
+    properties[pi].monthlySnapshots[snapYM][r.no].contractOverride=newItems;
   }
 
   saveProps();
