@@ -249,7 +249,7 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
         </div>
         <div><label class="f">築年（西暦）</label><input type="number" id="fBuilt" inputmode="numeric" placeholder="1995"></div>
         <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
-        <div><label class="f">周辺相場利回り（%・空欄=AI検索）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等の相場値"></div>
+        <div><label class="f">周辺相場利回り（%・任意）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等で調べた相場値を入力"></div>
         <div><label class="f">最寄駅 徒歩（分）</label><input type="number" id="fWalk" inputmode="numeric"></div>
         <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
         <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
@@ -697,32 +697,6 @@ const STARS = n => "★★★★★".slice(0,n)+"☆☆☆☆☆".slice(0,5-n);
 const DUR = {RC:47, SRC:47, S:34, LGS:27, W:22};
 const DUR_NAME = {RC:"RC(47年)", SRC:"SRC(47年)", S:"鉄骨(34年)", LGS:"軽量鉄骨(27年)", W:"木造(22年)"};
 
-async function fetchMarketYield(input, addr){
-  try{
-    let type;
-    if(input.bldg!=null && input.land!=null) type = (input.struct==="W"||input.struct==="LGS") ? "一棟アパート" : "一棟マンション";
-    else if(input.bldg!=null) type = "区分マンション";
-    else return null;
-    const cm = addr.match(/^(.+?[都道府県])?(.+?[市区町村])/);
-    const areaTxt = cm ? cm[0] : addr.slice(0,12);
-    const prompt = areaTxt+"の中古"+type+"の現在の表面利回り相場(中央値)を、楽待・健美家・ノムコム等の収益物件市場データをweb検索して調べてください。回答はJSONのみ: {\"market_yield_pct\": 数値, \"basis\": \"出典を15字以内\"}";
-    const resp = await fetch(CFG.worker+"/anthropic",{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ model:CFG.model, max_tokens:2000,
-        tools:[{type:"web_search_20250305", name:"web_search", max_uses:3}],
-        messages:[{role:"user", content:prompt}] })
-    });
-    const data = await resp.json();
-    if(data.error) return null;
-    const text = (data.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
-    const m = text.match(/\{[\s\S]*?\}/);
-    if(!m) return null;
-    const j = JSON.parse(m[0]);
-    if(typeof j.market_yield_pct==="number" && j.market_yield_pct>1 && j.market_yield_pct<30) return j;
-    return null;
-  }catch(e){ return null; }
-}
-
 function computeScore(input, r, kouji, comps, district, mkt){
   const M = [];
   const skipped = [];
@@ -920,15 +894,10 @@ $("btnRun").addEventListener("click", async ()=>{
       const cityCode = (pts[0]&&pts[0].cityCode)||"";
       let comps = null;
       if(cityCode) comps = await fetchComps(cityCode, subjectTypeOf(eff));
-      // 周辺相場利回り: 手入力優先、なければAI検索して欄に反映
+      // 周辺相場利回り: 手入力値のみ使用（API課金なし）
       let mkt = null;
       const mktIn = $("fYieldMkt").value;
       if(mktIn!==""){ mkt = {pct:Number(mktIn), src:"手入力"}; }
-      else if(eff.gyield!=null){
-        loading(true,"周辺の利回り相場をAI検索中");
-        const mj = await fetchMarketYield(eff, addr);
-        if(mj){ mkt = {pct:mj.market_yield_pct, src:mj.basis||"AI検索"}; $("fYieldMkt").value = mj.market_yield_pct; }
-      }
       const top3 = pts.slice(0,3);
       const w = top3.reduce((s2,p)=>s2+1/Math.max(p.dist,50),0);
       const u = Math.round(top3.reduce((s2,p)=>s2+p.priceYen/Math.max(p.dist,50),0)/w);
