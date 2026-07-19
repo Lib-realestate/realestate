@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>マイソク即査定</title>
+<link rel="manifest" href="maisoku.webmanifest">
+<meta name="theme-color" content="#1D3D5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="マイソク査定">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBFCFD;
+  --ink:#24292F;
+  --blue:#1D3D5C;        /* 図面の罫線・見出し */
+  --blue-line:#C9D8E4;
+  --blue-pale:#EFF4F8;
+  --shu:#C13A32;         /* 朱肉 */
+  --ok:#2C7A5B;
+  --warn:#A9761C;
+  --mono:"SFMono-Regular",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Zen Kaku Gothic New",sans-serif;
+  background:var(--paper);color:var(--ink);
+  font-size:15px;line-height:1.65;
+  background-image:linear-gradient(var(--blue-pale) 1px,transparent 1px),linear-gradient(90deg,var(--blue-pale) 1px,transparent 1px);
+  background-size:28px 28px;
+  min-height:100vh;
+}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px 90px}
+header{
+  border-bottom:3px double var(--blue);
+  padding:18px 2px 10px;margin-bottom:16px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+}
+h1{font-family:"Shippori Mincho",serif;font-weight:800;font-size:22px;color:var(--blue);letter-spacing:.12em}
+h1 small{font-size:11px;letter-spacing:.2em;color:#5B7286;display:block;font-family:"Zen Kaku Gothic New";font-weight:500}
+#gear{background:none;border:1px solid var(--blue-line);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--blue);cursor:pointer}
+
+/* 図面の表題欄風カード */
+.card{
+  background:#fff;border:1px solid var(--blue-line);
+  border-radius:8px;margin-bottom:16px;overflow:hidden;
+  box-shadow:0 1px 3px rgba(29,61,92,.06);
+}
+.card>.ttl{
+  display:flex;align-items:center;gap:8px;
+  background:var(--blue-pale);border-bottom:1px solid var(--blue-line);
+  padding:8px 14px;font-weight:700;font-size:13px;color:var(--blue);letter-spacing:.08em;
+}
+.card>.ttl .no{
+  font-family:var(--mono);font-size:11px;border:1px solid var(--blue);
+  border-radius:3px;padding:0 5px;background:#fff;
+}
+.card>.bd{padding:14px}
+
+button.primary{
+  width:100%;padding:14px;border:none;border-radius:8px;
+  background:var(--blue);color:#fff;font-size:16px;font-weight:700;
+  font-family:inherit;letter-spacing:.1em;cursor:pointer;
+}
+button.primary:disabled{opacity:.45}
+button.sub{
+  width:100%;padding:11px;border:1px solid var(--blue);border-radius:8px;
+  background:#fff;color:var(--blue);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;
+}
+.uploadbox{
+  border:2px dashed var(--blue-line);border-radius:8px;padding:20px 12px;
+  text-align:center;color:#5B7286;font-size:13px;background:var(--blue-pale);
+  transition:border-color .15s, background .15s;
+}
+.uploadbox.drag{border-color:var(--blue);background:#E3EDF5}
+.uploadbox b{color:var(--blue);font-size:15px;display:block;margin-bottom:4px}
+.upbtns{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+.upbtn{
+  padding:11px;border:1px solid var(--blue);border-radius:8px;background:#fff;
+  color:var(--blue);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;
+}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.thumb{position:relative;border:1px solid var(--blue-line);border-radius:6px;overflow:hidden;background:#fff}
+.thumb img{display:block;height:88px;width:auto;max-width:150px;object-fit:cover}
+.thumb .pdfchip{display:flex;align-items:center;height:88px;padding:0 14px;font-size:13px;font-weight:700;color:var(--blue);max-width:220px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.thumb .rm{
+  position:absolute;top:2px;right:2px;width:22px;height:22px;border:none;border-radius:50%;
+  background:rgba(29,61,92,.75);color:#fff;font-size:14px;line-height:1;cursor:pointer;
+}
+/* PC(ワイド画面)レイアウト */
+@media (min-width:900px){
+  .wrap{max-width:1000px}
+  .grid{grid-template-columns:repeat(3,1fr)}
+  .upbtns{grid-template-columns:220px;justify-content:center}
+  #camBtn{display:none}
+  #results{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  #results .card{margin-bottom:0}
+}
+
+/* 入力グリッド */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid .full{grid-column:1/-1}
+label.f{display:block;font-size:11px;color:#5B7286;font-weight:700;letter-spacing:.05em;margin-bottom:2px}
+input[type=text],input[type=number],select{
+  width:100%;padding:9px 10px;border:1px solid var(--blue-line);border-radius:6px;
+  font-size:15px;font-family:inherit;background:#fff;color:var(--ink);
+}
+input:focus,select:focus{outline:2px solid var(--blue);outline-offset:-1px}
+
+/* 結果表 */
+table.rt{width:100%;border-collapse:collapse;font-size:13.5px}
+table.rt th{
+  text-align:left;font-weight:500;color:#5B7286;padding:7px 6px 7px 0;
+  border-bottom:1px solid var(--blue-pale);white-space:nowrap;vertical-align:top;width:38%;
+}
+table.rt td{
+  padding:7px 0;border-bottom:1px solid var(--blue-pale);
+  font-variant-numeric:tabular-nums;font-weight:500;
+}
+.big{font-family:"Shippori Mincho",serif;font-size:24px;font-weight:800;color:var(--blue)}
+.big small{font-size:13px;font-family:"Zen Kaku Gothic New";font-weight:500;color:#5B7286}
+.unit{font-size:12px;color:#5B7286}
+
+/* 判定スタンプ(印鑑) */
+.stamp-row{display:flex;gap:14px;align-items:flex-start;margin-bottom:10px}
+.stamp{
+  flex:none;width:94px;height:94px;border-radius:50%;
+  border:3px solid var(--shu);color:var(--shu);
+  display:flex;align-items:center;justify-content:center;
+  padding:4px;line-height:1.15;
+  font-family:"Shippori Mincho",serif;font-weight:800;font-size:14px;
+  letter-spacing:.05em;transform:rotate(-7deg);
+  writing-mode:vertical-rl;text-orientation:upright;
+  box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3px var(--shu);
+  background:radial-gradient(circle,rgba(193,58,50,.06),transparent 70%);
+}
+.stamp.ok{border-color:var(--ok);color:var(--ok);box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3px var(--ok);background:radial-gradient(circle,rgba(44,122,91,.06),transparent 70%)}
+.stamp.warn{border-color:var(--warn);color:var(--warn);box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3px var(--warn);background:radial-gradient(circle,rgba(169,118,28,.07),transparent 70%)}
+ul.reasons{list-style:none;font-size:13px}
+ul.reasons li{padding:3px 0 3px 16px;position:relative}
+ul.reasons li::before{content:"—";position:absolute;left:0;color:#8FA5B7}
+ul.reasons li.ng{color:var(--shu);font-weight:700}
+ul.reasons li.gd{color:var(--ok)}
+ul.reasons li.wn{color:var(--warn);font-weight:500}
+
+.pt{border:1px solid var(--blue-pale);border-radius:6px;padding:9px 11px;margin-bottom:8px;font-size:12.5px;background:#fff}
+.pt .nm{font-weight:700;color:var(--blue);font-size:13px}
+.pt .pr{font-family:var(--mono);font-weight:700;font-size:15px}
+.pt .mt{color:#5B7286}
+
+.note{font-size:11.5px;color:#7A8B99;line-height:1.6;margin-top:10px;border-top:1px dashed var(--blue-line);padding-top:8px}
+.extlink{display:inline-block;padding:7px 12px;border:1px solid var(--blue);border-radius:20px;background:#fff;color:var(--blue);font-size:12.5px;font-weight:700;text-decoration:none;font-family:inherit;cursor:pointer}
+.extlink:active{background:var(--blue-pale)}
+.badge{display:inline-block;font-size:11px;border-radius:4px;padding:1px 8px;font-weight:700;vertical-align:middle}
+.badge.ok{background:#E3F1EA;color:var(--ok)}
+.badge.warn{background:#F7EEDC;color:var(--warn)}
+.err{background:#FBEDEC;border:1px solid #E3B7B4;color:var(--shu);border-radius:6px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:none}
+#loading{
+  display:none;text-align:center;padding:16px;color:var(--blue);font-weight:700;font-size:14px;letter-spacing:.08em;
+}
+#loading .bar{height:3px;background:var(--blue-pale);border-radius:2px;overflow:hidden;margin-top:8px}
+#loading .bar i{display:block;height:100%;width:35%;background:var(--blue);border-radius:2px;animation:sl 1.1s infinite ease-in-out}
+@keyframes sl{0%{transform:translateX(-110%)}100%{transform:translateX(310%)}}
+@media (prefers-reduced-motion:reduce){#loading .bar i{animation:none;width:100%}}
+
+/* 設定モーダル */
+#settings{display:none;position:fixed;inset:0;background:rgba(29,61,92,.45);z-index:50;padding:20px}
+#settings .box{background:#fff;border-radius:10px;max-width:520px;margin:40px auto;padding:18px}
+#settings h2{font-size:16px;color:var(--blue);margin-bottom:12px;font-family:"Shippori Mincho",serif}
+#settings label.f{margin-top:10px}
+/* ===== A4印刷レポート ===== */
+#btnPdf{margin-bottom:16px}
+#printReport{display:none;font-size:10.5px;line-height:1.5;color:var(--ink)}
+#printReport .rp-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px double var(--blue);padding-bottom:6px;margin-bottom:8px}
+#printReport .rp-title{font-family:"Shippori Mincho",serif;font-weight:800;font-size:19px;color:var(--blue);letter-spacing:.12em}
+#printReport .rp-sub{font-size:9px;color:#5B7286;letter-spacing:.15em}
+#printReport .rp-meta{font-size:9px;color:#5B7286;text-align:right}
+#printReport .rp-addr{font-size:12.5px;font-weight:700;margin-bottom:8px}
+#printReport .rp-sec{border:1px solid var(--blue-line);border-radius:4px;margin-bottom:8px;overflow:hidden;break-inside:avoid}
+#printReport .rp-sec>.h{background:var(--blue-pale);border-bottom:1px solid var(--blue-line);padding:3px 8px;font-weight:700;font-size:10px;color:var(--blue);letter-spacing:.08em}
+#printReport .rp-sec>.b{padding:7px 9px}
+#printReport .rp-2col{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#printReport table.rp-t{width:100%;border-collapse:collapse;font-size:10px}
+#printReport table.rp-t th{text-align:left;font-weight:500;color:#5B7286;padding:2.5px 6px 2.5px 0;border-bottom:1px solid var(--blue-pale);white-space:nowrap;width:42%;vertical-align:top}
+#printReport table.rp-t td{padding:2.5px 0;border-bottom:1px solid var(--blue-pale);font-variant-numeric:tabular-nums;vertical-align:top}
+#printReport .rp-big{font-family:"Shippori Mincho",serif;font-size:19px;font-weight:800;color:var(--blue)}
+#printReport .rp-big small{font-size:9.5px;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:500;color:#5B7286}
+#printReport .stamp{width:66px;height:66px;font-size:11px;border-width:2px}
+#printReport ul.reasons{font-size:9.5px}
+#printReport ul.reasons li{padding:1.5px 0 1.5px 12px}
+#printReport .rp-links{font-size:9.5px;margin-bottom:5px}
+#printReport .rp-links a{color:var(--blue);text-decoration:underline;font-weight:700}
+#printReport .rp-foot{font-size:8.5px;color:#7A8B99;border-top:1px dashed var(--blue-line);padding-top:5px;line-height:1.55}
+@media print{
+  @page{size:A4 portrait;margin:9mm 11mm}
+  html,body{background:#fff!important;background-image:none!important}
+  .wrap{max-width:none;padding:0}
+  .wrap>*:not(#printReport){display:none!important}
+  #settings,#loading{display:none!important}
+  #printReport{display:block}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>マイソク即査定<small>MAISOKU INSTANT APPRAISAL ／ 公示地価・再建築判定</small></h1>
+    <button id="gear" onclick="openSettings()">⚙ 設定</button>
+  </header>
+
+  <div class="err" id="errBox"></div>
+
+  <!-- 1. 読み取り -->
+  <section class="card">
+    <div class="ttl"><span class="no">01</span>マイソク読み取り</div>
+    <div class="bd">
+      <div class="uploadbox" id="dropZone">
+        <b>マイソクを読み込む</b>
+        写真(JPEG/PNG)・PDFに対応（1ファイル）。新しく読み込むと前のファイルと判定結果はリセットされます。<br>
+        PCはドラッグ&ドロップ／スクリーンショットの貼り付け(Ctrl+V)もできます。
+        <div class="upbtns">
+          <button type="button" class="upbtn" id="camBtn" onclick="document.getElementById('camInput').click()">📷 カメラで撮影</button>
+          <button type="button" class="upbtn" onclick="document.getElementById('fileInput').click()">📁 ファイルをアップロード</button>
+        </div>
+        <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none">
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+      <button class="primary" id="btnExtract" style="margin-top:12px" disabled>AIで物件情報を抽出</button>
+      <button class="sub" onclick="document.getElementById('manualCard').classList.remove('hidden');this.classList.add('hidden')">手入力に切り替える</button>
+    </div>
+  </section>
+
+  <!-- 2. 物件情報(抽出結果・編集可) -->
+  <section class="card hidden" id="manualCard">
+    <div class="ttl"><span class="no">02</span>物件情報（修正可）</div>
+    <div class="bd">
+      <div class="grid">
+        <div class="full"><label class="f">所在地（住所）</label><input type="text" id="fAddress" placeholder="東京都足立区西新井○-○-○"></div>
+        <div><label class="f">販売価格（万円）</label><input type="number" id="fPrice" inputmode="numeric"></div>
+        <div><label class="f">土地面積（㎡）</label><input type="number" id="fLand" inputmode="decimal" step="0.01"></div>
+        <div><label class="f">延床面積（㎡）</label><input type="number" id="fBldg" inputmode="decimal" step="0.01"></div>
+        <div><label class="f">構造</label>
+          <select id="fStruct">
+            <option value="">不明</option>
+            <option value="RC">RC</option>
+            <option value="SRC">SRC</option>
+            <option value="S">鉄骨</option>
+            <option value="LGS">軽量鉄骨</option>
+            <option value="W">木造</option>
+          </select>
+        </div>
+        <div><label class="f">築年（西暦）</label><input type="number" id="fBuilt" inputmode="numeric" placeholder="1995"></div>
+        <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
+        <div><label class="f">周辺相場利回り（%・任意）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等で調べた相場値を入力"></div>
+        <div><label class="f">最寄駅 徒歩（分）</label><input type="number" id="fWalk" inputmode="numeric"></div>
+        <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
+        <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
+        <div><label class="f">容積率（%）</label><input type="number" id="fFar" inputmode="numeric"></div>
+        <div class="full"><label class="f">固定資産税路線価（千円/㎡・任意）<a href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">全国地価マップ↗</a></label><input type="number" id="fKotei" inputmode="decimal" placeholder="地価マップの値を入力→実額計算（未入力は公示×0.7で推計）"></div>
+        <div class="full"><label class="f">区域区分</label>
+          <select id="fCity">
+            <option value="">不明</option>
+            <option>市街化区域</option>
+            <option>市街化調整区域</option>
+            <option>非線引き区域</option>
+            <option>都市計画区域外</option>
+          </select>
+        </div>
+        <div><label class="f">前面道路 幅員（m）</label><input type="number" id="fRoadW" inputmode="decimal" step="0.1"></div>
+        <div><label class="f">接道長さ（m）</label><input type="number" id="fFront" inputmode="decimal" step="0.1"></div>
+        <div><label class="f">道路種別</label>
+          <select id="fRoadKind">
+            <option value="">不明</option>
+            <option value="public">公道</option>
+            <option value="private">私道</option>
+          </select>
+        </div>
+        <div><label class="f">建基法上の道路</label>
+          <select id="fRoadLaw">
+            <option value="">記載なし／不明</option>
+            <option value="42-1">42条1項道路（幅員4m以上）</option>
+            <option value="42-2">42条2項道路（セットバック要）</option>
+            <option value="43">43条但し書き／認定外</option>
+            <option value="none">建基法上の道路でない</option>
+          </select>
+        </div>
+        <div class="full"><label class="f">備考（再建築不可等の記載・借地権など）</label><input type="text" id="fNotes"></div>
+      </div>
+      <button class="primary" id="btnRun" style="margin-top:14px">評価・判定を実行</button>
+    </div>
+  </section>
+
+  <div id="loading">解析中…<span id="loadingMsg"></span><div class="bar"><i></i></div></div>
+
+  <div id="results">
+  <!-- 3. 地価評価 -->
+  <section class="card hidden" id="valCard">
+    <div class="ttl"><span class="no">03</span>土地評価（地価公示・地価調査ベース）</div>
+    <div class="bd" id="valBody"></div>
+  </section>
+
+  <!-- 4. 再建築・法規判定 -->
+  <section class="card hidden" id="judgeCard">
+    <div class="ttl"><span class="no">04</span>再建築・建蔽率／容積率 判定</div>
+    <div class="bd" id="judgeBody"></div>
+  </section>
+  </div>
+
+  <!-- 5. 総合スコア -->
+  <section class="card hidden" id="scoreCard">
+    <div class="ttl"><span class="no">05</span>総合スコア（各5点満点・参考値）</div>
+    <div class="bd" id="scoreBody"></div>
+  </section>
+
+  <button class="sub hidden" id="btnPdf">📄 結果をPDFで保存（A4・1枚）</button>
+  <div id="printReport"></div>
+</div>
+
+<!-- 設定 -->
+<div id="settings">
+  <div class="box">
+    <h2>接続設定</h2>
+    <label class="f">Cloudflare Worker URL（末尾スラッシュなし）</label>
+    <input type="text" id="sWorker" placeholder="https://maisoku.xxxx.workers.dev">
+    <label class="f">Claudeモデル</label>
+    <input type="text" id="sModel" placeholder="claude-sonnet-4-6">
+    <label class="f">地価データ対象年（空欄=自動で最新を探索）</label>
+    <input type="number" id="sYear" placeholder="自動">
+    <button class="primary" style="margin-top:14px" onclick="saveSettings()">保存</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= 設定 ================= */
+const CFG = {
+  get worker(){ return localStorage.getItem("mk_worker") || ""; },
+  get model(){ return localStorage.getItem("mk_model") || "claude-sonnet-4-6"; },
+  get year(){ return localStorage.getItem("mk_year") || ""; },
+};
+function openSettings(){
+  document.getElementById("sWorker").value = CFG.worker;
+  document.getElementById("sModel").value = CFG.model;
+  document.getElementById("sYear").value = CFG.year;
+  document.getElementById("settings").style.display = "block";
+}
+function saveSettings(){
+  localStorage.setItem("mk_worker", document.getElementById("sWorker").value.trim().replace(/\/$/,""));
+  localStorage.setItem("mk_model", document.getElementById("sModel").value.trim() || "claude-sonnet-4-6");
+  localStorage.setItem("mk_year", document.getElementById("sYear").value.trim());
+  document.getElementById("settings").style.display = "none";
+}
+document.getElementById("settings").addEventListener("click", e=>{
+  if(e.target.id==="settings") e.target.style.display="none";
+});
+
+/* ================= 共通UI ================= */
+const $ = id => document.getElementById(id);
+function err(msg){ const b=$("errBox"); b.textContent=msg; b.style.display=msg?"block":"none"; }
+function loading(on,msg=""){ $("loading").style.display=on?"block":"none"; $("loadingMsg").textContent=msg?` ${msg}`:""; }
+const fmtMan = yen => (yen/10000).toLocaleString("ja-JP",{maximumFractionDigits:0});
+const fmt = n => n==null?"—":Number(n).toLocaleString("ja-JP",{maximumFractionDigits:1});
+
+/* ================= ファイル読込(選択・撮影・D&D・貼り付け) ================= */
+let files = []; // [{media_type, data(base64), isPdf, name}]
+async function addFiles(list){
+  err("");
+  try{
+    const f = [...list].find(x=>x.type==="application/pdf" || /\.pdf$/i.test(x.name||"") || /^image\//.test(x.type));
+    if(!f) return;
+    // 新しいファイルで完全に置き換え、以前の抽出結果・判定もリセット
+    resetDownstream();
+    if(f.type==="application/pdf" || /\.pdf$/i.test(f.name||"")){
+      files = [{ media_type:"application/pdf", data:await toBase64(f), isPdf:true, name:f.name||"maisoku.pdf" }];
+    }else{
+      files = [{ media_type:"image/jpeg", data:await resizeImage(f,1600,.85), isPdf:false, name:f.name||"貼り付け画像" }];
+    }
+    renderThumbs();
+  }catch(ex){ err("ファイル読込に失敗: "+ex.message); }
+}
+function resetDownstream(){
+  files = [];
+  renderThumbs();
+  // 02 物件情報フォームを全クリア
+  ["fAddress","fPrice","fLand","fBldg","fBuilt","fYield","fYieldMkt","fWalk","fUse","fBcr","fFar","fKotei","fRoadW","fFront","fNotes"]
+    .forEach(id=>{ $(id).value=""; });
+  ["fCity","fRoadKind","fRoadLaw","fStruct"].forEach(id=>{ $(id).value=""; });
+  $("manualCard").classList.add("hidden");
+  // 03/04 結果とPDFを非表示・破棄
+  $("valCard").classList.add("hidden");
+  $("judgeCard").classList.add("hidden");
+  $("btnPdf").classList.add("hidden");
+  $("scoreCard").classList.add("hidden");
+  $("valBody").innerHTML=""; $("judgeBody").innerHTML=""; $("scoreBody").innerHTML="";
+  $("printReport").innerHTML="";
+  lastRun = null;
+}
+function renderThumbs(){
+  const t = $("thumbs"); t.innerHTML = "";
+  files.forEach((f,i)=>{
+    const d = document.createElement("div"); d.className = "thumb";
+    if(f.isPdf){
+      const s = document.createElement("span"); s.className = "pdfchip"; s.textContent = "📄 " + f.name;
+      d.appendChild(s);
+    }else{
+      const im = document.createElement("img"); im.alt = f.name;
+      im.src = "data:image/jpeg;base64," + f.data;
+      d.appendChild(im);
+    }
+    const x = document.createElement("button");
+    x.className = "rm"; x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label","この画像を削除");
+    x.onclick = ()=>{ files.splice(i,1); renderThumbs(); };
+    d.appendChild(x);
+    t.appendChild(d);
+  });
+  $("btnExtract").disabled = files.length === 0;
+}
+$("fileInput").addEventListener("change", e=>{ addFiles(e.target.files); e.target.value=""; });
+$("camInput").addEventListener("change", e=>{ addFiles(e.target.files); e.target.value=""; });
+// ドラッグ&ドロップ(PC)
+const dz = $("dropZone");
+["dragover","dragenter"].forEach(ev=>dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.add("drag"); }));
+["dragleave","dragend"].forEach(ev=>dz.addEventListener(ev, ()=>dz.classList.remove("drag")));
+dz.addEventListener("drop", e=>{ e.preventDefault(); dz.classList.remove("drag"); addFiles(e.dataTransfer.files); });
+// クリップボード貼り付け(PC: スクリーンショット等)
+document.addEventListener("paste", e=>{
+  if(e.target.closest("input,select,textarea") && ![...(e.clipboardData?.items||[])].some(i=>i.kind==="file")) return;
+  const fs = [...(e.clipboardData?.items||[])].filter(i=>i.kind==="file").map(i=>i.getAsFile()).filter(Boolean);
+  if(fs.length){ e.preventDefault(); addFiles(fs); }
+});
+function toBase64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(",")[1]);
+    r.onerror=()=>rej(new Error("read failed"));
+    r.readAsDataURL(file);
+  });
+}
+function resizeImage(file,maxDim,q){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const sc=Math.min(1, maxDim/Math.max(img.width,img.height));
+      const c=document.createElement("canvas");
+      c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL("image/jpeg",q).split(",")[1]);
+    };
+    img.onerror=()=>rej(new Error("image decode failed"));
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+/* ================= AI抽出 ================= */
+const EXTRACT_PROMPT = `あなたは不動産マイソク(物件販売図面)の読取器です。画像/PDFから以下のJSONだけを出力してください。前置き・コードブロック記法は禁止。読み取れない項目はnull。数値は数値型で。
+{
+ "address": "所在地の住所(文字列)",
+ "price_man_yen": 販売価格(万円),
+ "land_area_sqm": 土地面積㎡(公簿/実測いずれか記載値),
+ "building_floor_area_sqm": 建物延床面積㎡,
+ "bcr_pct": 建蔽率%,
+ "far_pct": 容積率%,
+ "use_district": "用途地域",
+ "city_planning": "市街化区域/市街化調整区域/非線引き区域/都市計画区域外/不明",
+ "road_width_m": 前面道路の幅員m(複数あれば最も広いもの),
+ "frontage_m": 接道長さm(間口),
+ "road_is_public": 公道ならtrue/私道ならfalse/不明ならnull,
+ "road_law": "42-1/42-2/43/none/不明 (建築基準法上の道路種別。42条2項・セットバック要の記載→42-2)",
+ "setback": "要/済/不要/不明",
+ "rebuild_flag_text": "再建築不可・建築不可等の記載があれば原文、なければnull",
+ "structure": "RC/SRC/S/軽量鉄骨/木造/その他のいずれか",
+ "built_year": 築年(西暦の数値),
+ "gross_yield_pct": 表面利回り%,
+ "station_walk_min": 最寄駅までの徒歩分,
+ "land_right": "所有権/借地権等",
+ "notes": "再建築や法規リスクに関わるその他記載(43条但し書き、位置指定道路、通行掘削承諾、既存不適格など)を簡潔に"
+}`;
+
+$("btnExtract").addEventListener("click", async ()=>{
+  err("");
+  if(!CFG.worker){ err("先に⚙設定でWorker URLを登録してください。"); return; }
+  if(!files.length) return;
+  loading(true,"マイソクをAI解析中");
+  $("btnExtract").disabled = true;
+  try{
+    const content = [
+      ...files.map(f=> f.isPdf
+        ? { type:"document", source:{ type:"base64", media_type:"application/pdf", data:f.data } }
+        : { type:"image", source:{ type:"base64", media_type:f.media_type, data:f.data } }),
+      { type:"text", text:(files.length>1?"複数の画像は同一物件マイソクの表裏・分割ページです。統合して読み取ってください。\n":"")+EXTRACT_PROMPT }
+    ];
+    const resp = await fetch(CFG.worker+"/anthropic",{
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ model:CFG.model, max_tokens:1500, messages:[{role:"user",content}] })
+    });
+    const data = await resp.json();
+    if(data.error) throw new Error(data.error.message || "API error");
+    const text = (data.content||[]).map(c=>c.text||"").join("");
+    const j = JSON.parse(text.replace(/```json|```/g,"").trim());
+    fillForm(j);
+    $("manualCard").classList.remove("hidden");
+    $("manualCard").scrollIntoView({behavior:"smooth"});
+  }catch(ex){
+    err("AI抽出に失敗: "+ex.message);
+  }finally{
+    loading(false); $("btnExtract").disabled = false;
+  }
+});
+
+function fillForm(j){
+  $("fAddress").value = j.address || "";
+  $("fPrice").value = j.price_man_yen ?? "";
+  $("fLand").value = j.land_area_sqm ?? "";
+  $("fBldg").value = j.building_floor_area_sqm ?? "";
+  $("fUse").value = j.use_district || "";
+  $("fBcr").value = j.bcr_pct ?? "";
+  $("fFar").value = j.far_pct ?? "";
+  $("fCity").value = ["市街化区域","市街化調整区域","非線引き区域","都市計画区域外"].includes(j.city_planning)?j.city_planning:"";
+  $("fRoadW").value = j.road_width_m ?? "";
+  $("fFront").value = j.frontage_m ?? "";
+  $("fRoadKind").value = j.road_is_public===true?"public":(j.road_is_public===false?"private":"");
+  $("fRoadLaw").value = ["42-1","42-2","43","none"].includes(j.road_law)?j.road_law:"";
+  const st=String(j.structure||"");
+  $("fStruct").value = /SRC/i.test(st)?"SRC":/RC/i.test(st)?"RC":/軽量/.test(st)?"LGS":/鉄骨|S造|^S$/i.test(st)?"S":/木/.test(st)?"W":"";
+  $("fBuilt").value = j.built_year ?? "";
+  $("fYield").value = j.gross_yield_pct ?? "";
+  $("fWalk").value = j.station_walk_min ?? "";
+  const extra=[];
+  if(j.rebuild_flag_text) extra.push(j.rebuild_flag_text);
+  if(j.setback && j.setback!=="不明") extra.push("セットバック:"+j.setback);
+  if(j.land_right && !/所有権/.test(j.land_right)) extra.push(j.land_right);
+  if(j.notes) extra.push(j.notes);
+  $("fNotes").value = extra.join("／");
+}
+
+/* ================= ジオコーディング(国土地理院) ================= */
+async function geocode(addr){
+  const r = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(addr));
+  const arr = await r.json();
+  if(!arr || !arr.length) throw new Error("住所から座標を特定できませんでした。住所表記を調整してください。");
+  const [lng,lat] = arr[0].geometry.coordinates;
+  return { lat, lng, title: arr[0].properties?.title || addr };
+}
+
+/* ================= 地価公示・地価調査(XPT002) ================= */
+function tileXY(lat,lng,z){
+  const n = 2**z;
+  const x = Math.floor((lng+180)/360*n);
+  const latR = lat*Math.PI/180;
+  const y = Math.floor((1-Math.log(Math.tan(latR)+1/Math.cos(latR))/Math.PI)/2*n);
+  // 小数部(タイル内位置)も返す
+  const fx = (lng+180)/360*n - x;
+  const fy = (1-Math.log(Math.tan(latR)+1/Math.cos(latR))/Math.PI)/2*n - y;
+  return {x,y,fx,fy};
+}
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371000, d=Math.PI/180;
+  const a=Math.sin((lat2-lat1)*d/2)**2+Math.cos(lat1*d)*Math.cos(lat2*d)*Math.sin((lng2-lng1)*d/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+async function fetchTile(z,x,y,year){
+  const u = `${CFG.worker}/reinfolib?api=XPT002&response_format=geojson&z=${z}&x=${x}&y=${y}&year=${year}`;
+  const r = await fetch(u);
+  if(!r.ok) throw new Error("地価APIエラー HTTP "+r.status);
+  const j = await r.json();
+  return j.features || [];
+}
+async function landPoints(lat,lng){
+  const z = 13;
+  const t = tileXY(lat,lng,z);
+  // 対象点に近い側の隣接タイルを含む2x2を取得
+  const xs = [t.x, t.fx<0.5 ? t.x-1 : t.x+1];
+  const ys = [t.y, t.fy<0.5 ? t.y-1 : t.y+1];
+  const years = CFG.year ? [Number(CFG.year)] :
+    (()=>{const y=new Date().getFullYear();return [y,y-1,y-2];})();
+  for(const year of years){
+    const results = await Promise.all(
+      [[xs[0],ys[0]],[xs[1],ys[0]],[xs[0],ys[1]],[xs[1],ys[1]]]
+        .map(([x,y])=>fetchTile(z,x,y,year).catch(()=>[]))
+    );
+    const feats = results.flat();
+    if(feats.length){
+      const pts = feats.map(f=>{
+        const p=f.properties||{};
+        const [plng,plat]=f.geometry.coordinates;
+        const priceYen = parseInt(String(p.u_current_years_price_ja||"").replace(/[^\d]/g,""))||null;
+        return {
+          name: p.standard_lot_number_ja || p.place_name_ja || "",
+          cityCode: p.city_code || "",
+          location: p.location || p.location_number_ja || "",
+          type: (p.land_price_type===1||/調査/.test(p.target_year_name_ja||""))?"地価調査":"地価公示",
+          typeRaw: p.land_price_type,
+          use: p.use_category_name_ja || "",
+          priceYen,
+          yoy: p.year_on_year_change_rate,
+          bcr: String(p.u_regulations_building_coverage_ratio_ja||"").replace(/[^\d]/g,""),
+          far: String(p.u_regulations_floor_area_ratio_ja||"").replace(/[^\d]/g,""),
+          useDist: p.regulations_use_category_name_ja || "",
+          areaDiv: p.area_division_name_ja || "",
+          yearName: p.target_year_name_ja || String(year),
+          dist: haversine(lat,lng,plat,plng)
+        };
+      }).filter(p=>p.priceYen);
+      pts.sort((a,b)=>a.dist-b.dist);
+      return { year, pts };
+    }
+  }
+  throw new Error("周辺に地価公示・地価調査地点が見つかりませんでした。");
+}
+
+/* ================= 住所精度判定 ================= */
+function addrPrecision(addr){
+  if(/[○◯〇●＊*■□？?×]/.test(addr))
+    return {level:"masked", label:"概算（住所に伏せ字あり）", cls:"warn",
+      hint:"正確な住所を入力して再実行すると確定値になります。"};
+  const detail = /(\d+|[一二三四五六七八九十]+)\s*(番地?|号)|\d+\s*[-ー−‐－]\s*\d+/;
+  if(detail.test(addr))
+    return {level:"full", label:"住所確定（番地まで特定）", cls:"ok", hint:""};
+  return {level:"partial", label:"概算（丁目・大字レベル）", cls:"warn",
+    hint:"番地まで入力して再実行すると確定値になります。"};
+}
+
+/* ================= 用途地域(都市計画GIS XKT002) ================= */
+function pointInGeom(g,lng,lat){
+  const inRing = ring=>{
+    let inside=false;
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
+      if(((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/(yj-yi)+xi)) inside=!inside;
+    }
+    return inside;
+  };
+  const inPoly = poly => inRing(poly[0]) && !poly.slice(1).some(h=>inRing(h));
+  if(g.type==="Polygon") return inPoly(g.coordinates);
+  if(g.type==="MultiPolygon") return g.coordinates.some(inPoly);
+  return false;
+}
+async function fetchZoning(lat,lng){
+  try{
+    const z=14, t=tileXY(lat,lng,z);
+    const r = await fetch(`${CFG.worker}/reinfolib?api=XKT002&response_format=geojson&z=${z}&x=${t.x}&y=${t.y}`);
+    if(!r.ok) return null;
+    const j = await r.json();
+    const hit = (j.features||[]).find(f=>f.geometry && pointInGeom(f.geometry,lng,lat));
+    if(!hit) return null;
+    const p = hit.properties||{};
+    let use=null,bcr=null,far=null;
+    for(const [k,v] of Object.entries(p)){
+      if(use==null && typeof v==="string" && /(住居|商業|工業|田園)/.test(v)) use=v;
+      if(bcr==null && /coverage|kenpei|建蔽|建ぺい/i.test(k)){ const n=parseFloat(String(v).replace(/[^\d.]/g,"")); if(n) bcr=n; }
+      if(far==null && /floor_?area|youseki|容積/i.test(k)){ const n=parseFloat(String(v).replace(/[^\d.]/g,"")); if(n) far=n; }
+    }
+    return (use||bcr||far) ? {use,bcr,far} : null;
+  }catch(e){ return null; }
+}
+
+/* ================= 取引事例(XIT001)と総合スコア ================= */
+function subjectTypeOf(input){
+  if(input.bldg!=null && input.land!=null) return "宅地(土地と建物)";
+  if(input.bldg!=null) return "中古マンション等";
+  return "宅地(土地)";
+}
+function districtOf(addr){
+  let t = addr.replace(/^.+?[都道府県]/,"");
+  t = t.replace(/^.{1,8}?[市郡]/,"");
+  t = t.replace(/^.{1,8}?区/,"");
+  const m = t.match(/^([^0-9０-９]+?)(?=[0-9０-９]|[一二三四五六七八九十]+丁目|$)/);
+  return m ? m[1].trim() : "";
+}
+function parseBuiltYear(str){
+  if(!str) return null;
+  let m = String(str).match(/(19|20)\d{2}/); if(m) return +m[0];
+  m = String(str).match(/令和(元|\d+)/); if(m) return 2018+(m[1]==="元"?1:+m[1]);
+  m = String(str).match(/平成(元|\d+)/); if(m) return 1988+(m[1]==="元"?1:+m[1]);
+  m = String(str).match(/昭和(元|\d+)/); if(m) return 1925+(m[1]==="元"?1:+m[1]);
+  return null;
+}
+async function fetchComps(cityCode, subjectType){
+  const all = [];
+  const nowY = new Date().getFullYear();
+  for(let y=nowY; y>nowY-3; y--){
+    try{
+      const r = await fetch(`${CFG.worker}/reinfolib?api=XIT001&year=${y}&area=${cityCode.slice(0,2)}&city=${cityCode}`);
+      if(!r.ok) continue;
+      const j = await r.json();
+      (j.data||[]).forEach(d=>{
+        if(d.Type!==subjectType) return;
+        const price=+d.TradePrice, area=+d.Area;
+        if(!price || !area) return;
+        all.push({price, area, unit:price/area, district:d.DistrictName||"", built:parseBuiltYear(d.BuildingYear)});
+      });
+    }catch(e){}
+    if(all.length>=30) break;
+  }
+  return all;
+}
+function median(a){const s2=[...a].sort((x,y)=>x-y);const m=Math.floor(s2.length/2);return s2.length%2?s2[m]:(s2[m-1]+s2[m])/2;}
+const STARS = n => "★★★★★".slice(0,n)+"☆☆☆☆☆".slice(0,5-n);
+const DUR = {RC:47, SRC:47, S:34, LGS:27, W:22};
+const DUR_NAME = {RC:"RC(47年)", SRC:"SRC(47年)", S:"鉄骨(34年)", LGS:"軽量鉄骨(27年)", W:"木造(22年)"};
+
+function computeScore(input, r, kouji, comps, district, mkt){
+  const M = [];
+  const skipped = [];
+  // 1) 相場割安度(取引事例比較)
+  (()=>{
+    const type = subjectTypeOf(input);
+    const basisArea = type==="中古マンション等" ? input.bldg : input.land;
+    if(input.price==null || !basisArea){ skipped.push("相場割安度（価格または面積が未入力）"); return; }
+    if(!comps || comps.length<5){ skipped.push("相場割安度（近隣の取引事例が不足）"); return; }
+    const subjUnit = input.price*10000/basisArea;
+    let pool = comps, scope = "同一市区町村";
+    if(district){
+      const near = comps.filter(c=>c.district===district || c.district.startsWith(district) || district.startsWith(c.district));
+      if(near.length>=5){ pool=near; scope="同一町名("+district+")"; }
+    }
+    const med = median(pool.map(c=>c.unit));
+    const ratio = subjUnit/med;
+    const sc = ratio<=0.70?5 : ratio<=0.85?4 : ratio<=1.00?3 : ratio<=1.15?2 : 1;
+    M.push({name:"相場割安度（取引事例比較）", score:sc,
+      basis:`本物件 ${Math.round(subjUnit).toLocaleString()}円/㎡ vs 相場中央値 ${Math.round(med).toLocaleString()}円/㎡（比 ${(ratio*100).toFixed(0)}%）｜相場換算 ${fmtMan(med*basisArea)}万円 vs 販売 ${input.price.toLocaleString()}万円（${scope}・${type}・${pool.length}件）`});
+  })();
+  // 2) 積算(土地値比率)
+  if(kouji!=null && input.price!=null){
+    const ratio = kouji/(input.price*10000);
+    const sc = ratio>=1.0?5 : ratio>=0.8?4 : ratio>=0.6?3 : ratio>=0.4?2 : 1;
+    const diff = kouji - input.price*10000;
+    M.push({name:"積算評価（公示ベース土地値比率）", score:sc,
+      basis:`土地評価 ${fmtMan(kouji)}万円 vs 販売 ${input.price.toLocaleString()}万円（土地値比率 ${(ratio*100).toFixed(0)}%・差額 ${diff>=0?"+":"△"}${fmtMan(Math.abs(diff))}万円）`});
+  }else skipped.push("積算評価（価格または土地面積が未入力）");
+  // 3) 表面利回り（周辺相場中央値=3点、±1ptごとに増減）
+  if(input.gyield!=null){
+    if(mkt && mkt.pct!=null){
+      const d = input.gyield - mkt.pct;
+      const sc = d>=2?5 : d>=1?4 : d>=-1?3 : d>=-2?2 : 1;
+      M.push({name:"表面利回り（周辺相場比）", score:sc,
+        basis:`本物件 ${input.gyield}% − 周辺相場中央値 ${mkt.pct}% = ${d>=0?"+":""}${d.toFixed(1)}pt（±1pt=3点/＋1pt毎に+1点${mkt.src?"・相場出典:"+mkt.src:""}）`});
+    }else{
+      const y2=input.gyield;
+      const sc = y2>=10?5 : y2>=8?4 : y2>=6.5?3 : y2>=5?2 : 1;
+      M.push({name:"表面利回り（絶対値・相場未取得）", score:sc, basis:`本物件 ${y2}%（周辺相場が取得できなかったため絶対基準: 10%=5点/8%=4点/6.5%=3点/5%=2点）`});
+    }
+  }else skipped.push("表面利回り（未入力・実需物件は対象外）");
+  // 4) 法規・再建築リスク
+  {
+    let sc = r.cls==="ok"?5 : r.cls==="warn"?3 : 1;
+    let over = "";
+    if(r.farInfo && r.farInfo.usedFar!=null && r.farInfo.usedFar > r.farInfo.base+0.5){ sc=Math.max(1,sc-1); over="・容積オーバーで減点"; }
+    const farTxt = r.farInfo ? `｜基準容積率 ${r.farInfo.base}%${r.farInfo.usedFar!=null?`・現況消化 ${fmt(r.farInfo.usedFar)}%`:""}` : "";
+    M.push({name:"法規・再建築リスク", score:sc, basis:`判定「${r.verdict}」${over}${farTxt}`});
+  }
+  // 5) 残存法定耐用年数
+  if(input.struct && DUR[input.struct] && input.built!=null){
+    const rem = DUR[input.struct] - (new Date().getFullYear() - input.built);
+    const sc = rem>=20?5 : rem>=10?4 : rem>=5?3 : rem>0?2 : 1;
+    M.push({name:"残存法定耐用年数（融資期間目線）", score:sc, basis:`${DUR_NAME[input.struct]} 築${new Date().getFullYear()-input.built}年 → 残存 ${rem}年`});
+  }else skipped.push("残存耐用年数（構造・築年が未入力）");
+  // 6) 駅近・流動性
+  if(input.walk!=null){
+    const sc = input.walk<=5?5 : input.walk<=10?4 : input.walk<=15?3 : input.walk<=20?2 : 1;
+    M.push({name:"駅近・流動性", score:sc, basis:`最寄駅 徒歩${input.walk}分`});
+  }else skipped.push("駅近・流動性（駅徒歩が未入力）");
+
+  const total = M.length ? Math.round(M.reduce((s2,m)=>s2+m.score,0)/M.length*10)/10 : null;
+  return {metrics:M, skipped, total};
+}
+function renderScore(sc){
+  if(!sc || !sc.metrics.length){ return; }
+  let html = `<div class="big">${sc.total.toFixed(1)}<small> / 5.0（${sc.metrics.length}指標の平均）</small></div>
+  <table class="rt" style="margin-top:8px">`;
+  sc.metrics.forEach(m=>{
+    html += `<tr><th>${m.name}</th><td><span style="color:var(--blue);letter-spacing:2px">${STARS(m.score)}</span> <b>${m.score}</b><br><span class="unit">${m.basis}</span></td></tr>`;
+  });
+  html += `</table>`;
+  if(sc.skipped.length){
+    html += `<div class="note">未評価: ${sc.skipped.join("／")}。フォームに入力して再実行すると採点対象になります。<br>※相場は国交省の不動産取引価格情報(アンケートベース・直近数年)の中央値との単純比較で、階数・接道・個別条件は未補正の参考値です。</div>`;
+  }else{
+    html += `<div class="note">※相場は国交省の不動産取引価格情報(アンケートベース・直近数年)の中央値との単純比較で、個別条件は未補正の参考値です。</div>`;
+  }
+  $("scoreBody").innerHTML = html;
+  $("scoreCard").classList.remove("hidden");
+}
+
+/* ================= 判定ロジック ================= */
+function isResidentialZone(use){ return /住居|田園/.test(use||""); }
+
+function judge(input){
+  const r = { verdict:"要確認", cls:"warn", reasons:[], farInfo:null };
+  const notes = input.notes || "";
+
+  // --- 再建築可否 ---
+  let ok=true, unknown=false;
+  if(/再建築不可|建築不可|再建不可/.test(notes)){
+    r.reasons.push({t:"マイソクに「再建築不可」相当の記載あり",c:"ng"}); ok=false;
+  }
+  if(input.city==="市街化調整区域"){
+    r.reasons.push({t:"市街化調整区域 → 原則、再建築には開発許可等が必要(既存宅地・属人性など個別確認必須)",c:"ng"}); ok=false;
+  }else if(input.city==="都市計画区域外"){
+    r.reasons.push({t:"都市計画区域外 → 接道義務の適用外(条例確認)",c:"wn"}); unknown=true;
+  }
+  // 接道義務: 建基法上の道路に2m以上
+  if(input.roadLaw==="none"){
+    r.reasons.push({t:"前面道路が建築基準法上の道路でない → 接道義務を満たさず再建築不可の可能性大",c:"ng"}); ok=false;
+  }else if(input.roadLaw==="43"){
+    r.reasons.push({t:"43条但し書き(2項)許可が前提 → 許可実績・包括同意基準を要役所調査",c:"wn"}); unknown=true;
+  }
+  if(input.frontage!=null){
+    if(input.frontage<2){ r.reasons.push({t:`接道長 ${input.frontage}m < 2m → 接道義務不適合`,c:"ng"}); ok=false; }
+    else r.reasons.push({t:`接道長 ${input.frontage}m ≥ 2m … 接道長は充足`,c:"gd"});
+  }else{
+    r.reasons.push({t:"接道長さが不明 → 要確認",c:"wn"}); unknown=true;
+  }
+  if(input.roadW!=null){
+    if(input.roadW>=4){ r.reasons.push({t:`前面道路幅員 ${input.roadW}m ≥ 4m … 幅員は充足`,c:"gd"}); }
+    else if(input.roadLaw==="42-2" || /セットバック|42条2項|２項道路/.test(notes)){
+      const sb = input.frontage!=null ? (input.frontage*(4-input.roadW)/2) : null;
+      r.reasons.push({t:`幅員 ${input.roadW}m の42条2項道路 → セットバックで再建築可。後退面積の目安 ${sb!=null?fmt(sb)+"㎡":"(接道長不明)"}（中心後退の場合）`,c:"wn"});
+    }else{
+      r.reasons.push({t:`前面道路幅員 ${input.roadW}m < 4m → 42条2項道路か否かを要確認(該当ならセットバックで可)`,c:"wn"}); unknown=true;
+    }
+  }else{
+    r.reasons.push({t:"前面道路幅員が不明 → 要確認",c:"wn"}); unknown=true;
+  }
+  if(input.roadKind==="private"){
+    r.reasons.push({t:"私道接道 → 通行・掘削承諾、位置指定道路か否かを要確認",c:"wn"});
+  }
+  if(/借地/.test(notes)){
+    r.reasons.push({t:"借地権 → 建替承諾料・地主承諾を要確認",c:"wn"});
+  }
+
+  if(!ok){ r.verdict="再建不可疑"; r.cls="ng"; }
+  else if(unknown){ r.verdict="要役所調査"; r.cls="warn"; }
+  else { r.verdict="再建築可"; r.cls="ok"; }
+
+  // --- 容積率(前面道路幅員制限) ---
+  if(input.far!=null){
+    let baseFar = input.far;
+    let roadFar = null;
+    if(input.roadW!=null && input.roadW<12){
+      const coef = isResidentialZone(input.use)?0.4:0.6;
+      roadFar = Math.floor(input.roadW*coef*100);
+      baseFar = Math.min(input.far, roadFar);
+    }
+    r.farInfo = { specified:input.far, roadFar, base:baseFar,
+      coefTxt: isResidentialZone(input.use)?"住居系×0.4":"×0.6" };
+    // 既存不適格チェック
+    if(input.land!=null && input.bldg!=null){
+      const usedFar = input.bldg/input.land*100;
+      r.farInfo.usedFar = usedFar;
+      r.farInfo.maxFloor = input.land*baseFar/100;
+      if(usedFar > baseFar+0.5){
+        r.reasons.push({t:`現況容積消化 ${fmt(usedFar)}% > 基準容積率 ${baseFar}% → 容積オーバー(既存不適格の可能性)。同規模での再建築不可`,c:"ng"});
+      }
+    }
+  }
+  return r;
+}
+
+/* ================= 実行 ================= */
+$("btnRun").addEventListener("click", async ()=>{
+  err("");
+  if(!CFG.worker){ err("先に⚙設定でWorker URLを登録してください。"); return; }
+  const addr = $("fAddress").value.trim();
+  if(!addr){ err("住所を入力してください。"); return; }
+  const num = id => { const v=$(id).value; return v===""?null:Number(v); };
+  const input = {
+    addr, price:num("fPrice"), land:num("fLand"), bldg:num("fBldg"),
+    use:$("fUse").value.trim(), bcr:num("fBcr"), far:num("fFar"),
+    kotei:num("fKotei"),
+    struct:$("fStruct").value, built:num("fBuilt"), gyield:num("fYield"), walk:num("fWalk"),
+    city:$("fCity").value, roadW:num("fRoadW"), frontage:num("fFront"),
+    roadKind:$("fRoadKind").value, roadLaw:$("fRoadLaw").value,
+    notes:$("fNotes").value
+  };
+  loading(true,"座標特定 → 地価・都市計画データ取得中");
+  $("btnRun").disabled=true;
+  try{
+    const geo = await geocode(addr);
+    const precision = addrPrecision(addr);
+    const [lp, zoning] = await Promise.all([ landPoints(geo.lat, geo.lng), fetchZoning(geo.lat, geo.lng) ]);
+    const {year, pts} = lp;
+    // 公式GISで補完（マイソク記載がない項目のみ）
+    const eff = {...input};
+    if(zoning){
+      if(!eff.use && zoning.use) eff.use = zoning.use;
+      if(eff.bcr==null && zoning.bcr!=null) eff.bcr = zoning.bcr;
+      if(eff.far==null && zoning.far!=null) eff.far = zoning.far;
+    }
+    renderValuation(eff, geo, year, pts, precision);
+    renderJudge(eff, pts, zoning, input);
+    lastRun = {input:eff, geo, year, pts, zoning, precision, score:null};
+    $("btnPdf").classList.remove("hidden");
+    // 取引事例の取得とスコアリング(追加で数秒かかる)
+    loading(true,"取引事例(相場)を取得中");
+    try{
+      const cityCode = (pts[0]&&pts[0].cityCode)||"";
+      let comps = null;
+      if(cityCode) comps = await fetchComps(cityCode, subjectTypeOf(eff));
+      // 周辺相場利回り: 手入力値のみ使用（API課金なし）
+      let mkt = null;
+      const mktIn = $("fYieldMkt").value;
+      if(mktIn!==""){ mkt = {pct:Number(mktIn), src:"手入力"}; }
+      const top3 = pts.slice(0,3);
+      const w = top3.reduce((s2,p)=>s2+1/Math.max(p.dist,50),0);
+      const u = Math.round(top3.reduce((s2,p)=>s2+p.priceYen/Math.max(p.dist,50),0)/w);
+      const kj = eff.land!=null ? u*eff.land : null;
+      const score = computeScore(eff, judge(eff), kj, comps, districtOf(addr), mkt);
+      lastRun.score = score;
+      renderScore(score);
+    }catch(e){ /* スコアは補助機能: 失敗しても本体結果は維持 */ }
+    $("valCard").classList.remove("hidden");
+    $("judgeCard").classList.remove("hidden");
+    $("valCard").scrollIntoView({behavior:"smooth"});
+  }catch(ex){ err(ex.message); }
+  finally{ loading(false); $("btnRun").disabled=false; }
+});
+
+function renderValuation(input, geo, year, pts, precision){
+  const top = pts.slice(0,3);
+  // 距離加重平均単価(近いほど重い)
+  const wsum = top.reduce((s,p)=>s+1/Math.max(p.dist,50),0);
+  const unit = Math.round(top.reduce((s,p)=>s+p.priceYen/Math.max(p.dist,50),0)/wsum);
+  const el = $("valBody");
+  let html = `<div style="margin-bottom:8px"><span class="badge ${precision.cls}">${precision.label}</span>${precision.hint?`<span style="font-size:11.5px;color:#7A8B99;margin-left:6px">${precision.hint}</span>`:""}</div>`;
+  if(input.land!=null){
+    const kouji = unit*input.land, kotei = kouji*0.7;
+    html += `<div class="big">${fmtMan(kouji)}<small> 万円（公示価格ベース土地評価額）</small></div>
+    <table class="rt" style="margin-top:8px">
+      <tr><th>採用単価（距離加重平均）</th><td>${unit.toLocaleString()} <span class="unit">円/㎡</span>（${(unit*3.30578).toLocaleString("ja-JP",{maximumFractionDigits:0})} 円/坪）</td></tr>
+      <tr><th>土地面積</th><td>${fmt(input.land)} ㎡</td></tr>`;
+    const vsPrice = v => input.price!=null ? `（販売価格の ${fmt(v/(input.price*10000)*100)}%）` : "";
+    html += `<tr><th>相続税路線価水準<span class="badge warn" style="margin-left:4px">概算×0.8</span></th><td>${fmtMan(kouji*0.8)} 万円 ${vsPrice(kouji*0.8)}</td></tr>`;
+    if(input.kotei!=null){
+      const koteiVal = input.kotei*1000*input.land;
+      html += `<tr><th>固定資産税路線価評価額<span class="badge ok" style="margin-left:4px">実額</span></th><td><b>${fmtMan(koteiVal)} 万円</b> ${vsPrice(koteiVal)}<br><span class="unit">路線価 ${input.kotei.toLocaleString()}千円/㎡ × ${fmt(input.land)}㎡ ※画地補正未適用</span></td></tr>`;
+    }else{
+      html += `<tr><th>固定資産税評価水準<span class="badge warn" style="margin-left:4px">推計×0.7</span></th><td>${fmtMan(kotei)} 万円 ${vsPrice(kotei)}<br><span class="unit">※<a href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener">全国地価マップ</a>の固定資産税路線価をフォームに入力すると実額計算に切替</span></td></tr>`;
+    }
+    if(input.price!=null){
+      const ratio = kouji/(input.price*10000)*100;
+      html += `<tr><th>販売価格に対する土地値</th><td><b>${fmt(ratio)}%</b>（販売 ${input.price.toLocaleString()} 万円）</td></tr>`;
+    }
+    html += `</table>`;
+  }else{
+    html += `<div class="big">${unit.toLocaleString()}<small> 円/㎡（周辺公示単価・距離加重平均）</small></div>
+    <p style="font-size:12.5px;color:#5B7286;margin-top:4px">土地面積を入力すると評価額を計算します。</p>`;
+  }
+  html += `<div style="margin-top:12px;font-size:12px;color:#5B7286;font-weight:700;letter-spacing:.05em">近隣の標準地・基準地（${year}年）</div>`;
+  top.forEach(p=>{
+    html += `<div class="pt">
+      <div style="display:flex;justify-content:space-between;gap:8px">
+        <span class="nm">${p.type}『${p.name}』</span>
+        <span class="pr">${p.priceYen.toLocaleString()} 円/㎡</span>
+      </div>
+      <div class="mt">${p.location}</div>
+      <div class="mt">距離 ${Math.round(p.dist)}m ／ ${p.use.replace(/^\d+,/,"")} ／ 前年比 ${p.yoy??"—"}%${p.useDist?` ／ ${p.useDist} 建${p.bcr||"—"}/容${p.far||"—"}`:""}</div>
+    </div>`;
+  });
+  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+    <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップで物件地点を開く</a>
+    <a class="extlink" target="_blank" rel="noopener" href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">🗾 全国地価マップ（固定資産税路線価）</a>
+    <button type="button" class="extlink" id="copyAddr">📋 住所をコピー</button>
+  </div>`;
+  html += `<div class="note">※ 公示・調査地点の単価をそのまま面積按分した机上値です。個別の画地条件(角地・不整形・道路幅員等)は未補正。固定資産税路線価・相続税路線価の実額は<a href="https://www.chikamap.jp/chikamap/Portal?mid=216" target="_blank" rel="noopener">全国地価マップ</a>・<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener">財産評価基準書</a>で確認してください。座標: ${geo.title}</div>`;
+  el.innerHTML = html;
+  const cb = document.getElementById("copyAddr");
+  if(cb) cb.onclick = ()=>{
+    navigator.clipboard.writeText(input.addr).then(()=>{
+      cb.textContent = "✓ コピーしました";
+      setTimeout(()=>{ cb.textContent = "📋 住所をコピー"; }, 1500);
+    }).catch(()=>{ err("コピーに失敗しました。住所欄から手動でコピーしてください。"); });
+  };
+}
+
+function renderJudge(input, pts, zoning, orig){
+  const r = judge(input);
+  const el = $("judgeBody");
+  let html = `<div class="stamp-row">
+    <div class="stamp ${r.cls==="ng"?"":r.cls}">${r.verdict}</div>
+    <ul class="reasons">${r.reasons.map(x=>`<li class="${x.c}">${x.t}</li>`).join("")}</ul>
+  </div>`;
+
+  html += `<table class="rt">`;
+  // 公式GIS(用途地域)とマイソク記載のクロスチェック
+  if(zoning){
+    let cmp = "";
+    if(orig && (orig.bcr!=null || orig.far!=null || orig.use)){
+      const m = (orig.use ? (zoning.use ? orig.use.replace(/\s/g,"").includes(zoning.use.replace(/地域|\s/g,"").slice(0,4)) || zoning.use.includes(orig.use.slice(0,4)) : true) : true)
+        && (orig.bcr==null || zoning.bcr==null || orig.bcr===zoning.bcr)
+        && (orig.far==null || zoning.far==null || orig.far===zoning.far);
+      cmp = m ? `<span style="color:var(--ok);font-weight:700">（マイソク記載と一致）</span>`
+              : `<span style="color:var(--warn);font-weight:700">（マイソク記載と相違 → 用途地域境の可能性、要確認）</span>`;
+    }
+    html += `<tr><th>公式用途地域（都市計画GIS）</th><td>${zoning.use||"—"} 建${zoning.bcr??"—"}/容${zoning.far??"—"} ${cmp}</td></tr>`;
+  }
+  if(input.bcr!=null){
+    html += `<tr><th>指定建蔽率</th><td>${input.bcr}%${input.land!=null?`（建築面積の上限目安 ${fmt(input.land*input.bcr/100)}㎡）`:""}</td></tr>`;
+  }
+  if(r.farInfo){
+    const f=r.farInfo;
+    html += `<tr><th>指定容積率</th><td>${f.specified}%</td></tr>`;
+    if(f.roadFar!=null){
+      html += `<tr><th>前面道路制限（${f.coefTxt}）</th><td>${f.roadFar}%</td></tr>
+      <tr><th>基準容積率（採用値）</th><td><b>${f.base}%</b></td></tr>`;
+    }
+    if(f.maxFloor!=null){
+      html += `<tr><th>延床面積の上限目安</th><td>${fmt(f.maxFloor)} ㎡</td></tr>
+      <tr><th>現況の容積消化率</th><td>${fmt(f.usedFar)}%（延床 ${fmt(input.bldg)}㎡ ÷ 土地 ${fmt(input.land)}㎡）</td></tr>`;
+    }
+  }
+  // 公示地点の法規制とのクロスチェック
+  const near = pts[0];
+  if(near && (near.bcr || near.far)){
+    const match = (input.bcr==null||String(input.bcr)===near.bcr) && (input.far==null||String(input.far)===near.far);
+    html += `<tr><th>最寄り公示地点の法規制</th><td>${near.useDist||"—"} 建${near.bcr||"—"}/容${near.far||"—"}
+      ${input.bcr!=null||input.far!=null ? (match?`<span style="color:var(--ok);font-weight:700">（マイソク記載と一致）</span>`:`<span style="color:var(--warn);font-weight:700">（マイソク記載と相違 → 用途地域境の可能性、要確認）</span>`):""}</td></tr>`;
+  }
+  if(near && near.areaDiv){
+    html += `<tr><th>最寄り公示地点の区域区分</th><td>${near.areaDiv}</td></tr>`;
+  }
+  html += `</table>
+  <div class="note">※ 机上判定です。42条道路種別・セットバック・43条許可・私道承諾・地区計画・高度地区等は、必ず役所（建築指導課・都市計画課）調査と道路台帳で確定してください。</div>`;
+  el.innerHTML = html;
+}
+
+/* ================= PDF(A4)レポート ================= */
+let lastRun = null;
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+$("btnPdf").addEventListener("click", ()=>{
+  if(!lastRun) return;
+  buildReport(lastRun);
+  // PDFの既定ファイル名はブラウザがdocument.titleを使うため、住所に差し替えて印刷
+  const orig = document.title;
+  const addr = (lastRun.input.addr||"マイソク即査定").replace(/[\\/:*?"<>|]/g,"").replace(/\s+/g,"").trim();
+  document.title = addr + "_査定" + new Date().toISOString().slice(0,10).replace(/-/g,"");
+  const restore = ()=>{ document.title = orig; window.removeEventListener("afterprint", restore); };
+  window.addEventListener("afterprint", restore);
+  window.print();
+  setTimeout(restore, 4000); // afterprint非発火ブラウザ向けの保険
+});
+function buildReport({input, geo, year, pts, zoning, precision}){
+  const r = judge(input);
+  const top = pts.slice(0,3);
+  const wsum = top.reduce((s,p)=>s+1/Math.max(p.dist,50),0);
+  const unit = Math.round(top.reduce((s,p)=>s+p.priceYen/Math.max(p.dist,50),0)/wsum);
+  const kouji = input.land!=null ? unit*input.land : null;
+  const today = new Date().toLocaleDateString("ja-JP");
+  const roadKindTxt = {public:"公道",private:"私道"}[input.roadKind]||"不明";
+  const roadLawTxt = {"42-1":"42条1項道路","42-2":"42条2項道路(セットバック要)","43":"43条但し書き","none":"建基法上の道路でない"}[input.roadLaw]||"記載なし";
+  let h = `
+  <div class="rp-head">
+    <div><div class="rp-title">マイソク即査定 調査報告</div>
+    <div class="rp-sub">MAISOKU INSTANT APPRAISAL ／ 机上評価・再建築判定</div></div>
+    <div class="rp-meta">作成日 ${today}<br>地価データ: 地価公示・地価調査（${year}年）</div>
+  </div>
+  <div class="rp-addr">所在地　${esc(input.addr)} <span class="badge ${precision?precision.cls:"warn"}" style="font-size:9px">${precision?precision.label:""}</span></div>
+
+  <div class="rp-sec"><div class="h">物件概要</div><div class="b rp-2col">
+    <table class="rp-t">
+      <tr><th>販売価格</th><td>${input.price!=null?input.price.toLocaleString()+" 万円":"—"}</td></tr>
+      <tr><th>土地面積</th><td>${fmt(input.land)} ㎡</td></tr>
+      <tr><th>延床面積</th><td>${fmt(input.bldg)} ㎡</td></tr>
+      <tr><th>用途地域</th><td>${esc(input.use)||"—"}</td></tr>
+      <tr><th>区域区分</th><td>${esc(input.city)||"不明"}</td></tr>
+    </table>
+    <table class="rp-t">
+      <tr><th>建蔽率／容積率</th><td>${input.bcr??"—"}% ／ ${input.far??"—"}%</td></tr>
+      <tr><th>前面道路幅員</th><td>${input.roadW!=null?input.roadW+" m":"—"}（${roadKindTxt}）</td></tr>
+      <tr><th>接道長さ</th><td>${input.frontage!=null?input.frontage+" m":"—"}</td></tr>
+      <tr><th>道路種別</th><td>${roadLawTxt}</td></tr>
+      <tr><th>備考</th><td>${esc(input.notes)||"—"}</td></tr>
+    </table>
+  </div></div>
+
+  <div class="rp-2col">
+    <div class="rp-sec"><div class="h">土地評価（地価公示・地価調査ベース）</div><div class="b">`;
+  if(kouji!=null){
+    h += `<div class="rp-big">${fmtMan(kouji)}<small> 万円（公示価格ベース）</small></div>
+    <table class="rp-t" style="margin-top:4px">
+      <tr><th>採用単価（距離加重）</th><td>${unit.toLocaleString()} 円/㎡</td></tr>
+      <tr><th>相続税路線価水準【概算×0.8】</th><td>${fmtMan(kouji*0.8)} 万円${input.price!=null?`（販売価格の ${fmt(kouji*0.8/(input.price*10000)*100)}%）`:""}</td></tr>
+      ${input.kotei!=null
+        ?`<tr><th>固定資産税路線価評価額【実額】</th><td><b>${fmtMan(input.kotei*1000*input.land)} 万円</b>${input.price!=null?`（販売価格の ${fmt(input.kotei*1000*input.land/(input.price*10000)*100)}%）`:""}　${input.kotei.toLocaleString()}千円/㎡・画地補正未適用</td></tr>`
+        :`<tr><th>固定資産税評価水準【推計×0.7】</th><td>${fmtMan(kouji*0.7)} 万円${input.price!=null?`（販売価格の ${fmt(kouji*0.7/(input.price*10000)*100)}%）`:""}</td></tr>`}
+      ${input.price!=null?`<tr><th>販売価格に対する土地値</th><td><b>${fmt(kouji/(input.price*10000)*100)}%</b></td></tr>`:""}
+    </table>`;
+  }else{
+    h += `<div class="rp-big">${unit.toLocaleString()}<small> 円/㎡（周辺単価・距離加重平均）</small></div>`;
+  }
+  h += `</div></div>
+    <div class="rp-sec"><div class="h">再建築・法規判定</div><div class="b">
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div class="stamp ${r.cls==="ng"?"":r.cls}">${r.verdict}</div>
+        <ul class="reasons">${r.reasons.map(x=>`<li class="${x.c}">${esc(x.t)}</li>`).join("")}</ul>
+      </div>`;
+  h += `<table class="rp-t" style="margin-top:4px">
+      ${zoning?`<tr><th>公式用途地域（都市計画GIS）</th><td>${esc(zoning.use)||"—"} 建${zoning.bcr??"—"}/容${zoning.far??"—"}</td></tr>`:""}`;
+  if(r.farInfo && r.farInfo.roadFar!=null){
+    h += `
+      <tr><th>基準容積率（道路制限後）</th><td>${r.farInfo.base}%（指定${r.farInfo.specified}%／道路制限${r.farInfo.roadFar}%）</td></tr>
+      ${r.farInfo.usedFar!=null?`<tr><th>現況容積消化</th><td>${fmt(r.farInfo.usedFar)}%（延床上限目安 ${fmt(r.farInfo.maxFloor)}㎡）</td></tr>`:""}`;
+  }
+  h += `</table>`;
+  h += `</div></div>
+  </div>
+
+  ${(lastRun&&lastRun.score&&lastRun.score.metrics.length)?`
+  <div class="rp-sec"><div class="h">総合スコア（各5点満点・参考値）　総合 ${lastRun.score.total.toFixed(1)} / 5.0</div><div class="b">
+    <table class="rp-t">
+      ${lastRun.score.metrics.map(m=>`<tr><th>${m.name}</th><td>${STARS(m.score)} ${m.score}　<span style="color:#7A8B99">${esc(m.basis)}</span></td></tr>`).join("")}
+    </table>
+  </div></div>`:""}
+
+  <div class="rp-sec"><div class="h">近隣の標準地・基準地</div><div class="b">
+    <table class="rp-t">
+      <tr><td style="font-weight:700;color:#5B7286">地点</td><td style="font-weight:700;color:#5B7286">所在</td><td style="font-weight:700;color:#5B7286">単価</td><td style="font-weight:700;color:#5B7286">距離</td><td style="font-weight:700;color:#5B7286">法規制</td></tr>
+      ${top.map(p=>`<tr><td>${esc(p.type)} ${esc(p.name)}</td><td>${esc(p.location)}</td><td>${p.priceYen.toLocaleString()}円/㎡</td><td>${Math.round(p.dist)}m</td><td>${esc(p.useDist)||"—"} 建${p.bcr||"—"}/容${p.far||"—"}</td></tr>`).join("")}
+    </table>
+  </div></div>
+
+  <div class="rp-links">参考リンク:
+    <a href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">ハザードマップ（物件地点）</a> ／
+    <a href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">全国地価マップ（固定資産税路線価）</a> ／
+    <a href="https://www.rosenka.nta.go.jp/">国税庁 路線価図</a>
+  </div>
+  <div class="rp-foot">本書は地価公示・地価調査（国土交通省 不動産情報ライブラリ）の周辺地点単価を面積按分した机上評価であり、個別の画地条件（角地・不整形・道路条件等）は未補正。再建築・法規判定はマイソク記載情報に基づく参考判定であり、42条道路種別・セットバック・43条許可・私道承諾・地区計画・高度地区等は役所調査および道路台帳により確定すること。固定資産税路線価・相続税路線価の実額は全国地価マップ・財産評価基準書を参照。</div>`;
+  $("printReport").innerHTML = h;
+}
+</script>
+</body>
+</html>
