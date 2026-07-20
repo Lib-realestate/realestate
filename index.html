@@ -374,8 +374,8 @@ const getRoomOccStatus=r=>{const t=_todayStr();if(!r.since)return r.status||'vac
   return r.contractItems||r.items||[];
 }
 
-function getContractTotal(r, ym){
-  return getContractItems(r,ym).reduce((s,it)=>s+(it.amt||0),0);
+function getContractTotal(r, ym, pi){
+  return getContractItems(r,ym,pi).reduce((s,it)=>s+(it.amt||0),0);
 }
   let commonTransactions=[];
 let driveFiles=[],unclassifiedItems=[];
@@ -1692,7 +1692,7 @@ function renderOccProp(){
     return p.monthlySnapshots?.[ym]?.[no]||null;
   };
   const getContract=(r,ym)=>getContractItems(r,ym,pi);
-const contractTotal=(r,ym)=>getContractTotal(r,ym);
+const contractTotal=(r,ym)=>getContractTotal(r,ym,pi);
   const snapTotal=(snap)=>snap?snap.items.reduce((s,it)=>s+(it.amt||0),0):null;
 
   // 月別合計
