@@ -1676,6 +1676,8 @@ function renderOccAll(){
 }
 
 function renderOccProp(){
+  const _scrollY=window.scrollY;
+  setTimeout(()=>window.scrollTo(0,_scrollY),0);
   const pi=parseInt(currentProp);
   const p=properties[pi];if(!p)return;
 
