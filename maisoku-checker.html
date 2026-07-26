@@ -1097,6 +1097,7 @@ function buildReport({input, geo, year, pts, zoning, precision}){
         ?`<tr><th>固定資産税路線価評価額【実額】</th><td><b>${fmtMan(input.kotei*1000*input.land)} 万円</b>${input.price!=null?`（販売価格の ${fmt(input.kotei*1000*input.land/(input.price*10000)*100)}%）`:""}　${input.kotei.toLocaleString()}千円/㎡・画地補正未適用</td></tr>`
         :`<tr><th>固定資産税評価水準【推計×0.7】</th><td>${fmtMan(kouji*0.7)} 万円${input.price!=null?`（販売価格の ${fmt(kouji*0.7/(input.price*10000)*100)}%）`:""}</td></tr>`}
       ${input.price!=null?`<tr><th>販売価格に対する土地値</th><td><b>${fmt(kouji/(input.price*10000)*100)}%</b></td></tr>`:""}
+      ${(()=>{const ri=$("fRentAssess").value;if(ri!==""&&input.price){const ry=Number(ri)*12/input.price*100;return `<tr><th>本来利回り（査定賃料ベース）</th><td><b>${ry.toFixed(2)}%</b>${input.gyield!=null?`（マイソク表記 ${input.gyield}%）`:""}</td></tr>`;}return "";})()}
     </table>`;
   }else{
     h += `<div class="rp-big">${unit.toLocaleString()}<small> 円/㎡（周辺単価・距離加重平均）</small></div>`;
