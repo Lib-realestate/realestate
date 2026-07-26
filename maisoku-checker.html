@@ -238,8 +238,18 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
   <section class="card hidden" id="manualCard">
     <div class="ttl"><span class="no">02</span>物件情報（修正可）</div>
     <div class="bd">
-      <div class="grid">
-        <div class="full"><label class="f">所在地（住所）</label><input type="text" id="fAddress" placeholder="東京都足立区西新井○-○-○"></div>
+
+      <!-- 所在地 -->
+      <div class="g3" style="margin-bottom:10px">
+        <div style="grid-column:1/-1;display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1"><label class="f">所在地（住所）</label><input type="text" id="fAddress" placeholder="東京都足立区西新井○-○-○"></div>
+          <button type="button" class="extlink" id="btnCopyAddr" style="white-space:nowrap;height:40px">📋 コピー</button>
+        </div>
+      </div>
+
+      <!-- 物件基本 -->
+      <div class="sec-ttl">物件基本</div>
+      <div class="g3">
         <div><label class="f">販売価格（万円）</label><input type="number" id="fPrice" inputmode="numeric"></div>
         <div><label class="f">土地面積（㎡）</label><input type="number" id="fLand" inputmode="decimal" step="0.01"></div>
         <div><label class="f">延床面積（㎡）</label><input type="number" id="fBldg" inputmode="decimal" step="0.01"></div>
@@ -254,19 +264,41 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
           </select>
         </div>
         <div><label class="f">築年（西暦）</label><input type="number" id="fBuilt" inputmode="numeric" placeholder="1995"></div>
-        <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
-        <div><label class="f">周辺相場利回り（%・任意）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等で調べた相場値を入力"></div>
-        <div><label class="f">査定賃料 月額（万円・任意）</label><input type="number" id="fRentAssess" inputmode="decimal" step="0.1" placeholder="ポルティ/スマサテの査定額"></div>
-<div><label class="f">想定入居率（%・任意）</label><input type="number" id="fOcc" inputmode="numeric" placeholder="90"></div>
-<div><label class="f">借入額（万円・任意）</label><input type="number" id="fLoan" inputmode="numeric" placeholder="空欄=販売価格"></div>
-<div><label class="f">金利（%・任意）</label><input type="number" id="fRate" inputmode="decimal" step="0.01" placeholder="2.0"></div>
-<div><label class="f">融資期間（年・任意）</label><input type="number" id="fTerm" inputmode="numeric" placeholder="25"></div>
         <div><label class="f">最寄駅 徒歩（分）</label><input type="number" id="fWalk" inputmode="numeric"></div>
+      </div>
+
+      <!-- 収益・賃料 -->
+      <div class="sec-ttl">収益・賃料</div>
+      <div class="g3">
+        <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
+        <div><label class="f">周辺相場利回り（%・任意）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等で調べた相場値"></div>
+        <div><label class="f">想定入居率（%・任意）</label><input type="number" id="fOcc" inputmode="numeric" placeholder="90"></div>
+      </div>
+      <!-- 賃料査定（間取り別） -->
+      <div style="margin-top:8px">
+        <label class="f">査定賃料（間取り・月額・部屋数）
+          <a href="https://porty.co.jp/assess" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">ポルティ↗</a>
+          <a href="https://owners.sumasate.jp/assessments/new" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">スマサテ↗</a>
+        </label>
+        <div id="rentRows"></div>
+        <button type="button" class="sub" id="btnAddRent" style="margin-top:6px;width:auto;padding:6px 14px;font-size:13px">＋ 間取りを追加</button>
+      </div>
+
+      <!-- 融資情報 -->
+      <div class="sec-ttl">融資情報</div>
+      <div class="g3">
+        <div><label class="f">借入額（万円・任意）</label><input type="number" id="fLoan" inputmode="numeric" placeholder="空欄=販売価格"></div>
+        <div><label class="f">金利（%・任意）</label><input type="number" id="fRate" inputmode="decimal" step="0.01" placeholder="2.0"></div>
+        <div><label class="f">融資期間（年・任意）</label><input type="number" id="fTerm" inputmode="numeric" placeholder="25"></div>
+      </div>
+
+      <!-- 法規・地域 -->
+      <div class="sec-ttl">法規・地域</div>
+      <div class="g3">
         <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
         <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
         <div><label class="f">容積率（%）</label><input type="number" id="fFar" inputmode="numeric"></div>
-        <div class="full"><label class="f">固定資産税路線価（千円/㎡・任意）<a href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">全国地価マップ↗</a></label><input type="number" id="fKotei" inputmode="decimal" placeholder="地価マップの値を入力→実額計算（未入力は公示×0.7で推計）"></div>
-        <div class="full"><label class="f">区域区分</label>
+        <div><label class="f">区域区分</label>
           <select id="fCity">
             <option value="">不明</option>
             <option>市街化区域</option>
@@ -293,10 +325,15 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
             <option value="none">建基法上の道路でない</option>
           </select>
         </div>
-        <div class="full"><label class="f">備考（再建築不可等の記載・借地権など）</label><input type="text" id="fNotes"></div>
+        <div style="grid-column:1/-1">
+          <label class="f">固定資産税路線価（千円/㎡・任意）
+            <a id="linkChikamap" href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener" style="font-weight:400;margin-left:6px">🗾 地価マップで調べる↗</a>
+          </label>
+          <input type="number" id="fKotei" inputmode="decimal" placeholder="地価マップの値を入力→実額計算（未入力は公示×0.7で推計）">
+        </div>
+        <div style="grid-column:1/-1"><label class="f">備考（再建築不可等の記載・借地権など）</label><input type="text" id="fNotes"></div>
       </div>
-      <button type="button" class="sub" id="btnLinks">🔗 住所から調査リンクを生成（地価マップ・賃料査定・賃貸需要）</button>
-<div id="linkArea" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+
       <button class="primary" id="btnRun" style="margin-top:14px">評価・判定を実行</button>
     </div>
   </section>
