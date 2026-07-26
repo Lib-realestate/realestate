@@ -256,6 +256,7 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
         <div><label class="f">築年（西暦）</label><input type="number" id="fBuilt" inputmode="numeric" placeholder="1995"></div>
         <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
         <div><label class="f">周辺相場利回り（%・任意）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等で調べた相場値を入力"></div>
+        <div><label class="f">査定賃料 月額（万円・任意）</label><input type="number" id="fRentAssess" inputmode="decimal" step="0.1" placeholder="ポルティ/スマサテの査定額"></div>
         <div><label class="f">最寄駅 徒歩（分）</label><input type="number" id="fWalk" inputmode="numeric"></div>
         <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
         <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
@@ -943,6 +944,12 @@ function renderValuation(input, geo, year, pts, precision){
     if(input.price!=null){
       const ratio = kouji/(input.price*10000)*100;
       html += `<tr><th>販売価格に対する土地値</th><td><b>${fmt(ratio)}%</b>（販売 ${input.price.toLocaleString()} 万円）</td></tr>`;
+      const rentIn = $("fRentAssess").value;
+if(rentIn!=="" && input.price){
+  const realY = Number(rentIn)*12/input.price*100;
+  const diff = input.gyield!=null ? realY-input.gyield : null;
+  html += `<tr><th>本来利回り（査定賃料ベース）</th><td><b>${realY.toFixed(2)}%</b>${diff!=null?`（マイソク表記 ${input.gyield}% との差 ${diff>=0?"+":""}${diff.toFixed(2)}pt${diff<-0.5?' <span class="badge warn">賃料設定が強気の可能性</span>':''}）`:""}</td></tr>`;
+}
     }
     html += `</table>`;
   }else{
@@ -963,6 +970,9 @@ function renderValuation(input, geo, year, pts, precision){
   html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
     <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップで物件地点を開く</a>
     <a class="extlink" target="_blank" rel="noopener" href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">🗾 全国地価マップ（固定資産税路線価）</a>
+    <a class="extlink" target="_blank" rel="noopener" href="https://porty.co.jp/assess">🏠 ポルティで賃料査定</a>
+<a class="extlink" target="_blank" rel="noopener" href="https://owners.sumasate.jp/assessments/new">🏠 スマサテで賃料査定</a>
+<a class="extlink" target="_blank" rel="noopener" href="https://toushi.homes.co.jp/owner/">📊 HOME'S見える賃貸経営</a>
     <button type="button" class="extlink" id="copyAddr">📋 住所をコピー</button>
   </div>`;
   html += `<div class="note">※ 公示・調査地点の単価をそのまま面積按分した机上値です。個別の画地条件(角地・不整形・道路幅員等)は未補正。固定資産税路線価・相続税路線価の実額は<a href="https://www.chikamap.jp/chikamap/Portal?mid=216" target="_blank" rel="noopener">全国地価マップ</a>・<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener">財産評価基準書</a>で確認してください。座標: ${geo.title}</div>`;
