@@ -1001,36 +1001,107 @@ $("btnRun").addEventListener("click", async ()=>{
 
 function renderValuation(input, geo, year, pts, precision){
   const top = pts.slice(0,3);
-  // 距離加重平均単価(近いほど重い)
   const wsum = top.reduce((s,p)=>s+1/Math.max(p.dist,50),0);
   const unit = Math.round(top.reduce((s,p)=>s+p.priceYen/Math.max(p.dist,50),0)/wsum);
   const el = $("valBody");
   let html = `<div style="margin-bottom:8px"><span class="badge ${precision.cls}">${precision.label}</span>${precision.hint?`<span style="font-size:11.5px;color:#7A8B99;margin-left:6px">${precision.hint}</span>`:""}</div>`;
   if(input.land!=null){
     const kouji = unit*input.land, kotei = kouji*0.7;
-    html += `<div class="big">${fmtMan(kouji)}<small> 万円（公示価格ベース土地評価額）</small></div>
+    const pricePct = v => input.price!=null ? `<span class="unit" style="margin-left:6px">販売価格の ${fmt(v/(input.price*10000)*100)}%</span>` : "";
+
+    // 土地評価ヘッダー: 公示価格を大きく、販売価格比をすぐ右に
+    html += `<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <div class="big">${fmtMan(kouji)}<small> 万円（公示価格ベース）</small></div>
+      ${input.price!=null?`<div style="font-size:14px;color:var(--blue);font-weight:700">販売価格の ${fmt(kouji/(input.price*10000)*100)}%</div>`:""}
+    </div>
     <table class="rt" style="margin-top:8px">
-      <tr><th>採用単価（距離加重平均）</th><td>${unit.toLocaleString()} <span class="unit">円/㎡</span>（${(unit*3.30578).toLocaleString("ja-JP",{maximumFractionDigits:0})} 円/坪）</td></tr>
-      <tr><th>土地面積</th><td>${fmt(input.land)} ㎡</td></tr>`;
-    const vsPrice = v => input.price!=null ? `（販売価格の ${fmt(v/(input.price*10000)*100)}%）` : "";
-    html += `<tr><th>相続税路線価水準<span class="badge warn" style="margin-left:4px">概算×0.8</span></th><td>${fmtMan(kouji*0.8)} 万円 ${vsPrice(kouji*0.8)}</td></tr>`;
+      <tr><th>採用単価</th><td>${unit.toLocaleString()} 円/㎡（${(unit*3.30578).toLocaleString("ja-JP",{maximumFractionDigits:0})} 円/坪）<span class="unit" style="margin-left:8px">土地 ${fmt(input.land)}㎡</span></td></tr>`;
+
     if(input.kotei!=null){
       const koteiVal = input.kotei*1000*input.land;
-      html += `<tr><th>固定資産税路線価評価額<span class="badge ok" style="margin-left:4px">実額</span></th><td><b>${fmtMan(koteiVal)} 万円</b> ${vsPrice(koteiVal)}<br><span class="unit">路線価 ${input.kotei.toLocaleString()}千円/㎡ × ${fmt(input.land)}㎡ ※画地補正未適用</span></td></tr>`;
+      html += `<tr><th>固定資産税路線価評価額<span class="badge ok" style="margin-left:4px">実額</span></th><td><b>${fmtMan(koteiVal)} 万円</b>${pricePct(koteiVal)}<span class="unit" style="margin-left:6px">${input.kotei.toLocaleString()}千円/㎡×${fmt(input.land)}㎡ ※画地補正未適用</span></td></tr>`;
     }else{
-      html += `<tr><th>固定資産税評価水準<span class="badge warn" style="margin-left:4px">推計×0.7</span></th><td>${fmtMan(kotei)} 万円 ${vsPrice(kotei)}<br><span class="unit">※<a href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener">全国地価マップ</a>の固定資産税路線価をフォームに入力すると実額計算に切替</span></td></tr>`;
+      html += `<tr><th>固定資産税評価水準<span class="badge warn" style="margin-left:4px">推計×0.7</span></th><td>${fmtMan(kotei)} 万円${pricePct(kotei)}<span class="unit" style="margin-left:6px"><a href="https://www.chikamap.jp/chikamap/Portal?mid=225" target="_blank" rel="noopener">地価マップ</a>で路線価入力→実額に切替</span></td></tr>`;
     }
+    html += `</table>`;
+
+    // 収益シミュレーション
+    const rentRows = getRentRows();
+    const totalMonthly = rentRows.reduce((s,r)=>s+r.rent*r.units,0);
+    const annualRent = totalMonthly*12;
+    const occ = $("fOcc").value!==""?Number($("fOcc").value)/100:0.9;
+    const rateIn=$("fRate").value, termIn=$("fTerm").value;
+    const loanMan = $("fLoan").value!==""?Number($("fLoan").value):(input.price||0);
+    let payMan=0;
+    if(rateIn!==""&&termIn!==""){
+      const mr=Number(rateIn)/100/12, nM=Number(termIn)*12;
+      payMan = mr>0 ? loanMan*mr/(1-Math.pow(1+mr,-nM)) : loanMan/nM;
+    }
+
+    html += `<div class="sec-ttl" style="margin-top:16px">収益シミュレーション</div>
+    <table class="rt">
+      <tr style="font-size:11px;color:#5B7286"><th></th><td><span style="display:inline-block;width:90px">月額</span><span style="display:inline-block;width:90px">年額</span><span>利回り</span></td></tr>`;
+
+    // マイソク賃料行
+    if(input.gyield!=null && input.price!=null){
+      const mAnnual = input.price*input.gyield/100;
+      const mMonthly = mAnnual/12;
+      html += `<tr><th>マイソク賃料</th><td>
+        <span style="display:inline-block;width:90px">${mMonthly.toFixed(1)} 万円</span>
+        <span style="display:inline-block;width:90px">${mAnnual.toFixed(0)} 万円</span>
+        <b style="color:var(--blue)">${input.gyield.toFixed(2)}%</b>
+      </td></tr>`;
+    }
+
+    // 査定賃料行
+    if(totalMonthly>0 && input.price!=null){
+      const assessYield = annualRent/input.price/100;
+      const diff = input.gyield!=null ? assessYield-input.gyield : null;
+      html += `<tr><th>査定賃料</th><td>
+        <span style="display:inline-block;width:90px">${totalMonthly.toFixed(1)} 万円</span>
+        <span style="display:inline-block;width:90px">${annualRent.toFixed(0)} 万円</span>
+        <b style="color:var(--blue)">${assessYield.toFixed(2)}%</b>
+        ${diff!=null?`<span class="unit" style="margin-left:6px">（マイソク比 ${diff>=0?"+":""}${diff.toFixed(2)}pt${diff<-0.5?'　<span class="badge warn">強気設定の可能性</span>':''}）</span>`:""}
+        <br><span class="unit">${rentRows.map(r=>`${r.layout} ${r.rent}万×${r.units}室`).join("・")}</span>
+      </td></tr>`;
+
+      const effMonthly = totalMonthly*occ;
+      const effAnnual = effMonthly*12;
+      const effYield = effAnnual/input.price/100;
+      html += `<tr><th>実効賃料（入居率${Math.round(occ*100)}%）</th><td>
+        <span style="display:inline-block;width:90px">${effMonthly.toFixed(1)} 万円</span>
+        <span style="display:inline-block;width:90px">${effAnnual.toFixed(0)} 万円</span>
+        <b style="color:var(--blue)">${effYield.toFixed(2)}%</b>
+      </td></tr>`;
+
+      if(payMan>0){
+        const cf = effMonthly - payMan;
+        const annualCF = cf*12;
+        const equity = input.price - loanMan;
+        const roi = input.price>0 ? annualCF/input.price*100 : null;
+        const ccr = equity>0 ? annualCF/equity*100 : null;
+        html += `<tr><th>月次返済額</th><td><b>${payMan.toFixed(1)} 万円/月</b>
+          <span class="unit">　借入${loanMan.toLocaleString()}万・金利${rateIn}%・${termIn}年</span></td></tr>
+        <tr><th>税引前CF（返済後）</th><td>
+          <b style="color:${cf>=0?"var(--ok)":"var(--shu)"}">${cf>=0?"+":"△"}${Math.abs(cf).toFixed(1)} 万円/月　年間 ${annualCF.toFixed(0)} 万円</b><br>
+          <span style="font-size:13px">ROI <b>${roi!=null?roi.toFixed(2)+"%":"—"}</b>　CCR <b>${ccr!=null?ccr.toFixed(2)+"%":"—"}</b></span>
+          <span class="unit">　自己資金${equity.toLocaleString()}万円　※管理費・固都税・修繕等未控除</span>
+        </td></tr>`;
+      }
+    }
+
+    // 即転売
     if(input.price!=null){
-      const ratio = kouji/(input.price*10000)*100;
-      html += `<tr><th>販売価格に対する土地値</th><td><b>${fmt(ratio)}%</b>（販売 ${input.price.toLocaleString()} 万円）</td></tr>`;
-      const rentRows = getRentRows();
-const totalMonthlyRent = rentRows.reduce((s,r)=>s+r.rent*r.units,0);
-if(totalMonthlyRent>0 && input.price){
-  const realY = totalMonthlyRent*12/input.price*100;
-  const diff = input.gyield!=null ? realY-input.gyield : null;
-  html += `<tr><th>本来利回り（査定賃料ベース）</th><td><b>${realY.toFixed(2)}%</b>${diff!=null?`（マイソク表記 ${input.gyield}% との差 ${diff>=0?"+":""}${diff.toFixed(2)}pt${diff<-0.5?' <span class="badge warn">賃料設定が強気の可能性</span>':''}）`:""}</td></tr>`;
-}
+      const CORP_TAX=0.34, SELL_COST=0.07;
+      const sellPrice = kouji;
+      const sellGross = sellPrice - input.price*10000;
+      const sellNet = sellGross>0 ? sellGross*(1-CORP_TAX)-sellPrice*SELL_COST : sellGross-sellPrice*SELL_COST;
+      html += `<tr><th>即転売（相場換算）</th><td>
+        売却想定 <b>${fmtMan(sellPrice)} 万円</b>　税引後益 <b style="color:${sellNet>=0?"var(--ok)":"var(--shu)"}">${sellNet>=0?"+":"△"}${fmtMan(Math.abs(sellNet))} 万円</b>
+        <br><span class="unit">法人税率${Math.round(CORP_TAX*100)}%・諸費用${Math.round(SELL_COST*100)}%控除。取得費・減価償却未控除</span>
+      </td></tr>`;
     }
+
     html += `</table>`;
 
     // 収益計算
