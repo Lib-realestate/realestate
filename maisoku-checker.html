@@ -1026,18 +1026,6 @@ function renderValuation(input, geo, year, pts, precision){
     html += `</table>`;
 
     // 収益シミュレーション
-    const rentRows = getRentRows();
-    const totalMonthly = rentRows.reduce((s,r)=>s+r.rent*r.units,0);
-    const annualRent = totalMonthly*12;
-    const occ = $("fOcc").value!==""?Number($("fOcc").value)/100:0.9;
-    const rateIn=$("fRate").value, termIn=$("fTerm").value;
-    const loanMan = $("fLoan").value!==""?Number($("fLoan").value):(input.price||0);
-    let payMan=0;
-    if(rateIn!==""&&termIn!==""){
-      const mr=Number(rateIn)/100/12, nM=Number(termIn)*12;
-      payMan = mr>0 ? loanMan*mr/(1-Math.pow(1+mr,-nM)) : loanMan/nM;
-    }
-
     html += `<div class="sec-ttl" style="margin-top:16px">収益シミュレーション</div>
     <table class="rt">
       <tr style="font-size:11px;color:#5B7286"><th></th><td><span style="display:inline-block;width:90px">月額</span><span style="display:inline-block;width:90px">年額</span><span>利回り</span></td></tr>`;
