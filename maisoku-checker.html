@@ -249,6 +249,7 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
           <div style="flex:1"><label class="f">所在地（住所）</label><input type="text" id="fAddress" placeholder="東京都足立区西新井○-○-○"></div>
           <button type="button" class="extlink" id="btnCopyAddr" style="white-space:nowrap;height:40px">📋 コピー</button>
         </div>
+        <div id="linkArea02" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
       </div>
 
       <!-- 物件基本 -->
@@ -1031,6 +1032,57 @@ if(totalMonthlyRent>0 && input.price){
 }
     }
     html += `</table>`;
+
+    // 収益計算
+    const rentRows = getRentRows();
+    const totalMonthly = rentRows.reduce((s,r)=>s+r.rent*r.units,0);
+    const annualRent = totalMonthly*12;
+    const occ = $("fOcc").value!==""?Number($("fOcc").value)/100:0.9;
+    const rateIn=$("fRate").value, termIn=$("fTerm").value;
+    const loanMan = $("fLoan").value!==""?Number($("fLoan").value):(input.price||0);
+    let payMan=0;
+    if(rateIn!==""&&termIn!==""){
+      const mr=Number(rateIn)/100/12, nM=Number(termIn)*12;
+      payMan = mr>0 ? loanMan*mr/(1-Math.pow(1+mr,-nM)) : loanMan/nM;
+    }
+
+    // 転売益
+    const SELL_COST = 0.07; // 仲介手数料+諸費用概算7%
+    const SHORT_TAX = 0.393; // 短期譲渡税
+    const LONG_TAX = 0.20315; // 長期譲渡税
+    const sellPrice5y = kouji; // 公示ベースを転売想定価格とする
+    const sellGross5y = sellPrice5y - input.price*10000;
+    const sellNet5y_short = sellGross5y>0 ? sellGross5y*(1-SHORT_TAX) - sellPrice5y*SELL_COST : sellGross5y - sellPrice5y*SELL_COST;
+    const sellNet5y_long  = sellGross5y>0 ? sellGross5y*(1-LONG_TAX)  - sellPrice5y*SELL_COST : sellGross5y - sellPrice5y*SELL_COST;
+
+    html += `<div class="sec-ttl" style="margin-top:14px">収益シミュレーション</div>
+    <table class="rt">`;
+
+    if(totalMonthly>0){
+      const effMonthly = totalMonthly*occ;
+      html += `<tr><th>満室月額賃料</th><td>${totalMonthly.toFixed(1)} 万円/月
+        <span class="unit">（${rentRows.map(r=>`${r.layout} ${r.rent}万×${r.units}室`).join("・")}）</span></td></tr>
+      <tr><th>年間満室賃料</th><td>${annualRent.toFixed(0)} 万円/年</td></tr>
+      <tr><th>実効賃料（入居率${Math.round(occ*100)}%）</th><td>${effMonthly.toFixed(1)} 万円/月　年間 ${(effMonthly*12).toFixed(0)} 万円</td></tr>`;
+      if(payMan>0){
+        const cf = effMonthly - payMan;
+        html += `<tr><th>月次返済額</th><td>${payMan.toFixed(1)} 万円/月
+          <span class="unit">借入${loanMan.toLocaleString()}万・金利${rateIn}%・${termIn}年</span></td></tr>
+        <tr><th>税引前CF（返済後）</th><td><b style="color:${cf>=0?"var(--ok)":"var(--shu)"}">${cf>=0?"+":"△"}${Math.abs(cf).toFixed(1)} 万円/月</b>　年間 <b>${(cf*12).toFixed(0)}</b> 万円
+          <span class="unit">※管理費・固都税・修繕等未控除</span></td></tr>`;
+      }
+    }
+
+    if(input.price!=null){
+      html += `<tr><th>即転売（公示価格で売却想定）</th><td>
+        短期譲渡: <b style="color:${sellNet5y_short>=0?"var(--ok)":"var(--shu)"}">${sellNet5y_short>=0?"+":"△"}${fmtMan(Math.abs(sellNet5y_short))} 万円</b>
+        　長期譲渡: <b style="color:${sellNet5y_long>=0?"var(--ok)":"var(--shu)"}">${sellNet5y_long>=0?"+":"△"}${fmtMan(Math.abs(sellNet5y_long))} 万円</b>
+        <br><span class="unit">売却諸費用${Math.round(SELL_COST*100)}%控除・短期税率${Math.round(SHORT_TAX*100)}%/長期税率${Math.round(LONG_TAX*100)}%適用。取得費・減価償却・リフォーム費は未控除</span>
+      </td></tr>`;
+    }
+
+    html += `</table>`;
+
   }else{
     html += `<div class="big">${unit.toLocaleString()}<small> 円/㎡（周辺公示単価・距離加重平均）</small></div>
     <p style="font-size:12.5px;color:#5B7286;margin-top:4px">土地面積を入力すると評価額を計算します。</p>`;
@@ -1047,12 +1099,8 @@ if(totalMonthlyRent>0 && input.price){
     </div>`;
   });
   html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-    <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップで物件地点を開く</a>
-    <a class="extlink" target="_blank" rel="noopener" href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">🗾 全国地価マップ（固定資産税路線価）</a>
-    <a class="extlink" target="_blank" rel="noopener" href="https://porty.co.jp/assess">🏠 ポルティで賃料査定</a>
-<a class="extlink" target="_blank" rel="noopener" href="https://owners.sumasate.jp/assessments/new">🏠 スマサテで賃料査定</a>
-<a class="extlink" target="_blank" rel="noopener" href="https://toushi.homes.co.jp/owner/">📊 HOME'S見える賃貸経営</a>
-    <button type="button" class="extlink" id="copyAddr">📋 住所をコピー</button>
+    <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップ</a>
+    <a class="extlink" target="_blank" rel="noopener" href="https://toushi.homes.co.jp/owner/">📊 HOME'S見える賃貸経営</a>
   </div>`;
   html += `<div class="note">※ 公示・調査地点の単価をそのまま面積按分した机上値です。個別の画地条件(角地・不整形・道路幅員等)は未補正。固定資産税路線価・相続税路線価の実額は<a href="https://www.chikamap.jp/chikamap/Portal?mid=216" target="_blank" rel="noopener">全国地価マップ</a>・<a href="https://www.rosenka.nta.go.jp/" target="_blank" rel="noopener">財産評価基準書</a>で確認してください。座標: ${geo.title}</div>`;
   el.innerHTML = html;
@@ -1133,6 +1181,11 @@ async function updateGeoLinks(){
   try{
     const geo=await geocode(addr);
     $("linkChikamap").href=`https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500`;
+    // 住所欄下のリンクエリアを更新
+    const la=$("linkArea02");
+    if(la) la.innerHTML=`
+      <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップ</a>
+      <a class="extlink" target="_blank" rel="noopener" href="https://toushi.homes.co.jp/owner/">📊 HOME'S見える賃貸経営</a>`;
   }catch(e){}
 }
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
