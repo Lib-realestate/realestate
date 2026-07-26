@@ -1080,6 +1080,25 @@ function renderJudge(input, pts, zoning, orig){
 
 /* ================= PDF(A4)レポート ================= */
 let lastRun = null;
+$("btnLinks") && $("btnLinks").addEventListener("click", async ()=>{
+  const addr=$("fAddress").value.trim();
+  if(!addr){ err("住所を入力してください。"); return; }
+  err("");
+  try{
+    const geo=await geocode(addr);
+    $("linkArea").innerHTML=`
+      <button type="button" class="extlink" id="copyAddr2">📋 住所をコピー</button>
+      <a class="extlink" target="_blank" rel="noopener" href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">🗾 地価マップ（固定資産税路線価）</a>
+      <a class="extlink" target="_blank" rel="noopener" href="https://porty.co.jp/assess">🏠 ポルティ賃料査定</a>
+      <a class="extlink" target="_blank" rel="noopener" href="https://owners.sumasate.jp/assessments/new">🏠 スマサテ賃料査定</a>
+      <a class="extlink" target="_blank" rel="noopener" href="https://toushi.homes.co.jp/owner/">📊 HOME'S見える賃貸経営</a>
+      <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップ</a>`;
+    $("copyAddr2").onclick=()=>{navigator.clipboard.writeText(addr).then(()=>{
+      $("copyAddr2").textContent="✓ コピーしました";
+      setTimeout(()=>{$("copyAddr2").textContent="📋 住所をコピー";},1500);
+    });};
+  }catch(ex){ err(ex.message); }
+});
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 $("btnPdf").addEventListener("click", ()=>{
   if(!lastRun) return;
