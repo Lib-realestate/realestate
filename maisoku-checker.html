@@ -101,6 +101,10 @@ button.sub{
 /* 入力グリッド */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid .full{grid-column:1/-1}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px}
+@media(max-width:540px){.g3{grid-template-columns:1fr 1fr}}
+.sec-ttl{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.1em;border-bottom:1px solid var(--blue-line);padding-bottom:3px;margin:14px 0 8px}
+.rent-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:6px}
 label.f{display:block;font-size:11px;color:#5B7286;font-weight:700;letter-spacing:.05em;margin-bottom:2px}
 input[type=text],input[type=number],select{
   width:100%;padding:9px 10px;border:1px solid var(--blue-line);border-radius:6px;
@@ -433,6 +437,7 @@ function resetDownstream(){
   ["fAddress","fPrice","fLand","fBldg","fBuilt","fYield","fYieldMkt","fWalk","fUse","fBcr","fFar","fKotei","fRoadW","fFront","fNotes"]
     .forEach(id=>{ $(id).value=""; });
   ["fCity","fRoadKind","fRoadLaw","fStruct"].forEach(id=>{ $(id).value=""; });
+  clearRentRows();
   $("manualCard").classList.add("hidden");
   // 03/04 結果とPDFを非表示・破棄
   $("valCard").classList.add("hidden");
@@ -555,6 +560,35 @@ $("btnExtract").addEventListener("click", async ()=>{
   }
 });
 
+/* ================= 賃料行の動的追加 ================= */
+let rentRowCount = 0;
+function addRentRow(layout="",rent="",units=""){
+  rentRowCount++;
+  const id = rentRowCount;
+  const div = document.createElement("div");
+  div.className = "rent-row"; div.id = "rentRow"+id;
+  div.innerHTML = `
+    <div><label class="f">間取り</label><input type="text" id="rLayout${id}" value="${layout}" placeholder="1K"></div>
+    <div><label class="f">月額（万円）</label><input type="number" id="rRent${id}" value="${rent}" inputmode="decimal" step="0.1" placeholder="5.0"></div>
+    <div><label class="f">部屋数</label><input type="number" id="rUnits${id}" value="${units}" inputmode="numeric" placeholder="4"></div>
+    <button type="button" onclick="document.getElementById('rentRow${id}').remove()" style="background:none;border:1px solid #ccc;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;color:#888;margin-top:14px">×</button>`;
+  $("rentRows").appendChild(div);
+}
+$("btnAddRent").addEventListener("click",()=>addRentRow());
+
+function getRentRows(){
+  return [...document.querySelectorAll(".rent-row")].map(row=>{
+    const id = row.id.replace("rentRow","");
+    return {
+      layout: (document.getElementById("rLayout"+id)||{}).value||"",
+      rent: parseFloat((document.getElementById("rRent"+id)||{}).value)||0,
+      units: parseInt((document.getElementById("rUnits"+id)||{}).value)||0
+    };
+  }).filter(r=>r.rent>0 && r.units>0);
+}
+
+function clearRentRows(){ $("rentRows").innerHTML=""; rentRowCount=0; }
+
 function fillForm(j){
   $("fAddress").value = j.address || "";
   $("fPrice").value = j.price_man_yen ?? "";
@@ -579,7 +613,7 @@ function fillForm(j){
   if(j.land_right && !/所有権/.test(j.land_right)) extra.push(j.land_right);
   if(j.notes) extra.push(j.notes);
   $("fNotes").value = extra.join("／");
-  if(j.address) $("btnLinks").click();
+  if(j.address) updateGeoLinks();
 }
 
 /* ================= ジオコーディング(国土地理院) ================= */
@@ -1083,25 +1117,23 @@ function renderJudge(input, pts, zoning, orig){
 
 /* ================= PDF(A4)レポート ================= */
 let lastRun = null;
-$("btnLinks") && $("btnLinks").addEventListener("click", async ()=>{
+$("btnCopyAddr").addEventListener("click",()=>{
   const addr=$("fAddress").value.trim();
-  if(!addr){ err("住所を入力してください。"); return; }
-  err("");
+  if(!addr) return;
+  navigator.clipboard.writeText(addr).then(()=>{
+    $("btnCopyAddr").textContent="✓ コピー完了";
+    setTimeout(()=>{ $("btnCopyAddr").textContent="📋 コピー"; },1500);
+  });
+});
+
+async function updateGeoLinks(){
+  const addr=$("fAddress").value.trim();
+  if(!addr) return;
   try{
     const geo=await geocode(addr);
-    $("linkArea").innerHTML=`
-      <button type="button" class="extlink" id="copyAddr2">📋 住所をコピー</button>
-      <a class="extlink" target="_blank" rel="noopener" href="https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500">🗾 地価マップ（固定資産税路線価）</a>
-      <a class="extlink" target="_blank" rel="noopener" href="https://porty.co.jp/assess">🏠 ポルティ賃料査定</a>
-      <a class="extlink" target="_blank" rel="noopener" href="https://owners.sumasate.jp/assessments/new">🏠 スマサテ賃料査定</a>
-      <a class="extlink" target="_blank" rel="noopener" href="https://toushi.homes.co.jp/owner/">📊 HOME'S見える賃貸経営</a>
-      <a class="extlink" target="_blank" rel="noopener" href="https://disaportal.gsi.go.jp/maps/index.html?ll=${geo.lat},${geo.lng}&z=16">🌊 ハザードマップ</a>`;
-    $("copyAddr2").onclick=()=>{navigator.clipboard.writeText(addr).then(()=>{
-      $("copyAddr2").textContent="✓ コピーしました";
-      setTimeout(()=>{$("copyAddr2").textContent="📋 住所をコピー";},1500);
-    });};
-  }catch(ex){ err(ex.message); }
-});
+    $("linkChikamap").href=`https://www.chikamap.jp/chikamap/Map?mid=225&mpx=${geo.lng}&mpy=${geo.lat}&mps=2500`;
+  }catch(e){}
+}
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 $("btnPdf").addEventListener("click", ()=>{
   if(!lastRun) return;
