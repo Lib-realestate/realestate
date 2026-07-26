@@ -1105,7 +1105,6 @@ function renderValuation(input, geo, year, pts, precision){
     html += `</table>`;
 
     // 収益計算
-    const rentRows = getRentRows();
     const totalMonthly = rentRows.reduce((s,r)=>s+r.rent*r.units,0);
     const annualRent = totalMonthly*12;
     const occ = $("fOcc").value!==""?Number($("fOcc").value)/100:0.9;
