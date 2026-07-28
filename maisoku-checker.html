@@ -167,7 +167,10 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
       <div class="g3">
         <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
         <div><label class="f">周辺相場利回り（%・任意）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等で調べた相場値"></div>
-        <div><label class="f">想定入居率（%・任意）</label><input type="number" id="fOcc" inputmode="numeric" placeholder="90"></div>
+        <div><label class="f">想定入居率（%）</label><input type="number" id="fOcc" inputmode="numeric" placeholder="90" value="90"></div>
+        <div><label class="f">運営経費率（%）</label><input type="number" id="fExpense" inputmode="numeric" placeholder="20" value="20"></div>
+        <div><label class="f">購入諸費用率（%）</label><input type="number" id="fBuyCost" inputmode="numeric" placeholder="7" value="7"></div>
+        <div><label class="f">売却諸費用率（%）</label><input type="number" id="fSellCost" inputmode="numeric" placeholder="5" value="5"></div>
       </div>
       <div style="margin-top:8px">
         <label class="f">査定賃料（間取り・月額・部屋数）
@@ -520,8 +523,12 @@ function renderValuation(input,geo,year,pts,precision){
     const totalMonthly=rentRows.reduce((s,r)=>s+r.rent*r.units,0);
     const annualRent=totalMonthly*12;
     const occ=$("fOcc").value!==""?Number($("fOcc").value)/100:0.9;
+    const expRate=$("fExpense").value!==""?Number($("fExpense").value)/100:0.20;
+    const buyCostRate=$("fBuyCost").value!==""?Number($("fBuyCost").value)/100:0.07;
+    const sellCostRate=$("fSellCost").value!==""?Number($("fSellCost").value)/100:0.05;
     const rateIn=$("fRate").value,termIn=$("fTerm").value;
     const loanMan=$("fLoan").value!==""?Number($("fLoan").value):(input.price||0);
+    const equity=input.price!=null?input.price*(1+buyCostRate)-loanMan:0;
     let payMan=0;
     if(rateIn!==""&&termIn!==""){const mr=Number(rateIn)/100/12,nM=Number(termIn)*12;payMan=mr>0?loanMan*mr/(1-Math.pow(1+mr,-nM)):loanMan/nM;}
 
@@ -534,41 +541,52 @@ function renderValuation(input,geo,year,pts,precision){
     }
 
     if(totalMonthly>0&&input.price!=null){
-      const assessYield=annualRent/input.price/100;
+      const assessYield=annualRent/input.price*100;
       const diff=input.gyield!=null?assessYield-input.gyield:null;
-      html+=`<tr><th>査定賃料</th><td>
+      html+=`<tr><th>査定賃料（満室）</th><td>
         <span style="display:inline-block;width:88px">${totalMonthly.toFixed(1)} 万円</span>
         <span style="display:inline-block;width:88px">${annualRent.toFixed(0)} 万円</span>
         <b style="color:var(--blue)">${assessYield.toFixed(2)}%</b>
         ${diff!=null?`<span class="unit" style="margin-left:6px">（マイソク比 ${diff>=0?"+":""}${diff.toFixed(2)}pt${diff<-0.5?' <span class="badge warn">強気設定の可能性</span>':''}）</span>`:""}
         <br><span class="unit">${rentRows.map(r=>`${r.layout} ${r.rent}万×${r.units}室`).join("・")}</span>
       </td></tr>`;
-      const effMonthly=totalMonthly*occ,effAnnual=effMonthly*12,effYield=effAnnual/input.price/100;
+      const effMonthly=totalMonthly*occ;
+      const effAnnual=effMonthly*12;
+      const effYield=effAnnual/input.price*100;
+      const expMonthly=effMonthly*expRate;
+      const noiMonthly=effMonthly-expMonthly;
+      const noiYield=noiMonthly*12/input.price*100;
       html+=`<tr><th>実効賃料（入居率${Math.round(occ*100)}%）</th><td>
         <span style="display:inline-block;width:88px">${effMonthly.toFixed(1)} 万円</span>
         <span style="display:inline-block;width:88px">${effAnnual.toFixed(0)} 万円</span>
         <b style="color:var(--blue)">${effYield.toFixed(2)}%</b>
+      </td></tr>
+      <tr><th>NOI（経費${Math.round(expRate*100)}%控除後）</th><td>
+        <span style="display:inline-block;width:88px">${noiMonthly.toFixed(1)} 万円</span>
+        <span style="display:inline-block;width:88px">${(noiMonthly*12).toFixed(0)} 万円</span>
+        <b style="color:var(--blue)">${noiYield.toFixed(2)}%</b>
       </td></tr>`;
       if(payMan>0){
-        const cf=effMonthly-payMan,annualCF=cf*12,equity=input.price-loanMan;
+        const cf=noiMonthly-payMan,annualCF=cf*12;
         const roi=input.price>0?annualCF/input.price*100:null;
         const ccr=equity>0?annualCF/equity*100:null;
         html+=`<tr><th>月次返済額</th><td><b>${payMan.toFixed(1)} 万円/月</b><span class="unit"> 借入${loanMan.toLocaleString()}万・金利${rateIn}%・${termIn}年</span></td></tr>
         <tr><th>税引前CF / ROI / CCR</th><td>
           <b style="color:${cf>=0?"var(--ok)":"var(--shu)"}">${cf>=0?"+":"△"}${Math.abs(cf).toFixed(1)} 万円/月　年間 ${annualCF.toFixed(0)} 万円</b><br>
           ROI <b>${roi!=null?roi.toFixed(2)+"%":"—"}</b>　CCR <b>${ccr!=null?ccr.toFixed(2)+"%":"—"}</b>
-          <span class="unit"> 自己資金${equity.toLocaleString()}万円　※管理費・固都税・修繕等未控除</span>
+          <span class="unit"> 自己資金${equity.toFixed(0)}万円（物件価格×${Math.round((1+buyCostRate)*100)}%−借入）　※固都税・修繕等別途</span>
         </td></tr>`;
       }
     }
 
     if(input.price!=null){
-      const CORP_TAX=0.34,SELL_COST=0.07;
-      const sellGross=kouji-input.price*10000;
-      const sellNet=sellGross>0?sellGross*(1-CORP_TAX)-kouji*SELL_COST:sellGross-kouji*SELL_COST;
-      html+=`<tr><th>即転売（相場換算）</th><td>
-        売却想定 <b>${fmtMan(kouji)} 万円</b>　税引後益 <b style="color:${sellNet>=0?"var(--ok)":"var(--shu)"}">${sellNet>=0?"+":"△"}${fmtMan(Math.abs(sellNet))} 万円</b>
-        <br><span class="unit">法人税率${Math.round(CORP_TAX*100)}%・諸費用${Math.round(SELL_COST*100)}%控除。取得費・減価償却未控除</span>
+      const CORP_TAX=0.34;
+      const sellPrice=kouji;
+      const sellGross=sellPrice-input.price*10000*(1+buyCostRate);
+      const sellNet=sellGross>0?sellGross*(1-CORP_TAX)-sellPrice*sellCostRate:sellGross-sellPrice*sellCostRate;
+      html+=`<tr><th>再販（相場取引事例ベース）</th><td>
+        売却想定 <b>${fmtMan(sellPrice)} 万円</b>　税引後益 <b style="color:${sellNet>=0?"var(--ok)":"var(--shu)"}">${sellNet>=0?"+":"△"}${fmtMan(Math.abs(sellNet))} 万円</b>
+        <br><span class="unit">法人税率${Math.round(CORP_TAX*100)}%・売却諸費用${Math.round(sellCostRate*100)}%・購入諸費用${Math.round(buyCostRate*100)}%を取得費に加算。減価償却未控除</span>
       </td></tr>`;
     }
     html+=`</table>`;
