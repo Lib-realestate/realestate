@@ -485,6 +485,22 @@ $("btnRun").addEventListener("click",async()=>{
       let mkt=null;const mktIn=$("fYieldMkt").value;if(mktIn!=="")mkt={pct:Number(mktIn),src:"手入力"};
       const top3=pts.slice(0,3);const w=top3.reduce((s2,p)=>s2+1/Math.max(p.dist,50),0);const u=Math.round(top3.reduce((s2,p)=>s2+p.priceYen/Math.max(p.dist,50),0)/w);const kj=eff.land!=null?u*eff.land:null;
       const score=computeScore(eff,judge(eff),kj,comps,districtOf(addr),mkt);lastRun.score=score;renderScore(score);
+      // 相場取引事例中央値で再販行を更新
+      if(comps&&comps.length>=5&&eff.land!=null){
+        const basisArea=eff.bldg!=null&&eff.land!=null?eff.land:eff.land;
+        const units=comps.map(c=>c.unit);
+        units.sort((a,b)=>a-b);const med=units.length%2?units[Math.floor(units.length/2)]:(units[Math.floor(units.length/2)-1]+units[Math.floor(units.length/2)])/2;
+        const compPrice=med*basisArea;
+        const CORP_TAX=0.34;
+        const buyCostRate=$("fBuyCost").value!==""?Number($("fBuyCost").value)/100:0.07;
+        const sellCostRate=$("fSellCost").value!==""?Number($("fSellCost").value)/100:0.05;
+        const sellGross=compPrice-(eff.price||0)*10000*(1+buyCostRate);
+        const sellNet=sellGross>0?sellGross*(1-CORP_TAX)-compPrice*sellCostRate:sellGross-compPrice*sellCostRate;
+        const el=document.querySelector('#valBody tr th');
+        const rows=[...$("valBody").querySelectorAll('tr')];
+        const target=rows.find(r=>r.querySelector('th')&&r.querySelector('th').textContent.startsWith('再販'));
+        if(target){target.querySelector('td').innerHTML=`売却想定 <b>${fmtMan(compPrice)} 万円</b>（取引事例中央値 ${Math.round(med).toLocaleString()}円/㎡×${eff.land}㎡）　税引後益 <b style="color:${sellNet>=0?"var(--ok)":"var(--shu)"}">${sellNet>=0?"+":"△"}${fmtMan(Math.abs(sellNet))} 万円</b><br><span class="unit">法人税率${Math.round(CORP_TAX*100)}%・売却諸費用${Math.round(sellCostRate*100)}%・購入諸費用${Math.round(buyCostRate*100)}%を取得費加算。減価償却未控除</span>`;}
+      }
     }catch(e){}
     $("valCard").classList.remove("hidden");$("judgeCard").classList.remove("hidden");$("valCard").scrollIntoView({behavior:"smooth"});
   }catch(ex){err(ex.message);}
