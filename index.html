@@ -3721,8 +3721,8 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
             <button class="btn-sm" onclick="addExitOtherAdj()" style="font-size:10px">＋ その他精算を追加</button>
           </td>
         </tr>
-        <tr style="border-top:1px solid #d0d0c8;font-weight:700">
-          <td style="padding:6px 6px">①売却による利益</td>
+        <tr style="border-top:2px solid #333;font-weight:700;background:#f0f9ff">
+          <td style="padding:8px 6px">①売却による利益<br><span style="font-size:9px;font-weight:400;color:#888">売却価格−仲介手数料＋固都税精算−残債＋その他精算</span></td>
           <td style="padding:6px 6px;text-align:right;font-size:14px" class="${saleProfit>=0?'g':'r'}">${saleProfit<0?'▲':''}${fmt(Math.abs(saleProfit))}</td>
           <td></td>
         </tr>
@@ -3741,8 +3741,8 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
           <td style="padding:5px 6px;text-align:right"><input type="number" value="${ex.transferTax||autoTransferTax||''}" placeholder="0" style="width:110px;text-align:right;font-size:12px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px;color:#dc2626" onchange="updateExit('transferTax',parseInt(this.value)||0)"></td>
           <td style="color:#dc2626;font-size:11px">▲</td>
         </tr>
-        <tr style="border-top:1px solid #d0d0c8;font-weight:700;background:#fafaf8">
-          <td style="padding:6px 6px">②トータル利益</td>
+        <tr style="border-top:2px solid #333;font-weight:700;background:#f0fdf4">
+          <td style="padding:8px 6px">②トータル利益<br><span style="font-size:9px;font-weight:400;color:#888">①＋取得来CF累計−諸費用−譲渡税</span></td>
           <td style="padding:6px 6px;text-align:right;font-size:14px" class="${totalProfit>=0?'g':'r'}">${totalProfit<0?'▲':''}${fmt(Math.abs(totalProfit))}</td>
           <td></td>
         </tr>
@@ -3843,6 +3843,7 @@ function updateExitOtherAdj(idx,field,value){
   const p=properties[pi];
   p.exit.otherAdjs[idx][field]=value;
   saveProps();
+  renderExit();
 }
   function generateRepaySchedule(pi,segIdx){
   const p=properties[pi];
