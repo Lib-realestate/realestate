@@ -3630,7 +3630,13 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
   if(!ex.otherAdjs) ex.otherAdjs=[];
 
   // 譲渡税自動計算
-  const acqCost=(p.price||0)+(p.miscCost||0);
+  // 減価償却累計額を計算（取得年月〜売却年月）
+  const depAnnual=p.depreciation||0;
+  const acqD=p.acquireDate?new Date(p.acquireDate):null;
+  const saleD=ex.saleDate?new Date(ex.saleDate):new Date();
+  const depMonths=acqD?Math.max(0,Math.round((saleD-acqD)/(1000*60*60*24*30.44))):0;
+  const depTotal=Math.round(depAnnual*depMonths/12);
+  const acqCost=Math.max(0,(p.price||0)+(p.miscCost||0)-depTotal);
   const transferFee=ex.agentFee||0;
   const transferIncome=ex.salePrice||0;
   const taxableGain=Math.max(0,transferIncome-acqCost-transferFee);
@@ -3735,6 +3741,11 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
           <td style="padding:5px 6px;color:#888">購入時諸費用合計</td>
           <td style="padding:5px 6px;text-align:right;color:#dc2626">${miscTotal>0?'▲'+fmt(miscTotal):'—'}</td>
           <td style="color:#dc2626;font-size:11px">${miscTotal>0?'▲':''}</td>
+        </tr>
+        <tr style="border-bottom:0.5px solid #f0f0e8">
+          <td style="padding:5px 6px;color:#888;font-size:11px">　減価償却累計 <span style="font-size:9px;color:#aaa">譲渡税計算用</span></td>
+          <td style="padding:5px 6px;text-align:right;font-size:11px;color:#888">${fmt(depTotal)}</td>
+          <td></td>
         </tr>
         <tr style="border-bottom:0.5px solid #f0f0e8">
           <td style="padding:5px 6px;color:#888">譲渡税 <span style="font-size:9px;color:#aaa">自動</span></td>
