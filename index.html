@@ -3817,9 +3817,9 @@ function updateExit(field,value){
     const rate=value/100;
     if(!p.exit._agentFeeManual) p.exit.agentFee=Math.round((p.exit.salePrice*rate+60000)*1.1);
   }
-  if(field==='agentFee') p.exit._agentFeeManual=true;
-  if(field==='remainDebt') p.exit._remainDebtManual=true;
-  if(field==='transferTax') p.exit._transferTaxManual=true;
+  if(field==='agentFee') p.exit._agentFeeManual=value>0;
+  if(field==='remainDebt') p.exit._remainDebtManual=value>0;
+  if(field==='transferTax') p.exit._transferTaxManual=value>0;
   saveProps();
   renderExit();
 }
