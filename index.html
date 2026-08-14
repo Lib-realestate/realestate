@@ -3758,18 +3758,7 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
         </tr>
       </tbody>
     </table>
-  </div>
-  <div class="card"><div class="ct" style="margin-bottom:12px">売却シミュレーション — ${p.name}</div>
-  <div class="grid2" style="margin-bottom:12px">
-    <div><div style="font-size:11px;color:#888;margin-bottom:3px">売却想定価格（円）</div><input type="number" id="exitPrice" value="${Math.round(p.price*1.2)}" style="width:100%;font-size:14px;text-align:right" oninput="calcExit()"></div>
-    <div><div style="font-size:11px;color:#888;margin-bottom:3px">課税区分</div><select id="taxType" style="width:100%" onchange="calcExit()"><option value="longPersonal">個人 長期（20.315%）</option><option value="shortPersonal">個人 短期（39.63%）</option><option value="corporate">法人（実効税率34%）</option></select></div>
-  </div>
-  <div class="grid2"><div><div style="font-size:11px;font-weight:500;color:#888;margin-bottom:8px">費用内訳</div><div id="exitBreakdown"></div></div>
-    <div><div class="card" style="padding:10px 12px;margin:0 0 8px"><div style="font-size:10px;color:#888;margin-bottom:3px">手取り利益</div><div style="font-size:18px;font-weight:500" class="g" id="exitNet">—</div></div>
-      <div class="card" style="padding:10px 12px;margin:0"><div style="font-size:10px;color:#888;margin-bottom:3px">自己資金回収率</div><div style="font-size:18px;font-weight:500" class="b" id="exitRecovery">—</div></div>
-    </div></div>
-  <div style="margin-top:12px"><div class="ct" style="margin-bottom:8px">売却価格別 手取り試算</div><div style="position:relative;height:150px"><canvas id="exitChart"></canvas></div></div></div>`;
-  calcExit();
+  </div>`;
 }
 function calcTotalLoan(pi){
   const p=properties[pi];
