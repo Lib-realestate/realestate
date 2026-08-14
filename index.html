@@ -3631,7 +3631,8 @@ if(!p.price){document.getElementById('pages').innerHTML='<div class="card" style
 
   // 譲渡税自動計算
   // 減価償却累計額を計算（取得年月〜売却年月）
-  const depAnnual=p.depreciation||0;
+  const _dur=({RC:47,'鉄骨造':34,'木造':22})[p.structure]||47;
+  const depAnnual=p.depreciation||Math.round((p.price||0)*0.7/_dur);
   const acqD=p.acquireDate?new Date(p.acquireDate):null;
   const saleD=ex.saleDate?new Date(ex.saleDate):new Date();
   const depMonths=acqD?Math.max(0,Math.round((saleD-acqD)/(1000*60*60*24*30.44))):0;
