@@ -1344,7 +1344,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         return txRows+sumRow;
       }).join('');
       const commonRules=window.commonRecurringRules||[];
-      const commonRecurringHTML=commonRules.length?`
+      const commonRecurringHTML=`
       <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
         <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
           <span class="ct">🔁 定期明細 <span class="rtoggle" style="font-size:11px">▼</span></span>
@@ -1360,7 +1360,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(null,${i})">編集</button>
         </div>`).join('')}
         </div>
-      </div>`:'';
+      </div>`;
       return`${commonRecurringHTML}<div class="card" style="padding:0;overflow:hidden;margin-top:10px">
         <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between">
         <span class="ct">明細履歴</span>
@@ -1466,7 +1466,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
       return rows+sumRow;
     }).join('');
     const recurringRules=properties[pi]?.recurringRules||[];
-    const recurringHTML=recurringRules.length?`
+    const recurringHTML=`
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
       <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.rtoggle').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'">
         <span class="ct">🔁 定期明細 <span class="rtoggle" style="font-size:11px">▼</span></span>
@@ -1482,7 +1482,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
         <button class="btn-sm" style="font-size:10px" onclick="editRecurringRule(${pi},${i})">編集</button>
       </div>`).join('')}
       </div>
-    </div>`:'';
+    </div>`;
     return`
     ${recurringHTML}
     <div class="card" style="padding:0;overflow:hidden">
