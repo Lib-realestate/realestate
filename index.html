@@ -1677,7 +1677,14 @@ function renderOccAll(){
 
 function renderOccProp(){
   const _scrollY=window.scrollY;
-  setTimeout(()=>window.scrollTo(0,_scrollY),0);
+  const _wrap=document.getElementById('occTableWrap');
+  const _wrapTop=_wrap?_wrap.scrollTop:0;
+  const _wrapLeft=_wrap?_wrap.scrollLeft:0;
+  requestAnimationFrame(()=>{
+    window.scrollTo(0,_scrollY);
+    const el=document.getElementById('occTableWrap');
+    if(el){el.scrollTop=_wrapTop;el.scrollLeft=_wrapLeft;}
+  });
   const pi=parseInt(currentProp);
   const p=properties[pi];if(!p)return;
 
