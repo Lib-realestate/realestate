@@ -1254,7 +1254,7 @@ const occR=pct(p.rooms.filter(r=>_getStatus(r)==='occupied').length,p.rooms.leng
           <td class="left" style="font-weight:700;position:sticky;left:0;background:#fafaf8;z-index:2">月間CF</td>
           <td style="border-right:1px solid #d0d0c8"></td>
           ${(()=>{let ca=0;return indices.map((idx,pos)=>{const net=getMonthCF(idx,pi);ca+=net;return`<td style="text-align:right;font-weight:500${isFutureIdx(idx)?';opacity:.6':''}" class="${net>=0?'g':'r'}">${net<0?'▲':''}${fmt(net)}</td>`;}).join('');})()}
-          ${(()=>{const tot=getAnnualCF(pi);return`<td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${tot>=0?'g':'r'}">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
+          ${(()=>{const tot=indices.reduce((s,idx)=>s+getMonthCF(idx,pi),0);return`<td style="text-align:right;font-weight:700;border-left:1px solid #d0d0c8" class="${tot>=0?'g':'r'}">${tot<0?'▲':''}${fmt(tot)}</td>`;})()}
         </tr>
         <tr>
           <td class="left" style="font-size:12px;font-weight:700;position:sticky;left:0;background:#fff;z-index:2">年間CF累計</td>
