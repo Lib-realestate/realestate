@@ -100,7 +100,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 .fl b{white-space:nowrap}
 .fs{font-size:11.5px;color:var(--sub);line-height:1.7}
 #tbl{display:flex;flex-direction:column;overflow:hidden;max-height:420px}
-.tr{display:grid;grid-template-columns:40px repeat(5,minmax(0,1fr));gap:4px;padding:5px 12px;font-size:12px;text-align:right;border:0;border-bottom:1px solid #F1EFE9;background:#fff;width:100%;color:var(--ink)}
+.tr{display:grid;grid-template-columns:38px repeat(6,minmax(0,1fr));gap:4px;padding:5px 12px;font-size:12px;text-align:right;border:0;border-bottom:1px solid #F1EFE9;background:#fff;width:100%;color:var(--ink)}
 .tr>:first-child{text-align:left}
 .tr.h{font-size:11px;color:var(--sub);border-bottom:1px solid var(--line);padding:9px 12px}
 .tr:nth-child(even){background:#FAF9F5}
@@ -133,7 +133,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
   #btnMenu{margin-left:auto}
   .top{gap:10px}
   .kpi .v{font-size:24px}
-  .tr{font-size:11px;padding:6px 8px;grid-template-columns:28px repeat(5,minmax(0,1fr))}
+  .tr{font-size:10.5px;padding:6px 6px;gap:2px;grid-template-columns:24px repeat(6,minmax(0,1fr))}
   .box input,.box select{font-size:16px}
   #menu{top:calc(52px + env(safe-area-inset-top,0px))}
 }
@@ -271,7 +271,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
   </div>
   <div class="lower">
     <div class="card" id="tbl">
-      <div class="tr h num"><span>年</span><span>その年の手残り</span><span>① 保有中</span><span>残債</span><span>② 売却時</span><span>③ 最終</span></div>
+      <div class="tr h num"><span>年</span><span>その年の手残り</span><span>① 保有中</span><span>残債</span><span>② 売却時</span><span>③ 最終</span><span>1年あたり</span></div>
       <div class="tb" id="tbody"></div>
     </div>
   </div>
@@ -343,7 +343,7 @@ function model(I,D){
     const bleft=Math.max(0,bldg-depCum),book=land+bleft,gain=sp-sc-dm-book,lossUse=mode==='corp'?Math.min(loss,Math.max(0,gain)):0;
     const sr=mode==='corp'?I.taxCorp/100:(t>5?0.20315:0.3963),st=Math.max(0,gain-lossUse)*sr;
     const hold=cum-own-tax;
-    rows.push({t,ey,yp,useLand,dm,full,inc,ex,noi,py,rep,cf,cum,hold,cInc,cEx,cPy,cRep,b1,land,bldg,depCum,bleft,lossUse,sp,broker,sc,spl,pre,holdTax:tax,book,gain,sr,st,post:hold+spl-st});
+    rows.push({t,ey,yp,useLand,dm,full,inc,ex,noi,py,rep,cf,cum,hold,cInc,cEx,cPy,cRep,b1,land,bldg,depCum,bleft,lossUse,sp,broker,sc,spl,pre,holdTax:tax,book,gain,sr,st,post:hold+spl-st,per:(hold+spl-st)/t});
   }
   return {own,pay,rows};
 }
@@ -416,7 +416,7 @@ function renderInputs(){
 function nice(v){if(!(v>0))return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),q=v/p;return (q<=1?1:q<=2?2:q<=5?5:10)*p;}
 function renderChart(){
   const box=$('chart'),W=Math.max(300,box.clientWidth||600),sp=W<600;
-  const H=sp?200:250,H2=sp?64:84,L=sp?42:58,R=8,T=10,B=8,iw=W-L-R,ih=H-T-B,rows=M.rows,Y=cur.Y;
+  const H=sp?200:250,H2=sp?64:84,H3=sp?56:70,L=sp?42:58,R=8,T=10,B=8,iw=W-L-R,ih=H-T-B,rows=M.rows,Y=cur.Y;
   const vs=[];rows.forEach(r=>vs.push(r.hold,r.spl,r.post));
   let mn=Math.min(0,...vs),mx=Math.max(0,...vs);const st=nice((mx-mn)/(sp?4:5));
   mn=Math.floor(mn/st)*st;mx=Math.ceil(mx/st)*st;if(mx===mn)mx=mn+st;
@@ -430,9 +430,13 @@ function renderChart(){
   let pos='',neg='',sel='';
   rows.forEach(r=>{const x0=(x(r.t)-bw/2).toFixed(1),y0=by(Math.max(0,r.cf)).toFixed(1),y1=by(Math.min(0,r.cf)).toFixed(1);
     const d=`M${x0} ${y0}h${bw.toFixed(1)}V${y1}h${(-bw).toFixed(1)}Z`;if(r.t===Y)sel+=d;else if(r.cf<0)neg+=d;else pos+=d;});
-  const xt=(sp?[1,10,20,30,40]:[1,5,10,15,20,25,30,35,40]).map(t=>`<text x="${x(t).toFixed(1)}" y="${H+H2+13}" text-anchor="middle" font-size="${sp?9:10}" fill="#5E6763">${t}年</text>`).join('');
-  const hit=rows.map(r=>`<rect x="${(x(r.t)-iw/80).toFixed(1)}" y="0" width="${(iw/40).toFixed(1)}" height="${H+H2}" fill="transparent" data-y="${r.t}"><title>${r.t}年目</title></rect>`).join('');
-  box.innerHTML=`<svg width="${W}" height="${H+H2+18}" viewBox="0 0 ${W} ${H+H2+18}" role="img" aria-label="1〜40年の推移グラフ">
+  const pers=rows.map(r=>r.per);let pmn=Math.min(0,...pers),pmx=Math.max(0,...pers);if(pmx===pmn)pmx=pmn+1;
+  const pbest=rows.reduce((a,r)=>r.per>a.per?r:a,rows[0]);
+  const py=v=>6+(pmx-v)/(pmx-pmn)*(H3-14);
+  const pline=rows.map((r,i)=>(i?'L':'M')+x(r.t).toFixed(1)+' '+py(r.per).toFixed(1)).join(' ');
+  const xt=(sp?[1,10,20,30,40]:[1,5,10,15,20,25,30,35,40]).map(t=>`<text x="${x(t).toFixed(1)}" y="${H+H2+H3+13}" text-anchor="middle" font-size="${sp?9:10}" fill="#5E6763">${t}年</text>`).join('');
+  const hit=rows.map(r=>`<rect x="${(x(r.t)-iw/80).toFixed(1)}" y="0" width="${(iw/40).toFixed(1)}" height="${H+H2+H3}" fill="transparent" data-y="${r.t}"><title>${r.t}年目</title></rect>`).join('');
+  box.innerHTML=`<svg width="${W}" height="${H+H2+H3+18}" viewBox="0 0 ${W} ${H+H2+H3+18}" role="img" aria-label="1〜40年の推移グラフ">
   <path d="${g}" stroke="#ECE9E1" fill="none"/>${lab}
   <path d="M${L} ${y(0).toFixed(1)}H${W-R}" stroke="#9AA29E" fill="none"/>
   <path d="M${sx} ${T}V${H-B}" stroke="#1D2624" stroke-dasharray="3 3" fill="none"/>
@@ -444,6 +448,12 @@ function renderChart(){
   <path d="M${L} ${by(0).toFixed(1)}H${W-R}" stroke="#9AA29E" fill="none"/>
   <path d="${pos||'M0 0'}" fill="#8DB9A9"/><path d="${neg||'M0 0'}" fill="#D98A80"/><path d="${sel||'M0 0'}" fill="#1D2624"/>
   <text x="${L-6}" y="${H2/2-2}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">年間の</text><text x="${L-6}" y="${H2/2+10}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">手残り</text></g>
+  <g transform="translate(0,${H+H2})"><path d="M${L} 0H${W-R}" stroke="#ECE9E1"/>
+  <path d="M${L} ${py(0).toFixed(1)}H${W-R}" stroke="#9AA29E" fill="none"/>
+  <path d="${pline}" stroke="#D0342C" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+  <circle cx="${sx}" cy="${py(row().per).toFixed(1)}" r="4" fill="#D0342C" stroke="#fff" stroke-width="2"/>
+  <text x="${L-6}" y="${H3/2-2}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたり</text><text x="${L-6}" y="${H3/2+10}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">の利益</text>
+  <text x="${W-R}" y="${H3-3}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたりが最大：${pbest.t}年目 ${fm(pmx)}万円</text></g>
   ${xt}${hit}</svg>`;
 }
 function sg(v){const r=Math.round(v);return (r>0?'+':'')+fm(v);}
@@ -492,12 +502,12 @@ function renderResults(){
       ${ln('売却時の税',-s.st,`${taxNote}<br>${gainNote}<br>${bookNote}`)}
     </div>
     <div class="tot"><span>合計</span><span class="v num" style="color:${s.post<0?'var(--neg)':'var(--ink)'}">${fm(s.post)}${U}</span></div>
-    <div class="fs num" style="text-align:right">参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
+    <div class="fs num" style="text-align:right">1年あたり ${fm(s.per)} 万円（${Y}年で割った金額）／参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
   const be=M.rows.find(r=>r.post>0),best=M.rows.reduce((a,r)=>r.post>a.post?r:a,M.rows[0]);
   {const sw=M.rows.find(r=>r.useLand);$('cSw').textContent=sw?'土地値での売却に切替 '+sw.t+'年目から':'40年間 利回りで売却';$('cSw').style.display='';}
-  $('cBe').textContent='プラスになるのは '+(be?be.t+'年目から':'なし');$('cBest').textContent='税引後が最大 '+best.t+'年目';
+  $('cBe').textContent='プラスになるのは '+(be?be.t+'年目から':'なし');$('cBest').textContent='③が最大 '+best.t+'年目／1年あたりが最大 '+M.rows.reduce((a,r)=>r.per>a.per?r:a,M.rows[0]).t+'年目';
   renderChart();
-  $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}" data-y="${r.t}"><span>${r.t}</span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span></button>`).join('');
+  $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}" data-y="${r.t}"><span>${r.t}</span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span><span class="${r.per<0?'neg':''}">${fm(r.per)}</span></button>`).join('');
 }
 function renderTabs(){
   const items=[...store.items].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
