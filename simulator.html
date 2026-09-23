@@ -132,6 +132,7 @@ body.v-cmp #tabs,body.v-cmp #btnSave{display:none}
 #cmpGrid{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:12px}
 .mx{display:grid;min-width:max-content}
 .mx>div{border-bottom:1px solid #F1EFE9;padding:7px 10px;min-width:0}
+.mx .gh{position:sticky;left:0;background:#F6F5F0;font-size:11px;font-weight:700;color:var(--sub);padding:5px 10px}
 .mx .hd{position:sticky;top:0;background:#fff;z-index:2;font-size:12px;font-weight:700;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;white-space:nowrap}
 .mx .hd i{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .mx .rl,.mx .rl0{position:sticky;left:0;background:#fff;z-index:1;display:flex;flex-direction:column;gap:1px;border-right:1px solid var(--line)}
@@ -354,8 +355,8 @@ body.v-cmp #tabs,body.v-cmp #btnSave{display:none}
     </div>
     <div class="cmpRow">
       <b style="font-size:13px">比較する年</b>
-      <label class="f">年A<div class="box"><input data-c="y1" inputmode="numeric"><span>年目</span></div></label>
-      <label class="f">年B<div class="box"><input data-c="y2" inputmode="numeric"><span>年目</span></div></label>
+      <label class="f">年A<div class="box"><input data-c="y1" inputmode="numeric"><span>期目</span></div></label>
+      <label class="f">年B<div class="box"><input data-c="y2" inputmode="numeric"><span>期目</span></div></label>
       <span class="fs">指標は1年目・税引き前。売却の数字は選んだ年に売った場合（税引後）。</span>
     </div>
   </div>
@@ -980,6 +981,7 @@ function metrics(I,y1,y2){
   return {price:I.price,own:m.own,
     yld:I.rent/I.price*100,fcr:fcr,ccr:m.own>0?r.cf/m.own*100:NaN,roi:r.cf/tot*100,
     dscr:m.pay>0?r.noi/m.pay:NaN,prr:m.pay/I.rent*100,ber:m.pay/(I.rent*(1-I.exp/100))*100,yg:fcr-K,
+    landR:I.price>0?d.landVal/I.price*100:NaN,vac:I.vac,exp:I.exp,dec:I.dec,exitY:I.exitY,
     cf1:r.cf,pA:a.post,pB:b.post,eA:m.own>0?a.post/m.own*100:NaN,eB:m.own>0?b.post/m.own*100:NaN,perA:a.per,perB:b.per};
 }
 function renderCmp(){
@@ -993,6 +995,7 @@ function renderCmp(){
   const y1=Math.min(40,Math.max(1,Math.round(cmpY.y1||10))),y2=Math.min(40,Math.max(1,Math.round(cmpY.y2||20)));
   const data=sel.map(t=>({...t,m:metrics(t.inp,y1,y2)}));
   const defs=[
+    ['#','1年目の指標（税引き前）'],
     ['表面利回り','満室家賃 ÷ 価格','yld',1,'%',1],
     ['実質利回り','（実収入−経費）÷（価格＋諸費用）','fcr',1,'%',1],
     ['CCR','1年目の手残り ÷ 自己資金','ccr',1,'%',1],
@@ -1002,15 +1005,24 @@ function renderCmp(){
     ['分岐入居率','手残りがゼロになる入居率（低いほど良い）','ber',1,'%',-1],
     ['イールドG','実質利回り − ローン定数','yg',2,'%',1],
     ['1年目の手残り','年間の手残り（税引前）','cf1',0,'万円',1],
+    ['土地値比率','土地値 ÷ 価格（高いほど値崩れしにくい）','landR',1,'%',1],
     ['自己資金','購入時に入れた現金','own',0,'万円',0],
-    [y1+'年目の最終損益','税引後','pA',0,'万円',1],
-    [y2+'年目の最終損益','税引後','pB',0,'万円',1],
-    [y1+'年目の自己資金比','最終損益 ÷ 自己資金','eA',1,'%',1],
-    [y2+'年目の自己資金比','最終損益 ÷ 自己資金','eB',1,'%',1],
-    [y1+'年目の1年あたり','最終損益 ÷ '+y1+'年','perA',0,'万円',1],
-    [y2+'年目の1年あたり','最終損益 ÷ '+y2+'年','perB',0,'万円',1]
+    ['#','設定している条件'],
+    ['空室率','入居しない割合の想定（低いほど強気）','vac',1,'%',0],
+    ['経費率','実収入に対する経費の想定（低いほど強気）','exp',1,'%',0],
+    ['家賃下落','1年ごとの下落の想定（低いほど強気）','dec',2,'%',0],
+    ['売却時利回り','1期目の想定（低いほど強気）','exitY',2,'%',0],
+    ['#',y1+'期目に売却した場合（税引後）'],
+    [y1+'期目の最終損益','① ＋ ② − 税金','pA',0,'万円',1],
+    [y1+'期目の自己資金比','最終損益 ÷ 自己資金','eA',1,'%',1],
+    [y1+'期目の1年あたり','最終損益 ÷ '+y1,'perA',0,'万円',1],
+    ['#',y2+'期目に売却した場合（税引後）'],
+    [y2+'期目の最終損益','① ＋ ② − 税金','pB',0,'万円',1],
+    [y2+'期目の自己資金比','最終損益 ÷ 自己資金','eB',1,'%',1],
+    [y2+'期目の1年あたり','最終損益 ÷ '+y2,'perB',0,'万円',1]
   ];
   const rows=defs.map(([title,note,key,dec,unit,dir])=>{
+    if(title==='#')return `<div class="gh" style="grid-column:1/-1">${note}</div>`;
     const vals=data.map(d=>d.m[key]);
     const fin=vals.filter(v=>isFinite(v));
     const mx=fin.length?Math.max(...fin.map(Math.abs))||1:1;
@@ -1027,7 +1039,7 @@ function renderCmp(){
     }).join('');
     return `<div class="rl"><b>${title}</b><span>${note}${dir?(dir>0?' ／ 高いほど良い':' ／ 低いほど良い'):''}</span></div>${cells}`;
   }).join('');
-  $('cmpGrid').innerHTML=`<div class="mx" style="grid-template-columns:168px repeat(${data.length},minmax(104px,1fr))">
+  $('cmpGrid').innerHTML=`<div class="mx" style="grid-template-columns:176px repeat(${data.length},minmax(104px,1fr))">
     <div class="hd rl0">項目</div>${data.map(d=>`<div class="hd"><i style="background:${d.color}"></i>${esc(d.name)}</div>`).join('')}
     ${rows}</div>`;
 }
