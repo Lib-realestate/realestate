@@ -12,6 +12,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;-webkit-text-size-adjust:100%}
 body{padding-bottom:env(safe-area-inset-bottom,0px)}
+body.hasbar .wrap,body.hasbar #cmp{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 button{font:inherit;cursor:pointer}
 a{color:var(--cf)}
 .num{font-variant-numeric:tabular-nums}
@@ -124,16 +125,19 @@ body.v-cmp .wrap{display:none}
 .cmpList label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer}
 .cmpList input{accent-color:var(--ink);margin:0}
 .cmpList i{width:10px;height:10px;border-radius:50%;display:inline-block}
-#cmpGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.mc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:7px}
-.mc h3{margin:0;font-size:12.5px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.mc h3 span{font-size:10.5px;color:var(--sub);font-weight:400}
-.mr{display:grid;grid-template-columns:96px minmax(0,1fr) 74px;align-items:center;gap:8px;font-size:11.5px}
-.mr .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
-.mr .bar{height:14px;background:#F1EFE9;border-radius:4px;overflow:hidden;position:relative}
-.mr .bar i{position:absolute;top:0;bottom:0;border-radius:4px}
-.mr .vv{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
-.mr.best .vv{color:var(--cf)}
+#cmpGrid{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:12px}
+.mx{display:grid;min-width:max-content}
+.mx>div{border-bottom:1px solid #F1EFE9;padding:7px 10px;min-width:0}
+.mx .hd{position:sticky;top:0;background:#fff;z-index:2;font-size:12px;font-weight:700;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.mx .hd i{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.mx .rl,.mx .rl0{position:sticky;left:0;background:#fff;z-index:1;display:flex;flex-direction:column;gap:1px;border-right:1px solid var(--line)}
+.mx .rl0{z-index:3}
+.mx .rl b{font-size:12px}
+.mx .rl span{font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cel{display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:right}
+.cv{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.cb{height:5px;background:#F1EFE9;border-radius:3px;overflow:hidden;display:block}
+.cb i{display:block;height:100%;border-radius:3px}
 #nav{display:none}
 #ybar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(760px,92vw);background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 6px 20px rgba(29,38,36,.14);display:none;align-items:center;gap:12px;padding:6px 16px;z-index:25}
 #ybar.show{display:flex}
@@ -159,7 +163,8 @@ body.v-cmp .wrap{display:none}
   .wrap{grid-template-columns:1fr;padding:10px;padding-bottom:80px}
   body.v-res #inp{display:none} body.v-inp #res{display:none}
   #cmp{padding:10px;padding-bottom:80px}
-  .mr{grid-template-columns:76px minmax(0,1fr) 66px}
+  body.hasbar .wrap,body.hasbar #cmp{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+  .mx{font-size:11px}
   #nav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;height:calc(58px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:#fff;border-top:1px solid var(--line);z-index:20}
   #nav button{border:0;background:#fff;font-size:13px;color:var(--sub)}
   #nav button.on{color:var(--ink);font-weight:700;box-shadow:inset 0 3px 0 var(--ink)}
@@ -887,25 +892,34 @@ function renderCmp(){
     [y1+'年目の1年あたり','最終損益 ÷ '+y1+'年','perA',0,'万円',1],
     [y2+'年目の1年あたり','最終損益 ÷ '+y2+'年','perB',0,'万円',1]
   ];
-  $('cmpGrid').innerHTML=defs.map(([title,note,key,dec,unit,dir])=>{
-    const vs=data.map(d=>d.m[key]).filter(v=>isFinite(v));
-    if(!vs.length)return '';
-    const mx=Math.max(...vs.map(Math.abs))||1;
-    const bestV=dir===0?NaN:dir>0?Math.max(...vs):Math.min(...vs);
-    return `<div class="mc"><h3>${title}<span>${note}</span></h3>`+data.map(d=>{
-      const v=d.m[key],okv=isFinite(v);
-      const w=okv?Math.max(2,Math.abs(v)/mx*100):0;
-      return `<div class="mr${okv&&v===bestV?' best':''}"><span class="nm" title="${esc(d.name)}">${esc(d.name)}</span>`
-        +`<span class="bar"><i style="left:0;width:${w}%;background:${okv&&v<0?'var(--neg)':d.color}"></i></span>`
-        +`<span class="vv${okv&&v<0?' neg':''}">${okv?fd(v,dec)+(unit==='%'?'%':unit==='倍'?'倍':''):'−'}</span></div>`;
-    }).join('')+'</div>';
+  const rows=defs.map(([title,note,key,dec,unit,dir])=>{
+    const vals=data.map(d=>d.m[key]);
+    const fin=vals.filter(v=>isFinite(v));
+    const mx=fin.length?Math.max(...fin.map(Math.abs))||1:1;
+    const best=!dir||!fin.length?NaN:(dir>0?Math.max(...fin):Math.min(...fin));
+    const worst=!dir||fin.length<2?NaN:(dir>0?Math.min(...fin):Math.max(...fin));
+    const cells=data.map((d,i)=>{
+      const v=vals[i],okv=isFinite(v);
+      const w=okv?Math.max(3,Math.abs(v)/mx*100):0;
+      const bg=okv&&v===best?'#EAF3EE':okv&&v===worst?'#FBEFEC':'transparent';
+      const u=unit==='%'?'%':unit==='倍'?'倍':'';
+      return `<div class="cel" style="background:${bg}">
+        <span class="cv${okv&&v<0?' neg':''}">${okv?fd(v,dec)+u:'−'}</span>
+        <span class="cb"><i style="width:${w}%;background:${okv&&v<0?'var(--neg)':d.color}"></i></span></div>`;
+    }).join('');
+    return `<div class="rl"><b>${title}</b><span>${note}${dir?(dir>0?' ／ 高いほど良い':' ／ 低いほど良い'):''}</span></div>${cells}`;
   }).join('');
+  $('cmpGrid').innerHTML=`<div class="mx" style="grid-template-columns:168px repeat(${data.length},minmax(104px,1fr))">
+    <div class="hd rl0">項目</div>${data.map(d=>`<div class="hd"><i style="background:${d.color}"></i>${esc(d.name)}</div>`).join('')}
+    ${rows}</div>`;
 }
 /* ===== 売却年バー（スクロール時） ===== */
 let saleVisible=true;
 function updateYbar(){
   const onRes=!document.body.classList.contains('v-cmp')&&(window.innerWidth>=1000||document.body.classList.contains('v-res'));
-  $('ybar').classList.toggle('show',!saleVisible&&onRes&&cur.inp.price>0&&cur.inp.rent>0);
+  const show=onRes&&cur.inp.price>0&&cur.inp.rent>0;
+  $('ybar').classList.toggle('show',show);
+  document.body.classList.toggle('hasbar',show);
 }
 try{
   const io=new IntersectionObserver(es=>{saleVisible=es[0].isIntersecting;updateYbar();},{threshold:0});
