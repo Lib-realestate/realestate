@@ -35,6 +35,12 @@ header h1{font-size:16px;margin:0;white-space:nowrap;letter-spacing:.04em}
 #inp{padding:12px 14px;display:flex;flex-direction:column;gap:8px;align-self:start}
 .up{height:42px;border-radius:8px;border:1.5px dashed var(--cf);background:#EEF5F1;color:var(--cf);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
 .up.drag{background:#D9EBE2}
+#ind{position:sticky;top:56px;z-index:5;background:#fff;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.ind{background:#fff;padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.ind .l{font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ind .n{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.ind .n small{font-size:10px;font-weight:500;color:var(--sub)}
+.ok{color:var(--cf)}.warn{color:#B07A12}.bad{color:var(--neg)}
 .legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);flex-wrap:wrap}
 .legend b{width:12px;height:12px;border-radius:3px;display:inline-block}
 details{border-top:1px solid var(--line)}
@@ -127,7 +133,9 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
   header{flex-wrap:wrap;gap:8px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
   header h1{font-size:15px}
   #tabs{order:5;flex-basis:100%}
-  .hide-sp,#drv.hide-sp{display:none}
+  .hide-sp{display:none}
+  #drv.hide-sp{display:flex;padding:0 8px}
+  #drv.hide-sp span{display:none}
   .hbtn{padding:0 10px}
   #btnSave{font-size:12px}
   #btnMenu{margin-left:auto}
@@ -135,6 +143,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
   .kpi .v{font-size:24px}
   .tr{font-size:10.5px;padding:6px 6px;gap:2px;grid-template-columns:24px repeat(6,minmax(0,1fr))}
   .box input,.box select{font-size:16px}
+  #ind{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}
   #menu{top:calc(52px + env(safe-area-inset-top,0px))}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -150,6 +159,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
   <div id="menu" role="menu">
     <button type="button" data-m="drive" id="mDrive">Googleドライブに接続</button>
     <button type="button" data-m="sync">ドライブから最新を読み込む</button>
+    <button type="button" data-m="status">保存の状態を確認</button>
     <button type="button" data-m="defaults">今の条件を初期値として保存</button>
     <button type="button" data-m="dup">この評価を複製して新規</button>
     <button type="button" data-m="del">この評価を削除</button>
@@ -164,6 +174,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
     マイソクを読み込む（PDF・画像・貼り付け）
   </button>
   <input type="file" id="fileIn" accept="image/*,application/pdf" multiple hidden>
+  <div id="ind" aria-label="指標（1年目）"></div>
   <div class="legend"><b style="background:var(--chk);border:1px solid var(--chkb)"></b>記載なし・要確認<span id="chkCount"></span><b style="background:var(--auto);border:1px solid var(--line);margin-left:8px"></b>自動計算</div>
 
   <details open data-sec="prop">
@@ -398,6 +409,7 @@ function renderInputs(){
   $('aRepair').value=fmE(D.repair);
   $('aOwn').value=I.price>0?fm(D.own):'';
   $('aPay').value=M.pay?fm(M.pay):'';
+  renderInd();
   {const r=row();$('aEy').value=fd(r.ey,2);$('lbEy').textContent=cur.Y+'年目の利回り';$('lbSp').textContent='売却価格（'+cur.Y+'年目・'+(r.useLand?'土地値':'利回り')+'で計算）';
    document.querySelectorAll('[data-demo]').forEach(b=>b.classList.toggle('on',(b.dataset.demo==='1')===!!I.demoOn));
    document.querySelector('[data-k="landVal"]').parentElement.classList.toggle('auto',I.landValM==null);
@@ -412,6 +424,28 @@ function renderInputs(){
   $('sumLoan').textContent=`諸費用${fm(D.buyAmt)}万(${fd(I.buyPct,1)}%)・${fm(I.loan)}万・${fd(I.rate,2)}%・${I.term}年`;
 }
 
+/* ===== 指標（1年目） ===== */
+function renderInd(){
+  const I=cur.inp,r=M.rows[0],tot=I.price+D.buyAmt,ok=I.price>0&&I.rent>0;
+  const p1=v=>isFinite(v)?fd(v,2)+'<small> %</small>':'−';
+  const cls=(v,g,w)=>!isFinite(v)?'':(v>=g?'ok':v>=w?'warn':'bad');
+  const clsR=(v,g,w)=>!isFinite(v)?'':(v<=g?'ok':v<=w?'warn':'bad');
+  const fcr=ok?r.noi/tot*100:NaN, ccr=ok&&M.own>0?r.cf/M.own*100:NaN, roi=ok?r.cf/tot*100:NaN;
+  const dscr=ok&&M.pay>0?r.noi/M.pay:NaN, prr=ok?M.pay/I.rent*100:NaN;
+  const ber=ok?M.pay/(I.rent*(1-I.exp/100))*100:NaN;
+  const K=I.loan>0?M.pay/I.loan*100:NaN, yg=ok?fcr-K:NaN;
+  const t=[
+    ['表面利回り',ok?p1(I.rent/I.price*100):'−','','満室家賃 ÷ 価格'],
+    ['実質利回り',p1(fcr),cls(fcr,7,5),'（実収入−経費）÷（価格＋購入諸費用）'],
+    ['CCR',p1(ccr),cls(ccr,10,5),'自己資金に対する手残り：1年目の手残り ÷ 自己資金'],
+    ['ROI',p1(roi),cls(roi,4,2),'総投資額に対する手残り：1年目の手残り ÷（価格＋購入諸費用）'],
+    ['DSCR',isFinite(dscr)?fd(dscr,2)+'<small> 倍</small>':'−',cls(dscr,1.3,1.1),'（実収入−経費）÷ 年間返済。1.3倍以上が目安'],
+    ['返済比率',p1(prr),clsR(prr,50,60),'年間返済 ÷ 満室家賃。50%以下が目安'],
+    ['分岐入居率',p1(ber),clsR(ber,70,85),'手残りがゼロになる入居率。低いほど安全'],
+    ['イールドG',p1(yg),cls(yg,2,1),'実質利回り − ローン定数（年間返済 ÷ 借入額）']
+  ];
+  $('ind').innerHTML=t.map(([l,v,c,h])=>`<div class="ind" title="${h}"><span class="l">${l}</span><span class="n ${c}">${v}</span></div>`).join('');
+}
 /* ===== 結果表示 ===== */
 function nice(v){if(!(v>0))return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),q=v/p;return (q<=1?1:q<=2?2:q<=5?5:10)*p;}
 function renderChart(){
@@ -558,6 +592,7 @@ $('btnSave').addEventListener('click',saveItem);
 $('btnDef').addEventListener('click',saveDefaults);
 $('btnCopy').addEventListener('click',async()=>{const a=cur.inp.addr;if(!a){toast('所在地が空です');return;}try{await navigator.clipboard.writeText(a);toast('住所をコピーしました');}catch(e){prompt('コピーしてください',a);}});
 $('btnApplyRent').addEventListener('click',()=>{const m=cur.inp.aRentM;if(!(m>0)){toast('査定家賃（月額合計）を入れてください');return;}cur.inp.rent=Math.round(m*12*100)/100;cur.chk=cur.chk.filter(x=>x!=='rent');markDirty();update();toast('満室家賃を '+fd(cur.inp.rent,2)+'万円/年 にしました');});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&token)driveLoad();});
 let rsz;window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(M&&cur.inp.price>0&&cur.inp.rent>0)renderChart();},150);});
 
 function startNew(){cur={id:null,inp:newInp(),Y:10,chk:['landEval','bldgEval'],dirty:false};saveDraft();renderAll();}
@@ -576,8 +611,8 @@ function saveItem(){
   Object.assign(it,{name:nm,date:now,inp:clone(cur.inp),Y:cur.Y,chk:[...cur.chk]});
   if(!cur.inp.name)cur.inp.name=nm;
   cur.id=it.id;cur.dirty=false;saveDraft();saveLocal();renderAll();
-  toast('保存しました'+(token?'':'（この端末のみ。メニューからドライブに接続すると他の端末でも見られます）'));
-  driveSave();
+  if(token)driveSave();
+  else{toast('この端末の中にだけ保存しました');setTimeout(()=>{if(confirm('この端末の中にだけ保存しました。\n他の端末（スマホなど）でも見られるようにするには、Googleドライブに接続してください。\n\n今すぐ接続しますか？'))connect();},300);}
 }
 function delItem(id){
   const it=store.items.find(i=>i.id===id);if(!it||!confirm('「'+it.name+'」を削除しますか？'))return;
@@ -594,6 +629,17 @@ function menuAct(m){
   else if(m==='defaults')saveDefaults();
   else if(m==='dup'){cur.id=null;cur.inp.name=(cur.inp.name||'無題')+'（複製）';cur.dirty=true;saveDraft();renderAll();toast('複製しました。保存すると新しい評価になります');}
   else if(m==='del'){if(cur.id)delItem(cur.id);else toast('保存していない評価です');}
+  else if(m==='status'){
+    const last=store.savedAt?new Date(store.savedAt).toLocaleString('ja-JP'):'なし';
+    const msg='【保存の状態】\n'
+      +'ドライブ：'+(token?'接続済み':'未接続（この端末の中だけに保存されています）')+'\n'
+      +'ドライブ上のファイル：'+(fileId?'あり':'まだ作られていません')+'\n'
+      +'この端末の履歴：'+store.items.length+'件\n'
+      +'最後に保存した日時：'+last+'\n'
+      +(store.items.length?'履歴：'+store.items.map(i=>i.name).join('、'):'')
+      +'\n\nOKを押すと、ドライブと照らし合わせます。';
+    if(confirm(msg)){if(token)driveLoad(true);else connect();}
+  }
   else if(m==='worker'){const v=prompt('読み取り用サーバーのURL',CFG.worker);if(v!==null){localStorage.setItem('mk_worker',v.trim().replace(/\/$/,''));toast('保存しました');}}
 }
 
@@ -612,7 +658,8 @@ function initGis(){
   s.onload=()=>{tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,callback:r=>{
     if(r.error){toast('ドライブ接続エラー: '+r.error);return;}
     token=r.access_token;localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(TOKEN_EXP_KEY,String(Date.now()+55*60*1000));
-    setDrv(true);toast('Googleドライブに接続しました');driveLoad();}});};
+    setDrv(true);toast('Googleドライブに接続しました');driveLoad();}});
+    if(!tokenValid())try{tokenClient.requestAccessToken({prompt:''});}catch(e){}};
   document.head.appendChild(s);
 }
 function connect(){if(!tokenClient){toast('準備中です。少し待ってからもう一度押してください');return;}tokenClient.requestAccessToken({prompt:localStorage.getItem(TOKEN_KEY)?'':'consent'});}
