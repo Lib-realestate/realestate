@@ -280,7 +280,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
       <span><i style="background:var(--cf)"></i>① 保有中の損益（手残り−自己資金−保有中の税）</span>
       <span><i style="background:var(--sale)"></i>② その年に売った場合の売却時の利益</span>
       <span><i style="background:var(--fin)"></i>③ 最終利益（すべての税金を引いた後）</span>
-      <span class="r"><span class="chip" id="cNow"></span><span class="chip" id="cSw"></span><span class="chip" id="cBe"></span><span class="chip" id="cBest"></span></span>
+      <span class="r"><span class="chip" id="cNow"></span><span class="chip" id="cSw"></span><span class="chip" id="cBe"></span><span class="chip" id="cBest"></span><span class="chip" id="cRoi"></span></span>
     </div>
     <div id="chart"></div>
   </div>
@@ -545,11 +545,13 @@ function renderResults(){
       ${ln('売却時の税',-s.st,`${taxNote}<br>${gainNote}<br>${bookNote}`)}
     </div>
     <div class="tot"><span>合計</span><span class="v num" style="color:${s.post<0?'var(--neg)':'var(--ink)'}">${fm(s.post)}${U}</span></div>
-    <div class="fs num" style="text-align:right">1年あたり ${fm(s.per)} 万円（${Y}年で割った金額）／参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
+    <div class="tot2" style="border-top:0;padding-top:2px"><span>自己資金に対する割合</span><b class="num" style="font-size:15px;color:${M.own>0&&s.post<0?'var(--neg)':'var(--ink)'}">${M.own>0?fd(s.post/M.own*100,1)+' %':'−'}</b></div>
+    <div class="fs num" style="text-align:right">自己資金 ${fm(M.own)} に対して 1年あたり ${M.own>0?fd(s.post/M.own*100/Y,1)+'%':'−'}／1年あたり ${fm(s.per)} 万円／参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
   const be=M.rows.find(r=>r.post>0),best=M.rows.reduce((a,r)=>r.post>a.post?r:a,M.rows[0]);
   {if(I.buyYear){$('cNow').style.display='';$('cNow').textContent=I.buyYear+'年'+(I.buyMonth||1)+'月に取得・今は'+D.nowT+'年目';}else $('cNow').style.display='none';}
   {const sw=M.rows.find(r=>r.useLand);$('cSw').textContent=sw?'土地値での売却に切替 '+sw.t+'年目から':'40年間 利回りで売却';$('cSw').style.display='';}
   $('cBe').textContent='プラスになるのは '+(be?be.t+'年目から':'なし');$('cBest').textContent='③が最大 '+best.t+'年目／1年あたりが最大 '+M.rows.reduce((a,r)=>r.per>a.per?r:a,M.rows[0]).t+'年目';
+  $('cRoi').textContent=M.own>0?'自己資金に対する割合 '+fd(s.post/M.own*100,1)+'%（1年あたり '+fd(s.post/M.own*100/Y,1)+'%）':'';
   renderChart();
   $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}${I.buyYear&&r.t===D.nowT?' now':''}" data-y="${r.t}"><span>${r.t}</span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span><span class="${r.per<0?'neg':''}">${fm(r.per)}</span></button>`).join('');
 }
