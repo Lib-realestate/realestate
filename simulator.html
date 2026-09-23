@@ -72,9 +72,8 @@ details:not([open]) summary .extra{display:none}
 .foot{height:34px;border-radius:8px;border:1px solid #D6D1C4;background:#fff;font-size:12px;color:var(--ink)}
 #res{display:flex;flex-direction:column;gap:14px;min-width:0}
 .top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
-.sale{grid-column:span 3;padding:12px 14px;display:grid;grid-template-columns:240px minmax(0,1fr);column-gap:20px;row-gap:2px;align-items:start}
-.sale>.lb,.sale>label,.sale>.ticks{grid-column:1}
-.sale>.g3{grid-column:2;grid-row:1 / span 3;margin-top:0;grid-template-columns:repeat(6,minmax(0,1fr))}
+.sale{grid-column:span 3;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.sale .g3{grid-template-columns:repeat(6,minmax(0,1fr))}
 .sale .lb{font-size:12px;color:var(--sub);display:flex;justify-content:space-between;align-items:baseline}
 .sale .g3{padding-bottom:0}
 .lines{display:flex;flex-direction:column;gap:3px;padding:6px 0;border-bottom:1px solid var(--line)}
@@ -107,7 +106,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 .fl b{white-space:nowrap}
 .fs{font-size:11.5px;color:var(--sub);line-height:1.7}
 #tbl{display:flex;flex-direction:column;overflow:hidden;max-height:420px}
-.tr{display:grid;grid-template-columns:38px repeat(6,minmax(0,1fr));gap:4px;padding:5px 12px;font-size:12px;text-align:right;border:0;border-bottom:1px solid #F1EFE9;background:#fff;width:100%;color:var(--ink)}
+.tr{display:grid;grid-template-columns:44px repeat(6,minmax(0,1fr));gap:4px;padding:5px 12px;font-size:12px;text-align:right;border:0;border-bottom:1px solid #F1EFE9;background:#fff;width:100%;color:var(--ink)}
 .tr>:first-child{text-align:left}
 .tr.h{font-size:11px;color:var(--sub);border-bottom:1px solid var(--line);padding:9px 12px}
 .tr:nth-child(even){background:#FAF9F5}
@@ -119,6 +118,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 #cmp{display:none;padding:16px;max-width:1500px;margin:0 auto;gap:14px;flex-direction:column}
 body.v-cmp #cmp{display:flex}
 body.v-cmp .wrap{display:none}
+body.v-cmp #tabs,body.v-cmp #btnSave{display:none}
 #cmpHead{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 .cmpRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .cmpList{display:flex;flex-wrap:wrap;gap:6px}
@@ -146,7 +146,8 @@ body.v-cmp .wrap{display:none}
 #ybar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(760px,92vw);background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 6px 20px rgba(29,38,36,.14);display:none;align-items:center;gap:12px;padding:6px 16px;z-index:25}
 #ybar.show{display:flex}
 #ybar .t{font-size:12px;color:var(--sub);white-space:nowrap}
-#ybar .v{font-size:16px;font-weight:700;white-space:nowrap;min-width:92px;text-align:right}
+#ybar .v{font-size:16px;font-weight:700;white-space:nowrap;text-align:right}
+#ybar #yb3{font-size:11px;color:var(--sub);white-space:nowrap}
 #pick{position:fixed;inset:0;background:rgba(29,38,36,.45);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
 #pick.show{display:flex}
 #pick .dlg{background:#fff;border-radius:12px;padding:18px;max-width:420px;width:100%;max-height:80vh;overflow:auto}
@@ -169,7 +170,7 @@ body.v-cmp .wrap{display:none}
 #menu.show{display:flex}
 #menu button{border:0;background:#fff;text-align:left;padding:12px 14px;font-size:13px;color:var(--ink);border-bottom:1px solid #F1EFE9}
 #menu button:hover{background:#F6F5F0}
-@media (max-width:1180px){.sale{grid-template-columns:1fr}.sale>.g3{grid-column:1;grid-row:auto;margin-top:8px;grid-template-columns:repeat(3,minmax(0,1fr))}.top{grid-template-columns:1fr}.sale{grid-column:auto}}
+@media (max-width:1180px){.sale .g3{grid-template-columns:repeat(3,minmax(0,1fr))}.top{grid-template-columns:1fr}.sale{grid-column:auto}}
 @media (max-width:999px){
   .wrap{grid-template-columns:1fr;padding:10px;padding-bottom:80px}
   body.v-res #inp{display:none} body.v-inp #res{display:none}
@@ -190,12 +191,12 @@ body.v-cmp .wrap{display:none}
   #btnMenu{margin-left:auto}
   .top{gap:10px}
   .kpi .v{font-size:24px}
-  .tr{font-size:10.5px;padding:6px 6px;gap:2px;grid-template-columns:24px repeat(6,minmax(0,1fr))}
+  .tr{font-size:10.5px;padding:6px 6px;gap:2px;grid-template-columns:30px repeat(6,minmax(0,1fr))}
   .box input,.box select{font-size:16px}
   #ind{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}
   #menu{top:calc(52px + env(safe-area-inset-top,0px))}
   #ybar{bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:6px 12px;gap:8px}
-  #ybar .t{display:none}
+  #ybar #yb1{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -279,7 +280,7 @@ body.v-cmp .wrap{display:none}
       <label class="f">家賃下落<div class="box"><input data-k="dec" inputmode="decimal"><span>%/年</span></div></label>
       <label class="f"><span id="lbUnit">修繕単価</span><div class="box"><input data-k="unit" inputmode="decimal"><span>万円/㎡</span></div></label>
       <label class="f">修繕の間隔<div class="box"><input data-k="every" inputmode="numeric"><span>年ごと</span></div></label>
-      <label class="f">修繕額<div class="box auto"><input id="aRepair" readonly tabindex="-1"><span>万円</span></div></label>
+      <label class="f">修繕額<div class="box"><input data-k="repair" inputmode="decimal"><span>万円</span></div></label>
     </div>
   </details>
 
@@ -305,9 +306,7 @@ body.v-cmp .wrap{display:none}
 <main id="res">
   <div class="top">
     <div class="card sale">
-      <div class="lb"><span>売却する年</span><span class="v num" id="kY"></span></div>
-      <label><span style="position:absolute;width:1px;height:1px;overflow:hidden">売却する年</span><input type="range" id="rng" min="1" max="40" value="10"></label>
-      <div class="ticks num"><span>1年</span><span>10</span><span>20</span><span>30</span><span>40年</span></div>
+      <div class="lb"><span>売却の条件</span><span class="v num" id="kY"></span></div>
       <div class="g3">
         <label class="f">利回り（1年目）<div class="box"><input data-k="exitY" inputmode="decimal"><span>%</span></div></label>
         <label class="f">利回りの上昇<div class="box"><input data-k="yUp" inputmode="decimal"><span>%/年</span></div></label>
@@ -330,9 +329,9 @@ body.v-cmp .wrap{display:none}
   </div>
   <div class="card" id="chartCard">
     <div class="lg">
-      <b style="font-size:13px">1〜40年の推移</b>
+      <b style="font-size:13px">1〜40期の推移</b>
       <span><i style="background:var(--cf)"></i>① 保有中の損益（手残り−自己資金−保有中の税）</span>
-      <span><i style="background:var(--sale)"></i>② その年に売った場合の売却時の損益</span>
+      <span><i style="background:var(--sale)"></i>② その期に売った場合の売却時の損益</span>
       <span><i style="background:var(--fin)"></i>③ 最終損益（すべての税金を引いた後）</span>
       <span class="r"><span class="chip" id="cNow"></span><span class="chip" id="cSw"></span><span class="chip" id="cBe"></span><span class="chip" id="cBest"></span><span class="chip" id="cRoi"></span></span>
     </div>
@@ -340,7 +339,7 @@ body.v-cmp .wrap{display:none}
   </div>
   <div class="lower">
     <div class="card" id="tbl">
-      <div class="tr h num"><span>年</span><span>その年の手残り</span><span>① 保有中</span><span>残債</span><span>② 売却時</span><span>③ 最終</span><span>1年あたり</span></div>
+      <div class="tr h num"><span>期</span><span>その期の手残り</span><span>① 保有中</span><span>残債</span><span>② 売却時</span><span>③ 最終</span><span>1年あたり</span></div>
       <div class="tb" id="tbody"></div>
     </div>
   </div>
@@ -363,7 +362,7 @@ body.v-cmp .wrap{display:none}
   <div id="cmpGrid"></div>
 </section>
 <nav id="nav" aria-label="画面切り替え"><button type="button" data-v="inp" class="on">入力</button><button type="button" data-v="res">結果</button><button type="button" data-v="cmp">比較</button></nav>
-<div id="ybar"><span class="t num" id="yb1"></span><input type="range" id="rng2" min="1" max="40" value="10" aria-label="売却する年"><span class="v num" id="yb2"></span></div>
+<div id="ybar"><span class="t num" id="yb1"></span><input type="range" id="rng2" min="1" max="40" value="10" aria-label="売却する年"><span class="v num" id="yb2"></span><span class="t num" id="yb3" style="display:block"></span></div>
 <div id="pick"><div class="dlg"><p id="pickT"></p><div class="row" id="pickR"></div><button type="button" id="pickC" style="margin-top:8px">キャンセル</button></div></div>
 <div id="ask"><div class="dlg"><p id="askT"></p><div class="row"><button type="button" id="askSave">保存して切り替え</button><button type="button" id="askNo">保存せずに切り替え</button><button type="button" id="askC">キャンセル</button></div></div></div>
 <div id="toast" role="status"></div>
@@ -376,7 +375,7 @@ const DEMO={'木造':1.2,'軽量鉄骨':1.5,'重量鉄骨':1.8,'RC':2.5};
 const LIFE={'木造':22,'軽量鉄骨':27,'重量鉄骨':34,'RC':47};
 const DEF0={vac:15,exp:20,dec:0.5,unitMap:UNIT0,every:15,buyPct:7,fiscalMonth:parseInt(localStorage.getItem('fiscalMonth')||'3',10)||3,exitY:10.5,yUp:0.05,demoOn:true,demoMap:DEMO,sellPct:4,taxCorp:34,taxInd:30,rate:2,term:30,mode:'corp'};
 const DEF_KEYS=Object.keys(DEF0);
-const BLANK={name:'',addr:'',struct:'木造',landMode:'eval',price:0,rent:0,built:0,units:0,floor:0,landArea:0,landEval:0,bldgEval:0,bratio:30,loan:0,aRentM:0,reform:0,buyYear:0,buyMonth:0,landValM:null,demoM:null};
+const BLANK={name:'',addr:'',struct:'木造',landMode:'eval',price:0,rent:0,built:0,units:0,floor:0,landArea:0,landEval:0,bldgEval:0,bratio:30,loan:0,aRentM:0,reform:0,repairM:null,buyYear:0,buyMonth:0,landValM:null,demoM:null};
 const LS_KEY='sim_store_v1';
 const $=id=>document.getElementById(id);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -407,11 +406,13 @@ function derive(I){
   const ev=I.landEval+I.bldgEval;
   const bratio=I.landMode==='eval'?(ev>0?I.bldgEval/ev*100:0):I.bratio;
   const unit=(I.unitMap&&I.unitMap[I.struct]!=null)?I.unitMap[I.struct]:UNIT0[I.struct];
-  const repair=I.floor*unit,buyAmt=I.price*I.buyPct/100;
+  const buyAmt=I.price*I.buyPct/100;
   const landAuto=I.landEval>0?I.landEval/0.7:0,landVal=I.landValM!=null?I.landValM:landAuto;
   const reform=I.reform||0;
+  const repair0=I.floor*unit,repair=I.repairM!=null?I.repairM:repair0;
   const demoUnit=(I.demoMap&&I.demoMap[I.struct]!=null)?I.demoMap[I.struct]:(DEMO[I.struct]||1.2),demoAuto=I.floor*demoUnit,demo=I.demoM!=null?I.demoM:demoAuto;
-  return {age,nowT,months1,fmo,life,bratio,unit,repair,buyAmt,tot:I.price+buyAmt+reform,own:I.price+buyAmt+reform-I.loan,landAuto,landVal,demoUnit,demoAuto,demo};
+  const endY1=I.buyYear?(bmo<=fmo?byr:byr+1):NOW_Y;
+  return {age,nowT,months1,fmo,endY1,life,bratio,unit,repair,buyAmt,tot:I.price+buyAmt+reform,own:I.price+buyAmt+reform-I.loan,landAuto,landVal,demoUnit,demoAuto,demo};
 }
 function model(I,D){
   const mode=I.mode,own=D.own,loan=I.loan,term=Math.max(0,Math.round(I.term)),r=I.rate/100/12,n=term*12;
@@ -448,7 +449,8 @@ const F={
   bratio:{g:()=>D.bratio,f:v=>fd(v,1),s:v=>{if(cur.inp.landMode==='manual')cur.inp.bratio=v;}},
   aRentM:{f:v=>v?fd(v,2):''},
   vac:{f:v=>fd(v,1)},exp:{f:v=>fd(v,1)},dec:{f:v=>fd(v,2)},
-  unit:{g:()=>D.unit,f:v=>fd(v,2),s:v=>{cur.inp.unitMap=Object.assign({},cur.inp.unitMap,{[cur.inp.struct]:v});}},
+  unit:{g:()=>D.unit,f:v=>fd(v,2),s:v=>{cur.inp.unitMap=Object.assign({},cur.inp.unitMap,{[cur.inp.struct]:v});cur.inp.repairM=null;}},
+  repair:{g:()=>D.repair,f:fmE,s:v=>{cur.inp.repairM=raw0?null:v;}},
   every:{f:v=>String(v)},loan:{f:fmE},rate:{f:v=>fd(v,3)},term:{f:v=>String(v)},
   buyPct:{f:v=>fd(v,2)},
   loanPct:{g:()=>cur.inp.price>0?cur.inp.loan/cur.inp.price*100:0,f:v=>fd(v,1),s:v=>{if(cur.inp.price>0)cur.inp.loan=Math.round(cur.inp.price*v/100*100)/100;}},
@@ -489,12 +491,12 @@ function renderInputs(){
   $('aLife').value=I.built?String(D.life):'';
   $('lbNow').textContent=I.buyYear?'今（'+D.nowT+'期目）の満室家賃':'今の満室家賃';
   $('aNowRent').value=I.rent>0?fd(M.rows[D.nowT-1].full,1):'';
-  $('aRepair').value=fmE(D.repair);
   $('aOwn').value=I.price>0?fm(D.own):'';
   $('aPay').value=M.pay?fm(M.pay):'';
   renderInd();
-  {const r=row();$('aEy').value=fd(r.ey,2);$('lbEy').textContent=cur.Y+'年目の利回り';$('lbSp').textContent='売却価格（'+cur.Y+'年目・'+(r.useLand?'土地値':'利回り')+'で計算）';
+  {const r=row();$('aEy').value=fd(r.ey,2);$('lbEy').textContent=cur.Y+'期目の利回り';$('lbSp').textContent='売却価格（'+cur.Y+'期目・'+(r.useLand?'土地値':'利回り')+'で計算）';
    document.querySelectorAll('[data-demo]').forEach(b=>b.classList.toggle('on',(b.dataset.demo==='1')===!!I.demoOn));
+   document.querySelector('[data-k="repair"]').parentElement.classList.toggle('auto',I.repairM==null);
    document.querySelector('[data-k="landVal"]').parentElement.classList.toggle('auto',I.landValM==null);
    document.querySelector('[data-k="demo"]').parentElement.classList.toggle('auto',I.demoM==null);
    $('lbDemoU').textContent='解体単価（'+I.struct+'）';
@@ -551,9 +553,9 @@ function renderChart(){
   const pbest=rows.reduce((a,r)=>r.per>a.per?r:a,rows[0]);
   const py=v=>6+(pmx-v)/(pmx-pmn)*(H3-14);
   const pline=rows.map((r,i)=>(i?'L':'M')+x(r.t).toFixed(1)+' '+py(r.per).toFixed(1)).join(' ');
-  const xt=(sp?[1,10,20,30,40]:[1,5,10,15,20,25,30,35,40]).map(t=>`<text x="${x(t).toFixed(1)}" y="${H+H2+H3+13}" text-anchor="middle" font-size="${sp?9:10}" fill="#5E6763">${t}年</text>`).join('');
+  const xt=(sp?[1,10,20,30,40]:[1,5,10,15,20,25,30,35,40]).map(t=>`<text x="${x(t).toFixed(1)}" y="${H+H2+H3+13}" text-anchor="middle" font-size="${sp?9:10}" fill="#5E6763">${t}期<tspan fill="#8B9490">　${D.endY1+t-1}</tspan></text>`).join('');
   const hit=rows.map(r=>`<rect x="${(x(r.t)-iw/80).toFixed(1)}" y="0" width="${(iw/40).toFixed(1)}" height="${H+H2+H3}" fill="transparent" data-y="${r.t}"><title>${r.t}年目</title></rect>`).join('');
-  box.innerHTML=`<svg width="${W}" height="${H+H2+H3+18}" viewBox="0 0 ${W} ${H+H2+H3+18}" role="img" aria-label="1〜40年の推移グラフ">
+  box.innerHTML=`<svg width="${W}" height="${H+H2+H3+18}" viewBox="0 0 ${W} ${H+H2+H3+18}" role="img" aria-label="1〜40期の推移グラフ">
   <path d="${g}" stroke="#ECE9E1" fill="none"/>${lab}
   <path d="M${L} ${y(0).toFixed(1)}H${W-R}" stroke="#9AA29E" fill="none"/>
   <path d="M${sx} ${T}V${H-B}" stroke="#1D2624" stroke-dasharray="3 3" fill="none"/>
@@ -571,14 +573,14 @@ function renderChart(){
   <path d="${pline}" stroke="#D0342C" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
   <circle cx="${sx}" cy="${py(row().per).toFixed(1)}" r="4" fill="#D0342C" stroke="#fff" stroke-width="2"/>
   <text x="${L-6}" y="${H3/2-2}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたり</text><text x="${L-6}" y="${H3/2+10}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">の損益</text>
-  <text x="${W-R}" y="${H3-3}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたりが最大：${pbest.t}年目 ${fm(pmx)}万円</text></g>
+  <text x="${W-R}" y="${H3-3}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたりが最大：${pbest.t}期目 ${fm(pmx)}万円</text></g>
   ${xt}${hit}</svg>`;
 }
 function sg(v){const r=Math.round(v);return (r>0?'+':'')+fm(v);}
 function ln(label,v,note){return `<div class="ln"><span>${label}${note?`<small>${note}</small>`:''}</span><span class="num${Math.round(v)<0?' neg':''}">${sg(v)}</span></div>`;}
 function renderResults(){
   const I=cur.inp,s=row(),Y=cur.Y,ok=I.price>0&&I.rent>0;
-  $('rng').value=Y;$('rng2').value=Y;$('yb1').textContent='売却する年';$('yb2').innerHTML=`${Y}<small style="font-size:11px;font-weight:500"> 年目</small>`;$('kY').innerHTML=`${Y}<small style="font-size:13px;font-weight:500"> 年目</small>`;
+  $('rng2').value=Y;$('yb3').textContent=D.endY1+Y-1+'年'+D.fmo+'月期';$('yb1').textContent='売却する年';$('yb2').innerHTML=`${Y}<small style="font-size:11px;font-weight:500"> 期目</small>`;$('kY').innerHTML=`${Y}<small style="font-size:13px;font-weight:500"> 期目（${D.endY1+Y-1}年${D.fmo}月期）</small>`;
   const U=' <small>万円</small>';
   if(!ok){
     $('b1').innerHTML='<div class="lb">① 保有中の損益</div><div class="empty" style="padding:16px 0">価格と満室家賃を入力してください</div>';
@@ -597,13 +599,13 @@ function renderResults(){
       ${ln(I.mode==='corp'?'保有中の法人税':'保有中の所得税',-s.holdTax,`（実収入 − 経費 − 利息 − 減価償却 − 修繕）× ${fd(I.mode==='corp'?I.taxCorp:I.taxInd,2)}%${I.mode==='corp'?'・赤字は翌年以降に繰越し':''}`)}
     </div>
     <div class="tot"><span>合計</span><span class="v num" style="color:${col(s.hold)||'var(--cf)'}">${fm(s.hold)}${U}</span></div>`;
-  $('b2').innerHTML=`<div class="lb">② 売却時の損益<span style="font-weight:400;color:var(--sub);font-size:11px">${Y}年目に売却</span></div>
+  $('b2').innerHTML=`<div class="lb">② 売却時の損益<span style="font-weight:400;color:var(--sub);font-size:11px">${Y}期目（${D.endY1+Y-1}年${D.fmo}月期）に売却</span></div>
     <div class="lines">
       ${ln(s.useLand?'売却価格（土地値）':'売却価格（利回り）',s.sp,s.useLand
         ?`${I.landValM!=null?'手入力の土地値':'土地の評価額 '+fm(I.landEval)+' ÷ 0.7'}／参考：利回りだと ${fm(s.yp)}`
         :`満室家賃 ${fm(s.full)} ÷ 利回り ${fd(s.ey,2)}%（1年目 ${fd(I.exitY,2)}% ＋ 毎年 ${fd(I.yUp||0,2)}%）${D.landVal>0?'／参考：土地値 '+fm(D.landVal):''}`)}
       ${s.dm>0?ln('解体費',-s.dm,`延床 ${fd(I.floor,1)}㎡ の建物を解体する費用`):''}
-      ${ln('残債',-s.b1,`${Y}年目の終わり時点`)}
+      ${ln('残債',-s.b1,`${Y}期目の終わり時点`)}
       ${ln('売却費用',-s.sc,`売却価格 × ${fd(I.sellPct,2)}%（仲介手数料の上限 ${fm(s.broker)}）`)}
     </div>
     <div class="tot"><span>合計</span><span class="v num" style="color:${col(s.spl)||'#2450B8'}">${fm(s.spl)}${U}</span></div>`;
@@ -613,7 +615,7 @@ function renderResults(){
   const taxNote=I.mode==='corp'
     ?`法人税：（売却益${s.lossUse>0?` − 繰越赤字 ${fm(s.lossUse)}`:''}）× ${rate}`
     :`譲渡所得税：売却益 × ${rate}（${Y>5?'5年超':'5年以下'}）`;
-  $('b3').innerHTML=`<div class="lb">③ 最終損益<span style="font-weight:400;color:var(--sub);font-size:11px">${I.mode==='corp'?'法人':'個人'}</span></div>
+  $('b3').innerHTML=`<div class="lb">③ 最終損益<span style="font-weight:400;color:var(--sub);font-size:11px">${D.endY1+Y-1}年${D.fmo}月期・${I.mode==='corp'?'法人':'個人'}</span></div>
     <div class="lines">
       ${ln('① 保有中の損益',s.hold,'税引後')}
       ${ln('② 売却時の損益',s.spl)}
@@ -624,11 +626,11 @@ function renderResults(){
     <div class="fs num" style="text-align:right;line-height:1.7">自己資金 ${fm(M.own)} に対して 1年あたり ${M.own>0?fd(s.post/M.own*100/Y,1)+'%':'−'}<br>1年あたり ${fm(s.per)} 万円<br>参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
   const be=M.rows.find(r=>r.post>0),best=M.rows.reduce((a,r)=>r.post>a.post?r:a,M.rows[0]);
   {if(I.buyYear){$('cNow').style.display='';$('cNow').textContent=I.buyYear+'年'+(I.buyMonth||1)+'月に取得・'+D.fmo+'月決算・今は'+D.nowT+'期目';}else $('cNow').style.display='none';}
-  {const sw=M.rows.find(r=>r.useLand);$('cSw').textContent=sw?'土地値での売却に切替 '+sw.t+'年目から':'40年間 利回りで売却';$('cSw').style.display='';}
-  $('cBe').textContent='プラスになるのは '+(be?be.t+'年目から':'なし');$('cBest').textContent='③が最大 '+best.t+'年目／1年あたりが最大 '+M.rows.reduce((a,r)=>r.per>a.per?r:a,M.rows[0]).t+'年目';
+  {const sw=M.rows.find(r=>r.useLand);$('cSw').textContent=sw?'土地値での売却に切替 '+sw.t+'期目から':'40期とも利回りで売却';$('cSw').style.display='';}
+  $('cBe').textContent='プラスになるのは '+(be?be.t+'期目から':'なし');$('cBest').textContent='③が最大 '+best.t+'期目／1年あたりが最大 '+M.rows.reduce((a,r)=>r.per>a.per?r:a,M.rows[0]).t+'期目';
   $('cRoi').textContent=M.own>0?'自己資金に対する割合 '+fd(s.post/M.own*100,1)+'%（1年あたり '+fd(s.post/M.own*100/Y,1)+'%）':'';
   renderChart();
-  $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}${I.buyYear&&r.t===D.nowT?' now':''}" data-y="${r.t}"><span>${r.t}</span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span><span class="${r.per<0?'neg':''}">${fm(r.per)}</span></button>`).join('');
+  $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}${I.buyYear&&r.t===D.nowT?' now':''}" data-y="${r.t}"><span>${r.t}<small style="display:block;font-size:9px;color:#5E6763;font-weight:400">${(D.endY1+r.t-1)%100<10?'0':''}${(D.endY1+r.t-1)%100}</small></span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span><span class="${r.per<0?'neg':''}">${fm(r.per)}</span></button>`).join('');
 }
 function renderTabs(){
   let h=`<button type="button" class="tab new" id="btnNew">＋ 新規</button>`;
@@ -657,7 +659,7 @@ document.addEventListener('input',e=>{
     if(el.dataset.t==='name')renderTabs();
     update();
   }else if(el.dataset&&el.dataset.c){cmpY[el.dataset.c]=pn(el.value)||cmpY[el.dataset.c];renderCmp();
-  }else if(el.id==='rng'||el.id==='rng2'){cur.Y=parseInt(el.value,10)||10;saveDraft();update();}
+  }else if(el.id==='rng2'){cur.Y=parseInt(el.value,10)||10;saveDraft();update();}
 });
 document.addEventListener('focusout',e=>{if(e.target.dataset&&e.target.dataset.k)setTimeout(renderInputs,0);});
 document.addEventListener('change',e=>{
@@ -807,38 +809,46 @@ async function importFromApp(){
     const props=(d.properties||[]).filter(x=>x&&x.name);
     if(!props.length)throw new Error('物件が入っていません');
     loading(false);
-    pick('取り込む物件を選んでください（新しい評価として開きます）',props.map(x=>x.name),i=>{
-      const go=()=>applyImport(props[i]);
-      if(cur.dirty||cur.id)ask('取り込みは新しい評価として開きます。今の内容はどうしますか？',go,go);else go();
+    pick('取り込む物件を選んでください',props.map(x=>x.name),i=>{
+      const pr=props[i];
+      setTimeout(()=>pick('「'+(pr.name||'物件')+'」をどこに取り込みますか？',
+        ['今開いている「'+(cur.inp.name||'新規')+'」に上書きする（他の入力はそのまま）','新しい評価として開く'],
+        k=>{
+          if(k===0){applyImport(pr,'merge');return;}
+          const go=()=>applyImport(pr,'new');
+          if(cur.dirty||cur.id)ask('新しい評価として開きます。今の内容はどうしますか？',go,go);else go();
+        }),150);
     });
   }catch(e){toast('読み込みに失敗しました: '+e.message);}
   finally{loading(false);}
 }
-function applyImport(p){
+function applyImport(p,mode){
   const y=v=>Math.round((v||0)/10000*100)/100;
-  doNew();const I=cur.inp,chk=[],notes=[];
-  I.name=p.name||'';
-  I.price=y(p.price);I.reform=y(p.reform);I.loan=y(p.loan);
+  if(mode!=='merge')doNew();
+  const I=cur.inp,chk=mode==='merge'?cur.chk.slice():[],notes=[];
+  if(mode!=='merge'||!I.name)I.name=p.name||I.name||'';
+  const keep=(v,old)=>v>0?v:(old||0);
+  I.price=keep(y(p.price),I.price);I.reform=keep(y(p.reform),I.reform);I.loan=keep(y(p.loan),I.loan);
   const misc=y(p.miscCost);if(I.price>0&&misc>0)I.buyPct=misc/I.price*100;
   if(p.acquireDate){const a=String(p.acquireDate).split('-');I.buyYear=+a[0]||0;I.buyMonth=+a[1]||1;}
   I.fiscalMonth=parseInt(localStorage.getItem('fiscalMonth')||I.fiscalMonth,10)||3;
   const st=String(p.structure||'');
   if(st)I.struct=/SRC|RC|鉄筋/i.test(st)?'RC':/軽量/.test(st)?'軽量鉄骨':/鉄骨|S造/i.test(st)?'重量鉄骨':'木造';else chk.push('struct');
-  I.built=+p.builtYear||0;
-  const rooms=p.rooms||[];I.units=rooms.length||0;
+  I.built=+p.builtYear||I.built||0;
+  const rooms=p.rooms||[];I.units=rooms.length||I.units||0;
   const ym=new Date().toISOString().slice(0,7);
   const nowFull=rooms.reduce((s,r)=>s+roomRent(r,ym),0);
   if(nowFull>0)I.aRentM=y(nowFull);
-  I.rent=p.origRent?y(p.origRent*12):(nowFull?y(nowFull*12):0);
+  I.rent=p.origRent?y(p.origRent*12):(nowFull?y(nowFull*12):(I.rent||0));
   const segs=p.loanSegs||[];
   if(segs[0]){I.rate=+segs[0].rate||I.rate;I.term=+segs[0].years||I.term;
     if(segs.length>1)notes.push('借入条件の変更が'+(segs.length-1)+'回あります。1本目の条件だけを使っています');
     if(segs.some(g=>g.repayType==='equal_principal'))notes.push('元金均等の期間がありますが、ここでは元利均等で計算します');
   }
-  ['price','rent','built','floor','landArea','loan'].forEach(k=>{if(!I[k])chk.push(k);});
-  chk.push('landEval','bldgEval');
+  ['price','rent','built','floor','landArea','loan','landEval','bldgEval'].forEach(k=>{if(!I[k])chk.push(k);else if(mode==='merge'&&['price','rent','built','loan'].includes(k))chk.splice(chk.indexOf(k)>=0?chk.indexOf(k):chk.length,chk.indexOf(k)>=0?1:0);});
+  if(!I.floor&&I.repairM==null)notes.push('延床面積がないので修繕額が0です。延床面積か修繕額を直接入れてください');
   cur.chk=[...new Set(chk)];cur.dirty=true;saveDraft();renderAll();
-  toast('「'+(p.name||'物件')+'」を取り込みました。黄色の欄を確認してください');
+  toast('「'+(p.name||'物件')+'」を'+(mode==='merge'?'今の評価に上書きしました':'取り込みました')+'。黄色の欄を確認してください');
   if(notes.length)setTimeout(()=>alert('取り込み時の注意\n\n・'+notes.join('\n・')+'\n\n延床面積・土地面積・土地建物の評価額は収支管理アプリにないので、手入力してください。'),400);
 }
 /* ===== Googleドライブ ===== */
