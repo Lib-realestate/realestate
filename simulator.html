@@ -124,6 +124,9 @@ body.v-cmp .wrap{display:none}
 .cmpList{display:flex;flex-wrap:wrap;gap:6px}
 .cmpList label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer}
 .cmpList input{accent-color:var(--ink);margin:0}
+.cmpList .mv{border:0;background:transparent;color:var(--sub);font-size:15px;line-height:1;padding:0 2px}
+.cmpList .mv[disabled]{opacity:.25}
+.tab .x[disabled]{opacity:.3}
 .cmpList i{width:10px;height:10px;border-radius:50%;display:inline-block}
 #cmpGrid{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:12px}
 .mx{display:grid;min-width:max-content}
@@ -613,15 +616,18 @@ function renderResults(){
   $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}${I.buyYear&&r.t===D.nowT?' now':''}" data-y="${r.t}"><span>${r.t}</span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span><span class="${r.per<0?'neg':''}">${fm(r.per)}</span></button>`).join('');
 }
 function renderTabs(){
-  const items=[...store.items].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  let h=items.map(it=>{const on=it.id===cur.id,d=(it.date||'').slice(5,10).replace('-','/');
-    return `<div class="tab${on?' on':''}" data-id="${it.id}" role="button" tabindex="0">${esc(it.name)}<small>${d}</small>${on?'<button type="button" class="x" data-del="'+it.id+'" aria-label="削除">×</button>':''}</div>`;}).join('');
+  const items=store.items;
+  let h=items.map((it,i)=>{const on=it.id===cur.id,d=(it.date||'').slice(5,10).replace('-','/');
+    return `<div class="tab${on?' on':''}" data-id="${it.id}" role="button" tabindex="0">${esc(it.name)}<small>${d}</small>${on?
+      '<button type="button" class="x" data-mv="'+it.id+'|-1" aria-label="左へ移動"'+(i===0?' disabled':'')+'>‹</button>'+
+      '<button type="button" class="x" data-mv="'+it.id+'|1" aria-label="右へ移動"'+(i===items.length-1?' disabled':'')+'>›</button>'+
+      '<button type="button" class="x" data-del="'+it.id+'" aria-label="削除">×</button>':''}</div>`;}).join('');
   if(!cur.id)h=`<div class="tab on">新規（未保存）</div>`+h;
   h+=`<button type="button" class="tab new" id="btnNew">＋ 新規</button>`;
   $('tabs').innerHTML=h;
 }
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function renderAll(){compute();renderInputs();renderResults();renderTabs();cmpSel=null;if(document.body.classList.contains('v-cmp'))renderCmp();}
+function renderAll(){compute();renderInputs();renderResults();renderTabs();if(document.body.classList.contains('v-cmp'))renderCmp();}
 function update(){compute();renderInputs();renderResults();}
 /* ===== 操作 ===== */
 let raw0=false;
@@ -654,6 +660,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.y){cur.Y=+t.dataset.y;saveDraft();update();return;}
   if(t.dataset.v){document.body.className='v-'+t.dataset.v;if(t.dataset.v==='cmp')renderCmp();document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b===t));window.scrollTo(0,0);if(t.dataset.v==='res')renderChart();updateYbar();return;}
   if(t.dataset.del){e.stopPropagation();delItem(t.dataset.del);return;}
+  if(t.dataset.mv){e.stopPropagation();const[id,d]=t.dataset.mv.split('|');moveItem(id,+d);return;}
   if(t.id==='btnNew'){startNew();return;}
   if(t.dataset.id){openItem(t.dataset.id);return;}
   if(t.dataset.m){$('menu').classList.remove('show');menuAct(t.dataset.m);return;}
@@ -691,6 +698,12 @@ function saveItem(after){
   cur.id=it.id;cur.dirty=false;saveDraft();saveLocal();renderAll();if(after)setTimeout(after,0);
   if(token)driveSave();
   else{toast('この端末の中にだけ保存しました');setTimeout(()=>{if(confirm('この端末の中にだけ保存しました。\n他の端末（スマホなど）でも見られるようにするには、Googleドライブに接続してください。\n\n今すぐ接続しますか？'))connect();},300);}
+}
+function moveItem(id,d){
+  const i=store.items.findIndex(x=>x.id===id),j=i+d;
+  if(i<0||j<0||j>=store.items.length)return;
+  const a=store.items;[a[i],a[j]]=[a[j],a[i]];
+  saveLocal();driveSave();renderTabs();if(document.body.classList.contains('v-cmp'))renderCmp();
 }
 function delItem(id){
   const it=store.items.find(i=>i.id===id);if(!it||!confirm('「'+it.name+'」を削除しますか？'))return;
@@ -765,9 +778,9 @@ async function findFile(){
 }
 function mergeStore(a,b){
   const del=[...new Set([...(a.deleted||[]),...(b.deleted||[])])];
-  const map={};[...(a.items||[]),...(b.items||[])].forEach(it=>{if(del.includes(it.id))return;const o=map[it.id];if(!o||(it.date||'')>(o.date||''))map[it.id]=it;});
+  const map={},order=[];[...(a.items||[]),...(b.items||[])].forEach(it=>{if(del.includes(it.id))return;const o=map[it.id];if(!o){order.push(it.id);map[it.id]=it;}else if((it.date||'')>(o.date||''))map[it.id]=it;});
   const newer=(b.savedAt||'')>(a.savedAt||'')?b:a;
-  return {defaults:Object.assign(clone(DEF0),newer.defaults||a.defaults||{}),items:Object.values(map),deleted:del,savedAt:[a.savedAt||'',b.savedAt||''].sort().pop()||null};
+  return {defaults:Object.assign(clone(DEF0),newer.defaults||a.defaults||{}),items:order.map(id=>map[id]),deleted:del,savedAt:[a.savedAt||'',b.savedAt||''].sort().pop()||null};
 }
 async function driveLoad(manual){
   if(!token)return;
@@ -850,11 +863,9 @@ document.addEventListener('paste',e=>{const fs=[...(e.clipboardData?.items||[])]
 
 /* ===== 物件の比較 ===== */
 const PAL=['#1E6B58','#2F5FD0','#D0342C','#B07A12','#7A3E9D','#0F7B8A','#A34E7B','#4B6B22'];
-let cmpSel=null,cmpY={y1:10,y2:20};
+let cmpSel=null,cmpSeen=new Set(),cmpY={y1:10,y2:20};
 function cmpTargets(){
-  const list=store.items.map(it=>({id:it.id,name:it.name,inp:Object.assign(newInp(),clone(it.inp))}));
-  if(cur.inp.price>0&&cur.inp.rent>0)list.unshift({id:'__cur',name:(cur.inp.name||'今の入力')+(cur.id?'（編集中）':'（未保存）'),inp:cur.inp});
-  return list;
+  return store.items.map(it=>({id:it.id,name:it.name,inp:it.id===cur.id?cur.inp:Object.assign(newInp(),clone(it.inp))}));
 }
 function metrics(I,y1,y2){
   const d=derive(I),m=model(I,d),r=m.rows[0],tot=I.price+d.buyAmt;
@@ -867,8 +878,9 @@ function metrics(I,y1,y2){
 }
 function renderCmp(){
   const all=cmpTargets();
-  if(!cmpSel)cmpSel=new Set(all.map(t=>t.id));
-  $('cmpList').innerHTML=all.map((t,i)=>`<label><input type="checkbox" data-cmp="${t.id}"${cmpSel.has(t.id)?' checked':''}><i style="background:${PAL[i%PAL.length]}"></i>${esc(t.name)}</label>`).join('')||'<span class="fs">保存した物件がありません</span>';
+  if(!cmpSel)cmpSel=new Set(all.map(t=>t.id));else all.forEach(t=>{if(!cmpSeen.has(t.id))cmpSel.add(t.id);});
+  cmpSeen=new Set(all.map(t=>t.id));
+  $('cmpList').innerHTML=all.map((t,i)=>`<label><input type="checkbox" data-cmp="${t.id}"${cmpSel.has(t.id)?' checked':''}><i style="background:${PAL[i%PAL.length]}"></i>${esc(t.name)}<button type="button" class="mv" data-mv="${t.id}|-1"${i===0?' disabled':''} aria-label="左へ">‹</button><button type="button" class="mv" data-mv="${t.id}|1"${i===all.length-1?' disabled':''} aria-label="右へ">›</button></label>`).join('')||'<span class="fs">保存した物件がありません</span>';
   document.querySelectorAll('[data-c]').forEach(el=>{if(el!==document.activeElement)el.value=String(cmpY[el.dataset.c]);});
   const sel=all.map((t,i)=>({...t,color:PAL[i%PAL.length]})).filter(t=>cmpSel.has(t.id));
   if(!sel.length){$('cmpGrid').innerHTML='<div class="empty">比較する物件を選んでください。</div>';return;}
