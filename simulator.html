@@ -111,6 +111,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 .tr.h{font-size:11px;color:var(--sub);border-bottom:1px solid var(--line);padding:9px 12px}
 .tr:nth-child(even){background:#FAF9F5}
 .tr.on{background:#E3EDE8;font-weight:700}
+.tr.now{box-shadow:inset 3px 0 0 #9AA29E}
 .tb{overflow-y:auto}
 .neg{color:var(--neg)!important}
 .empty{padding:40px 20px;text-align:center;color:var(--sub);font-size:14px;line-height:1.8}
@@ -191,6 +192,9 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
       <label class="f">延床面積<div class="box"><input data-k="floor" inputmode="decimal"><span>㎡</span></div></label>
       <label class="f">土地面積<div class="box"><input data-k="landArea" inputmode="decimal"><span>㎡</span></div></label>
       <label class="f">償却年数<div class="box auto"><input id="aLife" readonly tabindex="-1"><span>年</span></div></label>
+      <label class="f">購入年（西暦）<div class="box"><input data-k="buyYear" inputmode="numeric" placeholder="これから買う場合は空欄"><span>年</span></div></label>
+      <label class="f">購入月<div class="box"><input data-k="buyMonth" inputmode="numeric"><span>月</span></div></label>
+      <label class="f"><span id="lbNow">今の満室家賃</span><div class="box auto"><input id="aNowRent" readonly tabindex="-1"><span>万円/年</span></div></label>
     </div>
     <div class="links" style="padding-bottom:8px">
       <button type="button" id="btnCopy">住所をコピー</button>
@@ -276,7 +280,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
       <span><i style="background:var(--cf)"></i>① 保有中の損益（手残り−自己資金−保有中の税）</span>
       <span><i style="background:var(--sale)"></i>② その年に売った場合の売却時の利益</span>
       <span><i style="background:var(--fin)"></i>③ 最終利益（すべての税金を引いた後）</span>
-      <span class="r"><span class="chip" id="cSw"></span><span class="chip" id="cBe"></span><span class="chip" id="cBest"></span></span>
+      <span class="r"><span class="chip" id="cNow"></span><span class="chip" id="cSw"></span><span class="chip" id="cBe"></span><span class="chip" id="cBest"></span></span>
     </div>
     <div id="chart"></div>
   </div>
@@ -294,13 +298,13 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 <div id="loading"><span id="loadingT">読み込み中…</span></div>
 <script>
 /* ===== 基本設定 ===== */
-const NOW_Y=new Date().getFullYear();
+const NOW_Y=new Date().getFullYear(),NOW_M=new Date().getMonth()+1;
 const UNIT0={'木造':1.5,'軽量鉄骨':1.8,'重量鉄骨':2.0,'RC':2.5};
 const DEMO={'木造':1.2,'軽量鉄骨':1.5,'重量鉄骨':1.8,'RC':2.5};
 const LIFE={'木造':22,'軽量鉄骨':27,'重量鉄骨':34,'RC':47};
 const DEF0={vac:15,exp:20,dec:0.5,unitMap:UNIT0,every:15,buyPct:7,exitY:10.5,yUp:0.05,demoOn:true,demoMap:DEMO,sellPct:4,taxCorp:34,taxInd:30,rate:2,term:30,mode:'corp'};
 const DEF_KEYS=Object.keys(DEF0);
-const BLANK={name:'',addr:'',struct:'木造',landMode:'eval',price:0,rent:0,built:0,units:0,floor:0,landArea:0,landEval:0,bldgEval:0,bratio:30,loan:0,aRentM:0,landValM:null,demoM:null};
+const BLANK={name:'',addr:'',struct:'木造',landMode:'eval',price:0,rent:0,built:0,units:0,floor:0,landArea:0,landEval:0,bldgEval:0,bratio:30,loan:0,aRentM:0,buyYear:0,buyMonth:0,landValM:null,demoM:null};
 const LS_KEY='sim_store_v1';
 const $=id=>document.getElementById(id);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -323,7 +327,9 @@ function saveLocal(){store.savedAt=new Date().toISOString();try{localStorage.set
 
 /* ===== 計算 ===== */
 function derive(I){
-  const age=I.built?Math.max(0,NOW_Y-I.built):0,L=LIFE[I.struct]||22;
+  const byr=I.buyYear||NOW_Y,bmo=I.buyMonth||1;
+  const nowT=I.buyYear?Math.min(40,Math.max(1,Math.floor(((NOW_Y*12+NOW_M)-(byr*12+bmo))/12)+1)):1;
+  const age=I.built?Math.max(0,byr-I.built):0,L=LIFE[I.struct]||22;
   const life=Math.max(2,age>=L?Math.floor(L*0.2):Math.floor((L-age)+age*0.2));
   const ev=I.landEval+I.bldgEval;
   const bratio=I.landMode==='eval'?(ev>0?I.bldgEval/ev*100:0):I.bratio;
@@ -331,7 +337,7 @@ function derive(I){
   const repair=I.floor*unit,buyAmt=I.price*I.buyPct/100;
   const landAuto=I.landEval>0?I.landEval/0.7:0,landVal=I.landValM!=null?I.landValM:landAuto;
   const demoUnit=(I.demoMap&&I.demoMap[I.struct]!=null)?I.demoMap[I.struct]:(DEMO[I.struct]||1.2),demoAuto=I.floor*demoUnit,demo=I.demoM!=null?I.demoM:demoAuto;
-  return {age,life,bratio,unit,repair,buyAmt,own:I.price+buyAmt-I.loan,landAuto,landVal,demoUnit,demoAuto,demo};
+  return {age,nowT,life,bratio,unit,repair,buyAmt,own:I.price+buyAmt-I.loan,landAuto,landVal,demoUnit,demoAuto,demo};
 }
 function model(I,D){
   const mode=I.mode,own=D.own,loan=I.loan,term=Math.max(0,Math.round(I.term)),r=I.rate/100/12,n=term*12;
@@ -362,7 +368,7 @@ const row=()=>M.rows[cur.Y-1];
 
 /* ===== 入力欄の定義 ===== */
 const F={
-  price:{f:fmE},rent:{f:fmE},built:{f:v=>v?String(v):''},units:{f:v=>v?String(v):''},
+  price:{f:fmE},rent:{f:fmE},built:{f:v=>v?String(v):''},buyYear:{f:v=>v?String(v):''},buyMonth:{f:v=>v?String(v):''},units:{f:v=>v?String(v):''},
   floor:{f:v=>v?fd(v,2):''},landArea:{f:v=>v?fd(v,2):''},landEval:{f:fmE},bldgEval:{f:fmE},
   bratio:{g:()=>D.bratio,f:v=>fd(v,1),s:v=>{if(cur.inp.landMode==='manual')cur.inp.bratio=v;}},
   aRentM:{f:v=>v?fd(v,2):''},
@@ -406,6 +412,8 @@ function renderInputs(){
   $('aYield').value=I.price>0&&I.rent>0?fd(I.rent/I.price*100,2):'';
   $('aYield2').value=I.price>0&&I.aRentM>0?fd(I.aRentM*12/I.price*100,2):'';
   $('aLife').value=I.built?String(D.life):'';
+  $('lbNow').textContent=I.buyYear?'今（'+D.nowT+'年目）の満室家賃':'今の満室家賃';
+  $('aNowRent').value=I.rent>0?fd(M.rows[D.nowT-1].full,1):'';
   $('aRepair').value=fmE(D.repair);
   $('aOwn').value=I.price>0?fm(D.own):'';
   $('aPay').value=M.pay?fm(M.pay):'';
@@ -418,7 +426,7 @@ function renderInputs(){
    $('saleNote').textContent=`売却価格は「利回りで出した価格」と「土地値${I.demoOn?' − 解体費':''}」の高い方。土地値は未入力なら土地の固定資産税評価額 ÷ 0.7、解体費は延床 × 解体単価（構造ごとに設定・初期値として保存可）で自動計算（入力すると上書き、空にすると自動に戻る）。${I.mode==='corp'?'売却益も法人税率で計算':'売却時は譲渡所得税 5年超20.315%／5年以下39.63%'}。`;}
   $('lbUnit').textContent='修繕単価（'+I.struct+'）';
   // 閉じた時の要約
-  $('sumProp').textContent=I.price?`${fm(I.price)}万・${fd(I.rent/I.price*100||0,2)}%・${I.struct}`:'';
+  $('sumProp').textContent=I.price?`${fm(I.price)}万・${fd(I.rent/I.price*100||0,2)}%・${I.struct}${I.buyYear?'・'+I.buyYear+'年取得(今'+D.nowT+'年目)':''}`:'';
   $('sumRatio').textContent=`建物${fd(D.bratio,1)}%（${ev?'評価額から':'手入力'}）`;
   $('sumCf').textContent=`空室${fd(I.vac,1)}%・経費${fd(I.exp,1)}%・下落${fd(I.dec,2)}%・修繕${fm(D.repair)}万/${I.every}年`;
   $('sumLoan').textContent=`諸費用${fm(D.buyAmt)}万(${fd(I.buyPct,1)}%)・${fm(I.loan)}万・${fd(I.rate,2)}%・${I.term}年`;
@@ -458,7 +466,7 @@ function renderChart(){
   const line=k=>rows.map((r,i)=>(i?'L':'M')+x(r.t).toFixed(1)+' '+y(r[k]).toFixed(1)).join(' ');
   let g='',lab='';
   for(let v=mn;v<=mx+0.001;v+=st){const yy=y(v).toFixed(1);g+=`M${L} ${yy}H${W-R}`;lab+=`<text x="${L-6}" y="${(+yy+3.5).toFixed(1)}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">${fm(v)}</text>`;}
-  const sx=x(Y).toFixed(1);
+  const sx=x(Y).toFixed(1),nx=x(D.nowT).toFixed(1),showNow=!!cur.inp.buyYear;
   const cfs=rows.map(r=>r.cf);let bmn=Math.min(0,...cfs),bmx=Math.max(0,...cfs);if(bmx===bmn)bmx=bmn+1;
   const by=v=>4+(bmx-v)/(bmx-bmn)*(H2-8),bw=iw/40*0.62;
   let pos='',neg='',sel='';
@@ -474,6 +482,7 @@ function renderChart(){
   <path d="${g}" stroke="#ECE9E1" fill="none"/>${lab}
   <path d="M${L} ${y(0).toFixed(1)}H${W-R}" stroke="#9AA29E" fill="none"/>
   <path d="M${sx} ${T}V${H-B}" stroke="#1D2624" stroke-dasharray="3 3" fill="none"/>
+  ${showNow?`<path d="M${nx} ${T}V${H+H2+H3}" stroke="#9AA29E" stroke-width="1.5" fill="none"/><text x="${+nx+4}" y="${T+10}" font-size="${sp?9:10}" fill="#5E6763">今（${D.nowT}年目）</text>`:''}
   <path d="${line('hold')}" stroke="#1E6B58" stroke-width="2.5" fill="none"/>
   <path d="${line('spl')}" stroke="#2F5FD0" stroke-width="2" fill="none"/>
   <path d="${line('post')}" stroke="#D0342C" stroke-width="3" fill="none"/>
@@ -538,10 +547,11 @@ function renderResults(){
     <div class="tot"><span>合計</span><span class="v num" style="color:${s.post<0?'var(--neg)':'var(--ink)'}">${fm(s.post)}${U}</span></div>
     <div class="fs num" style="text-align:right">1年あたり ${fm(s.per)} 万円（${Y}年で割った金額）／参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
   const be=M.rows.find(r=>r.post>0),best=M.rows.reduce((a,r)=>r.post>a.post?r:a,M.rows[0]);
+  {if(I.buyYear){$('cNow').style.display='';$('cNow').textContent=I.buyYear+'年'+(I.buyMonth||1)+'月に取得・今は'+D.nowT+'年目';}else $('cNow').style.display='none';}
   {const sw=M.rows.find(r=>r.useLand);$('cSw').textContent=sw?'土地値での売却に切替 '+sw.t+'年目から':'40年間 利回りで売却';$('cSw').style.display='';}
   $('cBe').textContent='プラスになるのは '+(be?be.t+'年目から':'なし');$('cBest').textContent='③が最大 '+best.t+'年目／1年あたりが最大 '+M.rows.reduce((a,r)=>r.per>a.per?r:a,M.rows[0]).t+'年目';
   renderChart();
-  $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}" data-y="${r.t}"><span>${r.t}</span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span><span class="${r.per<0?'neg':''}">${fm(r.per)}</span></button>`).join('');
+  $('tbody').innerHTML=M.rows.map(r=>`<button type="button" class="tr num${r.t===Y?' on':''}${I.buyYear&&r.t===D.nowT?' now':''}" data-y="${r.t}"><span>${r.t}</span><span class="${r.cf<0?'neg':''}">${fm(r.cf)}</span><span class="${r.hold<0?'neg':''}">${fm(r.hold)}</span><span>${fm(r.b1)}</span><span>${fm(r.spl)}</span><span class="${r.post<0?'neg':''}">${fm(r.post)}</span><span class="${r.per<0?'neg':''}">${fm(r.per)}</span></button>`).join('');
 }
 function renderTabs(){
   const items=[...store.items].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
