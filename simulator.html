@@ -115,7 +115,37 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 .tb{overflow-y:auto}
 .neg{color:var(--neg)!important}
 .empty{padding:40px 20px;text-align:center;color:var(--sub);font-size:14px;line-height:1.8}
+#cmp{display:none;padding:16px;max-width:1500px;margin:0 auto;gap:14px;flex-direction:column}
+body.v-cmp #cmp{display:flex}
+body.v-cmp .wrap{display:none}
+#cmpHead{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.cmpRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cmpList{display:flex;flex-wrap:wrap;gap:6px}
+.cmpList label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer}
+.cmpList input{accent-color:var(--ink);margin:0}
+.cmpList i{width:10px;height:10px;border-radius:50%;display:inline-block}
+#cmpGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.mc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:7px}
+.mc h3{margin:0;font-size:12.5px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mc h3 span{font-size:10.5px;color:var(--sub);font-weight:400}
+.mr{display:grid;grid-template-columns:96px minmax(0,1fr) 74px;align-items:center;gap:8px;font-size:11.5px}
+.mr .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
+.mr .bar{height:14px;background:#F1EFE9;border-radius:4px;overflow:hidden;position:relative}
+.mr .bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.mr .vv{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.mr.best .vv{color:var(--cf)}
 #nav{display:none}
+#ybar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(760px,92vw);background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 6px 20px rgba(29,38,36,.14);display:none;align-items:center;gap:12px;padding:6px 16px;z-index:25}
+#ybar.show{display:flex}
+#ybar .t{font-size:12px;color:var(--sub);white-space:nowrap}
+#ybar .v{font-size:16px;font-weight:700;white-space:nowrap;min-width:92px;text-align:right}
+#ask{position:fixed;inset:0;background:rgba(29,38,36,.45);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+#ask.show{display:flex}
+#ask .dlg{background:#fff;border-radius:12px;padding:18px;max-width:420px;width:100%}
+#ask p{margin:0 0 14px;font-size:14px;line-height:1.7}
+#ask .row{display:flex;flex-direction:column;gap:8px}
+#ask button{height:44px;border-radius:8px;border:1px solid #D6D1C4;background:#fff;font-size:14px}
+#ask #askSave{background:var(--ink);color:#fff;border:0;font-weight:700}
 #toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw}
 #toast.show{opacity:1}
 #loading{position:fixed;inset:0;background:rgba(29,38,36,.45);display:none;align-items:center;justify-content:center;z-index:60;color:#fff;font-size:14px}
@@ -128,7 +158,9 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 @media (max-width:999px){
   .wrap{grid-template-columns:1fr;padding:10px;padding-bottom:80px}
   body.v-res #inp{display:none} body.v-inp #res{display:none}
-  #nav{display:grid;grid-template-columns:repeat(2,1fr);position:fixed;left:0;right:0;bottom:0;height:calc(58px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:#fff;border-top:1px solid var(--line);z-index:20}
+  #cmp{padding:10px;padding-bottom:80px}
+  .mr{grid-template-columns:76px minmax(0,1fr) 66px}
+  #nav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;height:calc(58px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:#fff;border-top:1px solid var(--line);z-index:20}
   #nav button{border:0;background:#fff;font-size:13px;color:var(--sub)}
   #nav button.on{color:var(--ink);font-weight:700;box-shadow:inset 0 3px 0 var(--ink)}
   header{flex-wrap:wrap;gap:8px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
@@ -146,6 +178,8 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
   .box input,.box select{font-size:16px}
   #ind{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}
   #menu{top:calc(52px + env(safe-area-inset-top,0px))}
+  #ybar{bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:6px 12px;gap:8px}
+  #ybar .t{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -155,6 +189,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
   <h1>収支シミュレーター</h1>
   <nav id="tabs" aria-label="評価履歴"></nav>
   <button class="hbtn hide-sp" id="drv" type="button"><i></i><span>Drive未接続</span></button>
+  <button class="hbtn hide-sp" id="btnCmp" type="button">比較</button>
   <button class="hbtn" id="btnMenu" type="button" aria-label="メニュー">メニュー</button>
   <button class="hbtn pri" id="btnSave" type="button">保存</button>
   <div id="menu" role="menu">
@@ -278,8 +313,8 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
     <div class="lg">
       <b style="font-size:13px">1〜40年の推移</b>
       <span><i style="background:var(--cf)"></i>① 保有中の損益（手残り−自己資金−保有中の税）</span>
-      <span><i style="background:var(--sale)"></i>② その年に売った場合の売却時の利益</span>
-      <span><i style="background:var(--fin)"></i>③ 最終利益（すべての税金を引いた後）</span>
+      <span><i style="background:var(--sale)"></i>② その年に売った場合の売却時の損益</span>
+      <span><i style="background:var(--fin)"></i>③ 最終損益（すべての税金を引いた後）</span>
       <span class="r"><span class="chip" id="cNow"></span><span class="chip" id="cSw"></span><span class="chip" id="cBe"></span><span class="chip" id="cBest"></span><span class="chip" id="cRoi"></span></span>
     </div>
     <div id="chart"></div>
@@ -293,7 +328,24 @@ input[type=range]{width:100%;accent-color:var(--ink);height:26px;margin:0}
 </main>
 </div>
 
-<nav id="nav" aria-label="画面切り替え"><button type="button" data-v="inp" class="on">入力</button><button type="button" data-v="res">結果</button></nav>
+<section id="cmp" aria-label="物件の比較">
+  <div class="card" id="cmpHead">
+    <div class="cmpRow">
+      <b style="font-size:13px">比較する物件</b>
+      <div id="cmpList" class="cmpList"></div>
+    </div>
+    <div class="cmpRow">
+      <b style="font-size:13px">比較する年</b>
+      <label class="f">年A<div class="box"><input data-c="y1" inputmode="numeric"><span>年目</span></div></label>
+      <label class="f">年B<div class="box"><input data-c="y2" inputmode="numeric"><span>年目</span></div></label>
+      <span class="fs">指標は1年目・税引き前。売却の数字は選んだ年に売った場合（税引後）。</span>
+    </div>
+  </div>
+  <div id="cmpGrid"></div>
+</section>
+<nav id="nav" aria-label="画面切り替え"><button type="button" data-v="inp" class="on">入力</button><button type="button" data-v="res">結果</button><button type="button" data-v="cmp">比較</button></nav>
+<div id="ybar"><span class="t num" id="yb1"></span><input type="range" id="rng2" min="1" max="40" value="10" aria-label="売却する年"><span class="v num" id="yb2"></span></div>
+<div id="ask"><div class="dlg"><p id="askT"></p><div class="row"><button type="button" id="askSave">保存して切り替え</button><button type="button" id="askNo">保存せずに切り替え</button><button type="button" id="askC">キャンセル</button></div></div></div>
 <div id="toast" role="status"></div>
 <div id="loading"><span id="loadingT">読み込み中…</span></div>
 <script>
@@ -495,7 +547,7 @@ function renderChart(){
   <path d="M${L} ${py(0).toFixed(1)}H${W-R}" stroke="#9AA29E" fill="none"/>
   <path d="${pline}" stroke="#D0342C" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
   <circle cx="${sx}" cy="${py(row().per).toFixed(1)}" r="4" fill="#D0342C" stroke="#fff" stroke-width="2"/>
-  <text x="${L-6}" y="${H3/2-2}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたり</text><text x="${L-6}" y="${H3/2+10}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">の利益</text>
+  <text x="${L-6}" y="${H3/2-2}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたり</text><text x="${L-6}" y="${H3/2+10}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">の損益</text>
   <text x="${W-R}" y="${H3-3}" text-anchor="end" font-size="${sp?9:10}" fill="#5E6763">1年あたりが最大：${pbest.t}年目 ${fm(pmx)}万円</text></g>
   ${xt}${hit}</svg>`;
 }
@@ -503,11 +555,11 @@ function sg(v){const r=Math.round(v);return (r>0?'+':'')+fm(v);}
 function ln(label,v,note){return `<div class="ln"><span>${label}${note?`<small>${note}</small>`:''}</span><span class="num${Math.round(v)<0?' neg':''}">${sg(v)}</span></div>`;}
 function renderResults(){
   const I=cur.inp,s=row(),Y=cur.Y,ok=I.price>0&&I.rent>0;
-  $('rng').value=Y;$('kY').innerHTML=`${Y}<small style="font-size:13px;font-weight:500"> 年目</small>`;
+  $('rng').value=Y;$('rng2').value=Y;$('yb1').textContent='売却する年';$('yb2').innerHTML=`${Y}<small style="font-size:11px;font-weight:500"> 年目</small>`;$('kY').innerHTML=`${Y}<small style="font-size:13px;font-weight:500"> 年目</small>`;
   const U=' <small>万円</small>';
   if(!ok){
     $('b1').innerHTML='<div class="lb">① 保有中の損益</div><div class="empty" style="padding:16px 0">価格と満室家賃を入力してください</div>';
-    $('b2').innerHTML='<div class="lb">② 売却時の利益</div>';$('b3').innerHTML='<div class="lb">③ 最終利益</div>';
+    $('b2').innerHTML='<div class="lb">② 売却時の損益</div>';$('b3').innerHTML='<div class="lb">③ 最終損益</div>';
     $('chart').innerHTML='<div class="empty">価格と満室家賃を入力すると、ここにグラフが出ます。<br>マイソクの読み込みからでも始められます。</div>';
     $('tbody').innerHTML='';$('cBe').textContent='';$('cBest').textContent='';return;
   }
@@ -522,7 +574,7 @@ function renderResults(){
       ${ln(I.mode==='corp'?'保有中の法人税':'保有中の所得税',-s.holdTax,`（実収入 − 経費 − 利息 − 減価償却 − 修繕）× ${fd(I.mode==='corp'?I.taxCorp:I.taxInd,2)}%${I.mode==='corp'?'・赤字は翌年以降に繰越し':''}`)}
     </div>
     <div class="tot"><span>合計</span><span class="v num" style="color:${col(s.hold)||'var(--cf)'}">${fm(s.hold)}${U}</span></div>`;
-  $('b2').innerHTML=`<div class="lb">② 売却時の利益<span style="font-weight:400;color:var(--sub);font-size:11px">${Y}年目に売却</span></div>
+  $('b2').innerHTML=`<div class="lb">② 売却時の損益<span style="font-weight:400;color:var(--sub);font-size:11px">${Y}年目に売却</span></div>
     <div class="lines">
       ${ln(s.useLand?'売却価格（土地値）':'売却価格（利回り）',s.sp,s.useLand
         ?`${I.landValM!=null?'手入力の土地値':'土地の評価額 '+fm(I.landEval)+' ÷ 0.7'}／参考：利回りだと ${fm(s.yp)}`
@@ -538,15 +590,15 @@ function renderResults(){
   const taxNote=I.mode==='corp'
     ?`法人税：（売却益${s.lossUse>0?` − 繰越赤字 ${fm(s.lossUse)}`:''}）× ${rate}`
     :`譲渡所得税：売却益 × ${rate}（${Y>5?'5年超':'5年以下'}）`;
-  $('b3').innerHTML=`<div class="lb">③ 最終利益<span style="font-weight:400;color:var(--sub);font-size:11px">${I.mode==='corp'?'法人':'個人'}</span></div>
+  $('b3').innerHTML=`<div class="lb">③ 最終損益<span style="font-weight:400;color:var(--sub);font-size:11px">${I.mode==='corp'?'法人':'個人'}</span></div>
     <div class="lines">
       ${ln('① 保有中の損益',s.hold,'税引後')}
-      ${ln('② 売却時の利益',s.spl)}
+      ${ln('② 売却時の損益',s.spl)}
       ${ln('売却時の税',-s.st,`${taxNote}<br>${gainNote}<br>${bookNote}`)}
     </div>
     <div class="tot"><span>合計</span><span class="v num" style="color:${s.post<0?'var(--neg)':'var(--ink)'}">${fm(s.post)}${U}</span></div>
     <div class="tot2" style="border-top:0;padding-top:2px"><span>自己資金に対する割合</span><b class="num" style="font-size:15px;color:${M.own>0&&s.post<0?'var(--neg)':'var(--ink)'}">${M.own>0?fd(s.post/M.own*100,1)+' %':'−'}</b></div>
-    <div class="fs num" style="text-align:right">自己資金 ${fm(M.own)} に対して 1年あたり ${M.own>0?fd(s.post/M.own*100/Y,1)+'%':'−'}／1年あたり ${fm(s.per)} 万円／参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
+    <div class="fs num" style="text-align:right;line-height:1.7">自己資金 ${fm(M.own)} に対して 1年あたり ${M.own>0?fd(s.post/M.own*100/Y,1)+'%':'−'}<br>1年あたり ${fm(s.per)} 万円<br>参考：税金を引く前 ${fm(s.pre)} 万円</div>`;
   const be=M.rows.find(r=>r.post>0),best=M.rows.reduce((a,r)=>r.post>a.post?r:a,M.rows[0]);
   {if(I.buyYear){$('cNow').style.display='';$('cNow').textContent=I.buyYear+'年'+(I.buyMonth||1)+'月に取得・今は'+D.nowT+'年目';}else $('cNow').style.display='none';}
   {const sw=M.rows.find(r=>r.useLand);$('cSw').textContent=sw?'土地値での売却に切替 '+sw.t+'年目から':'40年間 利回りで売却';$('cSw').style.display='';}
@@ -564,7 +616,7 @@ function renderTabs(){
   $('tabs').innerHTML=h;
 }
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function renderAll(){compute();renderInputs();renderResults();renderTabs();}
+function renderAll(){compute();renderInputs();renderResults();renderTabs();cmpSel=null;if(document.body.classList.contains('v-cmp'))renderCmp();}
 function update(){compute();renderInputs();renderResults();}
 /* ===== 操作 ===== */
 let raw0=false;
@@ -582,39 +634,48 @@ document.addEventListener('input',e=>{
     cur.inp[el.dataset.t]=el.value;markDirty();
     if(el.dataset.t==='name')renderTabs();
     update();
-  }else if(el.id==='rng'){cur.Y=parseInt(el.value,10)||10;saveDraft();update();}
+  }else if(el.dataset&&el.dataset.c){cmpY[el.dataset.c]=pn(el.value)||cmpY[el.dataset.c];renderCmp();
+  }else if(el.id==='rng'||el.id==='rng2'){cur.Y=parseInt(el.value,10)||10;saveDraft();update();}
 });
 document.addEventListener('focusout',e=>{if(e.target.dataset&&e.target.dataset.k)setTimeout(renderInputs,0);});
+document.addEventListener('change',e=>{
+  const el=e.target;if(el.dataset&&el.dataset.cmp){if(el.checked)cmpSel.add(el.dataset.cmp);else cmpSel.delete(el.dataset.cmp);renderCmp();}
+});
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,[data-id],rect[data-y]');if(!t)return;
   if(t.dataset.lm){e.preventDefault();if(t.dataset.lm==='manual')cur.inp.bratio=D.bratio;cur.inp.landMode=t.dataset.lm;markDirty();update();return;}
   if(t.dataset.demo){cur.inp.demoOn=t.dataset.demo==='1';markDirty();update();return;}
   if(t.dataset.mode){cur.inp.mode=t.dataset.mode;markDirty();update();return;}
   if(t.dataset.y){cur.Y=+t.dataset.y;saveDraft();update();return;}
-  if(t.dataset.v){document.body.className='v-'+t.dataset.v;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b===t));window.scrollTo(0,0);if(t.dataset.v==='res')renderChart();return;}
+  if(t.dataset.v){document.body.className='v-'+t.dataset.v;if(t.dataset.v==='cmp')renderCmp();document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b===t));window.scrollTo(0,0);if(t.dataset.v==='res')renderChart();updateYbar();return;}
   if(t.dataset.del){e.stopPropagation();delItem(t.dataset.del);return;}
-  if(t.id==='btnNew'){if(cur.dirty&&!confirm('保存していない変更があります。新規を始めますか？'))return;startNew();return;}
+  if(t.id==='btnNew'){startNew();return;}
   if(t.dataset.id){openItem(t.dataset.id);return;}
   if(t.dataset.m){$('menu').classList.remove('show');menuAct(t.dataset.m);return;}
 });
+$('btnCmp').addEventListener('click',()=>{const on=document.body.classList.contains('v-cmp');document.body.className=on?(window.innerWidth<1000?'v-res':'v-inp'):'v-cmp';$('btnCmp').textContent=on?'比較':'編集に戻る';if(!on)renderCmp();else{renderChart();}window.scrollTo(0,0);updateYbar();});
 $('btnMenu').addEventListener('click',e=>{e.stopPropagation();$('menu').classList.toggle('show');});
 document.addEventListener('click',e=>{if(!e.target.closest('#menu')&&e.target.id!=='btnMenu')$('menu').classList.remove('show');},true);
 $('drv').addEventListener('click',()=>connect());
-$('btnSave').addEventListener('click',saveItem);
+$('btnSave').addEventListener('click',()=>saveItem());
 $('btnDef').addEventListener('click',saveDefaults);
 $('btnCopy').addEventListener('click',async()=>{const a=cur.inp.addr;if(!a){toast('所在地が空です');return;}try{await navigator.clipboard.writeText(a);toast('住所をコピーしました');}catch(e){prompt('コピーしてください',a);}});
 $('btnApplyRent').addEventListener('click',()=>{const m=cur.inp.aRentM;if(!(m>0)){toast('査定家賃（月額合計）を入れてください');return;}cur.inp.rent=Math.round(m*12*100)/100;cur.chk=cur.chk.filter(x=>x!=='rent');markDirty();update();toast('満室家賃を '+fd(cur.inp.rent,2)+'万円/年 にしました');});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&token)driveLoad();});
 let rsz;window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(M&&cur.inp.price>0&&cur.inp.rent>0)renderChart();},150);});
 
-function startNew(){cur={id:null,inp:newInp(),Y:10,chk:['landEval','bldgEval'],dirty:false};saveDraft();renderAll();}
-function openItem(id){
-  if(id===cur.id)return;
-  if(cur.dirty&&!confirm('保存していない変更があります。切り替えますか？'))return;
+function doNew(){cur={id:null,inp:newInp(),Y:10,chk:['landEval','bldgEval'],dirty:false};saveDraft();renderAll();}
+function startNew(){if(cur.dirty)ask('保存していない変更があります。どうしますか？',doNew,doNew);else doNew();}
+function doOpen(id){
   const it=store.items.find(i=>i.id===id);if(!it)return;
   cur={id:it.id,inp:Object.assign(newInp(),clone(it.inp)),Y:it.Y||10,chk:it.chk||[],dirty:false};saveDraft();renderAll();
 }
-function saveItem(){
+function openItem(id){
+  if(id===cur.id)return;
+  if(cur.dirty)ask('保存していない変更があります。どうしますか？',()=>doOpen(id),()=>doOpen(id));
+  else doOpen(id);
+}
+function saveItem(after){
   const def=cur.inp.name||'無題';const name=prompt('保存する名前',def);if(name===null)return;
   const nm=name.trim()||def,now=new Date().toISOString();
   let it=cur.id&&store.items.find(i=>i.id===cur.id);
@@ -622,7 +683,7 @@ function saveItem(){
   if(!it){it={id:'s'+Date.now().toString(36)};store.items.push(it);}
   Object.assign(it,{name:nm,date:now,inp:clone(cur.inp),Y:cur.Y,chk:[...cur.chk]});
   if(!cur.inp.name)cur.inp.name=nm;
-  cur.id=it.id;cur.dirty=false;saveDraft();saveLocal();renderAll();
+  cur.id=it.id;cur.dirty=false;saveDraft();saveLocal();renderAll();if(after)setTimeout(after,0);
   if(token)driveSave();
   else{toast('この端末の中にだけ保存しました');setTimeout(()=>{if(confirm('この端末の中にだけ保存しました。\n他の端末（スマホなど）でも見られるようにするには、Googleドライブに接続してください。\n\n今すぐ接続しますか？'))connect();},300);}
 }
@@ -654,6 +715,17 @@ function menuAct(m){
   }
   else if(m==='worker'){const v=prompt('読み取り用サーバーのURL',CFG.worker);if(v!==null){localStorage.setItem('mk_worker',v.trim().replace(/\/$/,''));toast('保存しました');}}
 }
+
+/* ===== 確認ダイアログ ===== */
+let askCb=null;
+function ask(msg,onSave,onNo){
+  askCb={save:onSave,no:onNo};$('askT').textContent=msg;$('ask').classList.add('show');
+}
+function askClose(){$('ask').classList.remove('show');askCb=null;}
+$('askSave').addEventListener('click',()=>{const c=askCb;askClose();saveItem(()=>c&&c.save&&c.save());});
+$('askNo').addEventListener('click',()=>{const c=askCb;askClose();c&&c.no&&c.no();});
+$('askC').addEventListener('click',askClose);
+$('ask').addEventListener('click',e=>{if(e.target.id==='ask')askClose();});
 
 /* ===== Googleドライブ ===== */
 const CLIENT_ID='467615685674-njvnd3fgio14jcqb4qobbif4jtiabogb.apps.googleusercontent.com';
@@ -746,8 +818,11 @@ async function extract(files){
   finally{loading(false);}
 }
 function applyExtract(j){
-  if(cur.id||cur.dirty&&cur.inp.price>0){if(!confirm('新しい評価として読み込みます。よろしいですか？'))return;}
-  startNew();const I=cur.inp,chk=['landEval','bldgEval'];
+  if((cur.id||cur.dirty)&&cur.inp.price>0){const jj=j;ask('読み取った内容は新しい評価として開きます。今の内容はどうしますか？',()=>applyExtract2(jj),()=>applyExtract2(jj));return;}
+  applyExtract2(j);
+}
+function applyExtract2(j){
+  doNew();const I=cur.inp,chk=['landEval','bldgEval'];
   const num=v=>typeof v==='number'&&isFinite(v)?v:pn(v);
   I.name=j.property_name||'';I.addr=j.address||'';
   const price=num(j.price_man_yen),rent=num(j.annual_rent_man_yen),y=num(j.gross_yield_pct);
@@ -768,11 +843,81 @@ const dropArea=$('inp');
 dropArea.addEventListener('drop',e=>{e.preventDefault();extract(e.dataTransfer.files);});
 document.addEventListener('paste',e=>{const fs=[...(e.clipboardData?.items||[])].filter(i=>i.kind==='file').map(i=>i.getAsFile()).filter(Boolean);if(fs.length){e.preventDefault();extract(fs);}});
 
+/* ===== 物件の比較 ===== */
+const PAL=['#1E6B58','#2F5FD0','#D0342C','#B07A12','#7A3E9D','#0F7B8A','#A34E7B','#4B6B22'];
+let cmpSel=null,cmpY={y1:10,y2:20};
+function cmpTargets(){
+  const list=store.items.map(it=>({id:it.id,name:it.name,inp:Object.assign(newInp(),clone(it.inp))}));
+  if(cur.inp.price>0&&cur.inp.rent>0)list.unshift({id:'__cur',name:(cur.inp.name||'今の入力')+(cur.id?'（編集中）':'（未保存）'),inp:cur.inp});
+  return list;
+}
+function metrics(I,y1,y2){
+  const d=derive(I),m=model(I,d),r=m.rows[0],tot=I.price+d.buyAmt;
+  const g=t=>m.rows[Math.min(40,Math.max(1,Math.round(t)))-1];
+  const a=g(y1),b=g(y2),K=I.loan>0?m.pay/I.loan*100:NaN,fcr=r.noi/tot*100;
+  return {price:I.price,own:m.own,
+    yld:I.rent/I.price*100,fcr:fcr,ccr:m.own>0?r.cf/m.own*100:NaN,roi:r.cf/tot*100,
+    dscr:m.pay>0?r.noi/m.pay:NaN,prr:m.pay/I.rent*100,ber:m.pay/(I.rent*(1-I.exp/100))*100,yg:fcr-K,
+    cf1:r.cf,pA:a.post,pB:b.post,eA:m.own>0?a.post/m.own*100:NaN,eB:m.own>0?b.post/m.own*100:NaN,perA:a.per,perB:b.per};
+}
+function renderCmp(){
+  const all=cmpTargets();
+  if(!cmpSel)cmpSel=new Set(all.map(t=>t.id));
+  $('cmpList').innerHTML=all.map((t,i)=>`<label><input type="checkbox" data-cmp="${t.id}"${cmpSel.has(t.id)?' checked':''}><i style="background:${PAL[i%PAL.length]}"></i>${esc(t.name)}</label>`).join('')||'<span class="fs">保存した物件がありません</span>';
+  document.querySelectorAll('[data-c]').forEach(el=>{if(el!==document.activeElement)el.value=String(cmpY[el.dataset.c]);});
+  const sel=all.map((t,i)=>({...t,color:PAL[i%PAL.length]})).filter(t=>cmpSel.has(t.id));
+  if(!sel.length){$('cmpGrid').innerHTML='<div class="empty">比較する物件を選んでください。</div>';return;}
+  const y1=Math.min(40,Math.max(1,Math.round(cmpY.y1||10))),y2=Math.min(40,Math.max(1,Math.round(cmpY.y2||20)));
+  const data=sel.map(t=>({...t,m:metrics(t.inp,y1,y2)}));
+  const defs=[
+    ['表面利回り','満室家賃 ÷ 価格','yld',1,'%',1],
+    ['実質利回り','（実収入−経費）÷（価格＋諸費用）','fcr',1,'%',1],
+    ['CCR','1年目の手残り ÷ 自己資金','ccr',1,'%',1],
+    ['ROI','1年目の手残り ÷ 総投資額','roi',1,'%',1],
+    ['DSCR','（実収入−経費）÷ 年間返済','dscr',2,'倍',1],
+    ['返済比率','年間返済 ÷ 満室家賃（低いほど良い）','prr',1,'%',-1],
+    ['分岐入居率','手残りがゼロになる入居率（低いほど良い）','ber',1,'%',-1],
+    ['イールドG','実質利回り − ローン定数','yg',2,'%',1],
+    ['1年目の手残り','年間の手残り（税引前）','cf1',0,'万円',1],
+    ['自己資金','購入時に入れた現金','own',0,'万円',0],
+    [y1+'年目の最終損益','税引後','pA',0,'万円',1],
+    [y2+'年目の最終損益','税引後','pB',0,'万円',1],
+    [y1+'年目の自己資金比','最終損益 ÷ 自己資金','eA',1,'%',1],
+    [y2+'年目の自己資金比','最終損益 ÷ 自己資金','eB',1,'%',1],
+    [y1+'年目の1年あたり','最終損益 ÷ '+y1+'年','perA',0,'万円',1],
+    [y2+'年目の1年あたり','最終損益 ÷ '+y2+'年','perB',0,'万円',1]
+  ];
+  $('cmpGrid').innerHTML=defs.map(([title,note,key,dec,unit,dir])=>{
+    const vs=data.map(d=>d.m[key]).filter(v=>isFinite(v));
+    if(!vs.length)return '';
+    const mx=Math.max(...vs.map(Math.abs))||1;
+    const bestV=dir===0?NaN:dir>0?Math.max(...vs):Math.min(...vs);
+    return `<div class="mc"><h3>${title}<span>${note}</span></h3>`+data.map(d=>{
+      const v=d.m[key],okv=isFinite(v);
+      const w=okv?Math.max(2,Math.abs(v)/mx*100):0;
+      return `<div class="mr${okv&&v===bestV?' best':''}"><span class="nm" title="${esc(d.name)}">${esc(d.name)}</span>`
+        +`<span class="bar"><i style="left:0;width:${w}%;background:${okv&&v<0?'var(--neg)':d.color}"></i></span>`
+        +`<span class="vv${okv&&v<0?' neg':''}">${okv?fd(v,dec)+(unit==='%'?'%':unit==='倍'?'倍':''):'−'}</span></div>`;
+    }).join('')+'</div>';
+  }).join('');
+}
+/* ===== 売却年バー（スクロール時） ===== */
+let saleVisible=true;
+function updateYbar(){
+  const onRes=!document.body.classList.contains('v-cmp')&&(window.innerWidth>=1000||document.body.classList.contains('v-res'));
+  $('ybar').classList.toggle('show',!saleVisible&&onRes&&cur.inp.price>0&&cur.inp.rent>0);
+}
+try{
+  const io=new IntersectionObserver(es=>{saleVisible=es[0].isIntersecting;updateYbar();},{threshold:0});
+  io.observe(document.querySelector('.sale'));
+}catch(e){}
+window.addEventListener('scroll',updateYbar,{passive:true});
+
 /* ===== 起動 ===== */
 (function init(){
   try{const d=JSON.parse(localStorage.getItem('sim_draft')||'null');if(d&&d.inp){cur=d;cur.inp=Object.assign(newInp(),d.inp);if(cur.id&&!store.items.find(i=>i.id===cur.id))cur.id=null;}}catch(e){}
   if(window.innerWidth<1000)document.querySelectorAll('details').forEach(d=>{if(d.dataset.sec!=='prop')d.open=false;});
-  renderAll();initGis();
+  renderAll();initGis();setTimeout(updateYbar,100);
   if(tokenValid()){setDrv(true);driveLoad();}
 })();
 </script>
