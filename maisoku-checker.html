@@ -574,24 +574,45 @@ async function gsiSearch(q, timeoutMs){
     return { lat, lng, title: arr[0].properties?.title || q };
   }catch(e){ return null; } finally{ clearTimeout(tm); }
 }
+function widenAddr(q){
+  // 番地 → 丁目 → 町名 の順に広げた候補を作る
+  const m = q.match(/^(.*?)(\d.*)$/);
+  if(!m) return [q];
+  const base = m[1], nums = m[2].match(/\d+/g) || [];
+  const isChome = /^\d+丁目/.test(m[2]) || (nums.length>=3 && +nums[0]<=20);
+  const c = [q];
+  for(let k=nums.length-1;k>=1;k--){
+    if(k===1 && isChome) c.push(base+nums[0]+"丁目");
+    c.push(base+nums.slice(0,k).join("-"));
+  }
+  c.push(base);
+  return [...new Set(c)].filter(x=>x.length>=4);
+}
 async function osmSearch(q){
-  try{
-    const r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&accept-language=ja&q="+encodeURIComponent(q));
-    if(!r.ok) return null;
-    const arr = await r.json();
-    if(!arr || !arr.length) return null;
-    return { lat:+arr[0].lat, lng:+arr[0].lon, title:(arr[0].display_name||q)+"（予備の地図で特定）" };
-  }catch(e){ return null; }
+  const cands = widenAddr(q);
+  for(let i=0;i<cands.length;i++){
+    if(i>0) await new Promise(res=>setTimeout(res,1100)); // 予備地図の利用ルール(1秒1回)
+    try{
+      const r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&accept-language=ja&q="+encodeURIComponent(cands[i]));
+      if(!r.ok) continue;
+      const arr = await r.json();
+      if(arr && arr.length){
+        return { lat:+arr[0].lat, lng:+arr[0].lon, approx: i>0,
+          title: cands[i] + (i>0 ? "（予備の地図・町名付近で特定）" : "（予備の地図で特定）") };
+      }
+    }catch(e){}
+  }
+  return null;
 }
 async function geocode(addr){
   const q2 = cleanAddr(addr);
   // 1回目: そのまま / 2回目: 建物名等を除いた住所で再試行
-  let g = await gsiSearch(addr, 8000);
+  let g = await gsiSearch(addr, 15000);
   if(g && !Array.isArray(g)) return g;
   if(q2 !== addr || g===null){
     loading(true,"国土地理院が混雑中のため再試行中");
     await new Promise(res=>setTimeout(res,1200));
-    const g2 = await gsiSearch(q2, 10000);
+    const g2 = await gsiSearch(q2, 20000);
     if(g2 && !Array.isArray(g2)) return g2;
     if(Array.isArray(g) && Array.isArray(g2)) g = [];
   }
@@ -936,7 +957,9 @@ $("btnRun").addEventListener("click", async ()=>{
   $("btnRun").disabled=true;
   try{
     const geo = await geocode(addr);
-    const precision = addrPrecision(addr);
+    let precision = addrPrecision(addr);
+    if(geo.approx) precision = {level:"partial", label:"概算（地点は町名付近）", cls:"warn",
+      hint:"住所検索サーバーの不調で番地まで特定できませんでした。時間をおいて再実行すると確定値になります。"};
     const [lp, zoning] = await Promise.all([ landPoints(geo.lat, geo.lng), fetchZoning(geo.lat, geo.lng) ]);
     const {year, pts} = lp;
     // 公式GISで補完（マイソク記載がない項目のみ）
