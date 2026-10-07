@@ -261,6 +261,13 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
         <div><label class="f">表面利回り（%）</label><input type="number" id="fYield" inputmode="decimal" step="0.1"></div>
         <div><label class="f">周辺相場利回り（%・任意）</label><input type="number" id="fYieldMkt" inputmode="decimal" step="0.1" placeholder="楽待等で調べた相場値を入力"></div>
         <div><label class="f">最寄駅 徒歩（分）</label><input type="number" id="fWalk" inputmode="numeric"></div>
+        <div class="full" style="margin-top:4px;font-size:12px;font-weight:700;color:var(--blue);border-top:1px dashed var(--blue-line);padding-top:8px">融資条件（任意）</div>
+        <div><label class="f">借入額（万円・空欄=販売価格）</label><input type="number" id="fLoan" inputmode="numeric"></div>
+        <div><label class="f">金利（%）</label><input type="number" id="fRate" inputmode="decimal" step="0.01"></div>
+        <div><label class="f">借入期間（年）</label><input type="number" id="fTerm" inputmode="numeric"></div>
+        <div><label class="f">返済方法</label>
+          <select id="fMethod"><option value="ganri">元利均等</option><option value="gankin">元金均等</option></select>
+        </div>
         <div><label class="f">用途地域</label><input type="text" id="fUse" placeholder="第一種住居地域"></div>
         <div><label class="f">建蔽率（%）</label><input type="number" id="fBcr" inputmode="numeric"></div>
         <div><label class="f">容積率（%）</label><input type="number" id="fFar" inputmode="numeric"></div>
@@ -314,6 +321,12 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
   </section>
   </div>
 
+  <!-- 6. 残債と土地値 -->
+  <section class="card hidden" id="loanCard">
+    <div class="ttl"><span class="no">06</span>残債が土地値を下回る時期</div>
+    <div class="bd" id="loanBody"></div>
+  </section>
+
   <!-- 5. 総合スコア -->
   <section class="card hidden" id="scoreCard">
     <div class="ttl"><span class="no">05</span>総合スコア（各5点満点・参考値）</div>
@@ -341,6 +354,14 @@ ul.reasons li.wn{color:var(--warn);font-weight:500}
 <script>
 "use strict";
 /* ================= 設定 ================= */
+window.addEventListener("DOMContentLoaded",()=>{
+  try{
+    const r=localStorage.getItem("mk_rate"), t=localStorage.getItem("mk_term"), m=localStorage.getItem("mk_method");
+    if(r) document.getElementById("fRate").value=r;
+    if(t) document.getElementById("fTerm").value=t;
+    if(m) document.getElementById("fMethod").value=m;
+  }catch(e){}
+});
 const CFG = {
   get worker(){ return localStorage.getItem("mk_worker") || ""; },
   get model(){ return localStorage.getItem("mk_model") || "claude-sonnet-4-6"; },
@@ -390,7 +411,7 @@ function resetDownstream(){
   files = [];
   renderThumbs();
   // 02 物件情報フォームを全クリア
-  ["fAddress","fPrice","fLand","fBldg","fBuilt","fYield","fYieldMkt","fWalk","fUse","fBcr","fFar","fKotei","fRoadW","fFront","fNotes"]
+  ["fAddress","fPrice","fLand","fBldg","fBuilt","fYield","fYieldMkt","fWalk","fUse","fBcr","fFar","fKotei","fRoadW","fFront","fNotes","fLoan"]
     .forEach(id=>{ $(id).value=""; });
   ["fCity","fRoadKind","fRoadLaw","fStruct"].forEach(id=>{ $(id).value=""; });
   $("manualCard").classList.add("hidden");
@@ -399,6 +420,7 @@ function resetDownstream(){
   $("judgeCard").classList.add("hidden");
   $("btnPdf").classList.add("hidden");
   $("scoreCard").classList.add("hidden");
+  $("loanCard").classList.add("hidden"); $("loanBody").innerHTML="";
   $("valBody").innerHTML=""; $("judgeBody").innerHTML=""; $("scoreBody").innerHTML="";
   $("printReport").innerHTML="";
   lastRun = null;
@@ -862,6 +884,46 @@ function renderScore(sc){
   $("scoreCard").classList.remove("hidden");
 }
 
+/* ================= 残債と土地値 ================= */
+function calcLoan(input, pts){
+  if(input.rate==null || !input.term || input.land==null) return null;
+  const P = (input.loan!=null ? input.loan : input.price) ;
+  if(P==null) return null;
+  const top = pts.slice(0,3);
+  const w = top.reduce((a,p)=>a+1/Math.max(p.dist,50),0);
+  const unit = top.reduce((a,p)=>a+p.priceYen/Math.max(p.dist,50),0)/w;
+  const landVal = unit*input.land;
+  const koteiActual = input.kotei!=null;
+  const koteiVal = koteiActual ? input.kotei*1000*input.land : landVal*0.7;
+  const yen = P*10000, n = input.term*12, r = input.rate/100/12;
+  const pmt = r===0 ? yen/n : yen*r/(1-Math.pow(1+r,-n));
+  const bal = k => input.method==="gankin" ? yen*(1-k/n)
+    : (r===0 ? yen-pmt*k : yen*Math.pow(1+r,k) - pmt*(Math.pow(1+r,k)-1)/r);
+  const firstPay = input.method==="gankin" ? (yen/n + yen*r)*12 : pmt*12;
+  const reach = target => { for(let k=0;k<=n;k++){ if(bal(k)<=target) return k; } return n; };
+  return { P, assumed: input.loan==null, rate:input.rate, term:input.term, method:input.method,
+    firstPay, landVal, koteiVal, koteiActual,
+    kLand: reach(landVal), kKotei: reach(koteiVal), bal };
+}
+function whenTxt(k){
+  if(k===0) return "借入時点で下回る";
+  const y=Math.floor(k/12), m=k%12;
+  const d=new Date(); d.setMonth(d.getMonth()+k);
+  return `${y}年${m?m+"か月":""}後（${d.getFullYear()}年${d.getMonth()+1}月頃）`;
+}
+function renderLoan(L){
+  if(!L){ $("loanCard").classList.add("hidden"); return; }
+  const methodTxt = L.method==="gankin"?"元金均等":"元利均等";
+  $("loanBody").innerHTML = `
+  <table class="rt">
+    <tr><th>融資条件</th><td>${L.P.toLocaleString()}万円${L.assumed?"（販売価格で仮置き）":""}・金利${L.rate}%・${L.term}年・${methodTxt}<br><span class="unit">初年度の年間返済額 ${fmtMan(L.firstPay)}万円</span></td></tr>
+    <tr><th>土地値（公示ベース）まで</th><td><b>${whenTxt(L.kLand)}</b><br><span class="unit">土地値 ${fmtMan(L.landVal)}万円・その時点の残債 ${fmtMan(Math.max(0,L.bal(L.kLand)))}万円</span></td></tr>
+    <tr><th>土地の固定資産税評価額まで<span class="badge ${L.koteiActual?"ok":"warn"}" style="margin-left:4px">${L.koteiActual?"実額":"推計×0.7"}</span></th><td><b>${whenTxt(L.kKotei)}</b><br><span class="unit">評価額 ${fmtMan(L.koteiVal)}万円・その時点の残債 ${fmtMan(Math.max(0,L.bal(L.kKotei)))}万円</span></td></tr>
+  </table>
+  <div class="note">※借入開始を今月とした目安。土地値を下回ると、売却時に土地だけで残債を返せる状態の目安になります。</div>`;
+  $("loanCard").classList.remove("hidden");
+}
+
 /* ================= 判定ロジック ================= */
 function isResidentialZone(use){ return /住居|田園/.test(use||""); }
 
@@ -949,6 +1011,7 @@ $("btnRun").addEventListener("click", async ()=>{
     use:$("fUse").value.trim(), bcr:num("fBcr"), far:num("fFar"),
     kotei:num("fKotei"),
     struct:$("fStruct").value, built:num("fBuilt"), gyield:num("fYield"), walk:num("fWalk"),
+    loan:num("fLoan"), rate:num("fRate"), term:num("fTerm"), method:$("fMethod").value,
     city:$("fCity").value, roadW:num("fRoadW"), frontage:num("fFront"),
     roadKind:$("fRoadKind").value, roadLaw:$("fRoadLaw").value,
     notes:$("fNotes").value
@@ -971,7 +1034,14 @@ $("btnRun").addEventListener("click", async ()=>{
     }
     renderValuation(eff, geo, year, pts, precision);
     renderJudge(eff, pts, zoning, input);
-    lastRun = {input:eff, geo, year, pts, zoning, precision, score:null};
+    lastRun = {input:eff, geo, year, pts, zoning, precision, score:null, loan:null};
+    try{
+      localStorage.setItem("mk_rate",$("fRate").value);
+      localStorage.setItem("mk_term",$("fTerm").value);
+      localStorage.setItem("mk_method",$("fMethod").value);
+    }catch(e){}
+    lastRun.loan = calcLoan(eff, pts);
+    renderLoan(lastRun.loan);
     $("btnPdf").classList.remove("hidden");
     // 取引事例の取得とスコアリング(追加で数秒かかる)
     loading(true,"取引事例(相場)を取得中");
@@ -1191,6 +1261,14 @@ function buildReport({input, geo, year, pts, zoning, precision}){
   <div class="rp-sec"><div class="h">総合スコア（各5点満点・参考値）　総合 ${lastRun.score.total.toFixed(1)} / 5.0</div><div class="b">
     <table class="rp-t">
       ${lastRun.score.metrics.map(m=>`<tr><th>${m.name}</th><td>${STARS(m.score)} ${m.score}　<span style="color:#7A8B99">${esc(m.basis)}</span></td></tr>`).join("")}
+    </table>
+  </div></div>`:""}
+
+  ${(lastRun&&lastRun.loan)?`
+  <div class="rp-sec"><div class="h">残債が土地値を下回る時期（${lastRun.loan.P.toLocaleString()}万円${lastRun.loan.assumed?"・販売価格で仮置き":""}・金利${lastRun.loan.rate}%・${lastRun.loan.term}年・${lastRun.loan.method==="gankin"?"元金均等":"元利均等"}）</div><div class="b">
+    <table class="rp-t">
+      <tr><th>土地値（公示ベース ${fmtMan(lastRun.loan.landVal)}万円）まで</th><td><b>${whenTxt(lastRun.loan.kLand)}</b></td></tr>
+      <tr><th>土地の固定資産税評価額（${lastRun.loan.koteiActual?"実額":"推計×0.7"} ${fmtMan(lastRun.loan.koteiVal)}万円）まで</th><td><b>${whenTxt(lastRun.loan.kKotei)}</b></td></tr>
     </table>
   </div></div>`:""}
 
