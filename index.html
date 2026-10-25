@@ -3759,6 +3759,7 @@ function plTxList(pi,ym){
 function plAggregate(pi,yms){
   const map={};
   yms.forEach((ym,i)=>{
+    if(!ym)return;
     plTxList(pi,ym).forEach(t=>{
       if(t.type==='repayment'&&t.cat==='元金')return;
       const acc=getTxAccount(t);
@@ -3786,8 +3787,8 @@ function renderPL(){
     window._plUpto=Math.max(0,idx);
   }
   const upto=Math.min(11,Math.max(0,window._plUpto));
-  const n=upto+1;
-  const shownYms=yms.slice(0,n);
+  const n=12;
+  const shownYms=yms.map((y,i)=>i<=upto?y:null);
   const map=plAggregate(pi,shownYms);
   const accts=getAccounts();
   const rev=accts.filter(a=>a.grp==='revenue');
@@ -3810,7 +3811,7 @@ function renderPL(){
   const ordM=opM.map((v,i)=>v-nonM[i]);
   const opTot=revTot-sgaTot, ordTot=opTot-nonTot, netTot=ordTot-taxAdj;
   const th=`<th style="padding:5px 6px;text-align:right;font-size:10px;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8;min-width:80px">`;
-  const headCols=labels.slice(0,n).map(l=>`${th}${l}</th>`).join('');
+  const headCols=labels.map((l,i)=>`${th}${i>upto?'<span style="opacity:.45">'+l+'</span>':l}</th>`).join('');
   const cell=(v,bold)=>`<td style="padding:5px 6px;text-align:right;font-size:11px${bold?';font-weight:700':''}">${plFmt(v)}</td>`;
   const adjCell=(accName)=>`<td style="padding:3px 6px;text-align:right;border-left:1px solid #d0d0c8"><input type="number" value="${getPlAdjust(pi,yrKey,accName)||''}" placeholder="0" style="width:84px;text-align:right;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="setPlAdjust(${pi},'${yrKey}','${accName}',parseInt(this.value)||0);renderPL()"></td>`;
   const fixedCell=(v)=>`<td style="padding:5px 6px;text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${plFmt(v)}</td>`;
@@ -3895,8 +3896,8 @@ function plBuildMatrix(){
   const labels=getFiscalLabels();
   const yms=indices.map(i=>{const mo=MONTH_BASE[i];const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;return`${yr}-${String(mo).padStart(2,'0')}`;});
   const upto=Math.min(11,Math.max(0,window._plUpto||0));
-  const n=upto+1;
-  const shownYms=yms.slice(0,n);
+  const n=12;
+  const shownYms=yms.map((y,i)=>i<=upto?y:null);
   const map=plAggregate(pi,shownYms);
   const accts=getAccounts();
   const rev=accts.filter(a=>a.grp==='revenue');
@@ -3917,7 +3918,7 @@ function plBuildMatrix(){
   const rows=[];
   const bold=[];
   const push=(arr,isBold)=>{bold.push(!!isBold);rows.push(arr);};
-  push(['勘定科目',...labels.slice(0,n),'決算整理','合計'],true);
+  push(['勘定科目',...labels,'決算整理','合計'],true);
   push(['売上高',...new Array(n+2).fill('')],true);
   rev.forEach(a=>push([a.name,...vals(a),adj(a),rowTotal(a)]));
   push(['売上高合計',...revM,revAdj,revTot],true);
