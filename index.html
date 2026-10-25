@@ -851,7 +851,6 @@ function getTx(p,ym,type,exMisc=false){
   if(isSoldBefore(p,ym))return 0;
   return p.transactions.filter(t=>t.ym===ym&&t.type===type&&(!exMisc||!t.isMiscCost)).reduce((s,t)=>s+t.amount,0);
 }
-}
 function getMonthEEx(mi,pi){
   const mo=MONTH_BASE[mi];
   const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
