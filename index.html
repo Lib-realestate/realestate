@@ -838,9 +838,19 @@ const ym=`${yr}-${String(mo).padStart(2,'0')}`;
 if(pi===null)return properties.reduce((s,p)=>s+getTx(p,ym,'expense'),0);
 return getTx(properties[pi],ym,'expense');
 }
+function soldOutMonth(p){
+  const sd=p?.exit?.saleDate;
+  return sd?sd.slice(0,7):null;
+}
+function isSoldBefore(p,ym){
+  const m=soldOutMonth(p);
+  return !!(m&&ym>m);
+}
 function getTx(p,ym,type,exMisc=false){
   if(!p||!p.transactions)return 0;
+  if(isSoldBefore(p,ym))return 0;
   return p.transactions.filter(t=>t.ym===ym&&t.type===type&&(!exMisc||!t.isMiscCost)).reduce((s,t)=>s+t.amount,0);
+}
 }
 function getMonthEEx(mi,pi){
   const mo=MONTH_BASE[mi];
@@ -902,7 +912,8 @@ function getPrevYearCF(pi){
     return properties.reduce((s,p,i)=>s+getPrevYearCF(i),0)
       -(commonTransactions||[]).filter(t=>t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0);
   }
-  const allTx=properties[pi]?.transactions||[];
+  const pSold=properties[pi];
+  const allTx=(pSold?.transactions||[]).filter(t=>!isSoldBefore(pSold,t.ym));
   return allTx.filter(t=>t.type==='income'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0)
     -allTx.filter(t=>t.type==='expense'&&!t.isMiscCost&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0)
     -allTx.filter(t=>t.type==='repayment'&&t.ym&&parseInt(t.ym.slice(0,4))<yr2).reduce((s,t)=>s+t.amount,0);
@@ -917,6 +928,7 @@ function getMonthRepay(mi,pi){
   const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;
   const ym=`${yr}-${String(mo).padStart(2,'0')}`;
   if(pi===null)return 0;
+  if(isSoldBefore(properties[pi],ym))return 0;
   return (properties[pi].transactions||[]).filter(t=>t.ym===ym&&t.type==='repayment').reduce((s,t)=>s+t.amount,0);
 }
 function getAnnualRepay(pi){return getFiscalIndices().reduce((s,i)=>s+(isFutureIdx(i)?0:getMonthRepay(i,pi)),0);}
@@ -3523,6 +3535,7 @@ function deleteRecurringRule(pi,idx){
 }
 function getRecurringAmount(pi,ym){
   // 定期ルールから指定月の金額を計算
+  if(pi!==null&&isSoldBefore(properties[pi],ym))return 0;
   const rules=pi===null?(window.commonRecurringRules||[]):(properties[pi]?.recurringRules||[]);
   return rules.filter(r=>r.startYM<=ym&&(!r.endYM||r.endYM>=ym)).reduce((s,r)=>s+r.amount,0);
 }
@@ -3740,6 +3753,7 @@ function setPlAdjust(pi,yrKey,acc,val){
 function plTxList(pi,ym){
   const list=[];
   const addProp=(p)=>{
+    if(isSoldBefore(p,ym))return;
     (p.transactions||[]).forEach(t=>{if(t.ym===ym)list.push(t);});
     (p.recurringRules||[]).forEach(r=>{
       if(r.startYM<=ym&&(!r.endYM||r.endYM>=ym))
@@ -4221,7 +4235,7 @@ function syncSegToLoan(pi){
   const p=properties[pi];
   if(!p)return 0;
   const totalLoan=p.loan||0;
-  const now=nowYM();
+  const now=soldOutMonth(p)||nowYM();
   const repaidPrincipal=(p.transactions||[])
     .filter(t=>t.type==='repayment'&&t.cat==='元金'&&t.ym<=now)
     .reduce((s,t)=>s+t.amount,0);
