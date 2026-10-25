@@ -418,6 +418,12 @@ function guessAccount(t){
   if(t.cat==='税金等')return '租税公課';
   return '雑費';
 }
+function accountSelectHTML(id,current,txType){
+  const list=getAccounts();
+  const opts=list.filter(a=>txType==='income'?a.grp==='revenue':a.grp!=='revenue')
+    .map(a=>`<option value="${a.name}" ${current===a.name?'selected':''}>${a.name}${a.asset?'（資産）':''}</option>`).join('');
+  return`<select id="${id}" style="width:100%">${opts}</select>`;
+}
 function getTxAccount(t){
   return t.account||guessAccount(t);
 }
@@ -948,7 +954,7 @@ function changeMonth(dir){
 
 function buildNav(){
   const isAll=currentProp==='all';
-  const tabs=isAll?['cashflow:収支','occupancy:入居状況']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略'];
+  const tabs=isAll?['cashflow:収支','occupancy:入居状況','pl:決算書']:['cashflow:収支','occupancy:入居状況','analysis:分析','exit:出口戦略','pl:決算書'];
   document.getElementById('mainNav').innerHTML=tabs.map(t=>{const[id,label]=t.split(':');return`<button class="nb" onclick="showTab('${id}',this)">${label}</button>`;}).join('');
   document.getElementById('mainNav').firstChild.classList.add('active');
 }
@@ -957,9 +963,9 @@ function showTab(id,el){
   iconPageActive=null;updateIconBtns();
   currentTabId=id;
   if(el){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
-  else{const L={cashflow:'収支',occupancy:'入居状況',analysis:'分析',exit:'出口戦略',ledger:'明細'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
+  else{const L={cashflow:'収支',occupancy:'入居状況',analysis:'分析',exit:'出口戦略',ledger:'明細',pl:'決算書'};document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim()===L[id])b.classList.add('active');});}
   da();
-  ({cashflow:renderCashflow,occupancy:renderOccupancy,analysis:renderAnalysis,exit:renderExit,ledger:renderLedger}[id]||renderCashflow)();
+  ({cashflow:renderCashflow,occupancy:renderOccupancy,analysis:renderAnalysis,exit:renderExit,ledger:renderLedger,pl:renderPL}[id]||renderCashflow)();
 }
 
 function showIconPage(id){
@@ -3051,9 +3057,14 @@ function toggleMiscCost(pi,txIdx,checked){
       <input type="text" id="etDesc" value="${(t.desc||'').replace(/"/g,'&quot;')}" style="width:100%">
     </div>
     
-    <div class="form-group">
+        <div class="form-group">
       <label class="form-label">金額（円）</label>
       <input type="number" id="etAmt" value="${t.amount||0}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">勘定科目 <span style="font-size:10px;color:#888">${t.account?'':'自動判定'}</span></label>
+      ${accountSelectHTML('etAccount',getTxAccount(t),t.type)}
+      <div style="font-size:10px;color:#888;margin-top:3px">${isAssetTx(t)?'資産計上（損益計算書には出ません）':'経費計上'}</div>
     </div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -3096,6 +3107,8 @@ function saveTxModal(pi,idx){
   t.desc=document.getElementById('etDesc')?.value||'';
   t.cat=document.getElementById('etCat')?.value||t.cat;
   t.amount=parseInt(document.getElementById('etAmt')?.value)||0;
+  const etAcc=document.getElementById('etAccount')?.value;
+  if(etAcc) t.account=etAcc;
   t.isMiscCost=document.getElementById('etMisc')?.checked||false;
   if(t.isMiscCost) toggleMiscCost(pi,idx,true);
   // 定期明細の終了月設定
@@ -3185,9 +3198,14 @@ function deleteCommonTxByIdx(idx){
         ${SUB_FOLDERS.map(s=>`<option value="${s}">${s}</option>`).join('')}
       </select>
     </div>
-    <div class="form-group">
+        <div class="form-group">
       <label class="form-label">金額（円）</label>
       <input type="number" id="ectAmt" value="${t.amount||0}" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label class="form-label">勘定科目 <span style="font-size:10px;color:#888">${t.account?'':'自動判定'}</span></label>
+      ${accountSelectHTML('ectAccount',getTxAccount(t),t.type)}
+      <div style="font-size:10px;color:#888;margin-top:3px">${isAssetTx(t)?'資産計上（損益計算書には出ません）':'経費計上'}</div>
     </div>`;
   const modal=document.getElementById('classifyModal');
   modal.querySelector('.modal-title').textContent='共通明細編集';
@@ -3206,6 +3224,8 @@ function saveCommonTxModal(idx){
   const desc=document.getElementById('ectDesc')?.value||'';
   const cat=document.getElementById('ectCat')?.value||t.cat;
   const amount=parseInt(document.getElementById('ectAmt')?.value)||0;
+  const ectAcc=document.getElementById('ectAccount')?.value;
+  if(ectAcc) t.account=ectAcc;
   if(newProp&&newProp!=='common'){
     // 個別物件に移動
     const pi=parseInt(newProp);
@@ -3699,6 +3719,215 @@ function deleteTx(pi,txIdx){
   renderCashflow();
 }
   
+/* ── 決算書（損益計算書 月次推移） ── */
+function plFmt(v){v=Math.round(v||0);return v<0?'-'+fmt(Math.abs(v)):fmt(v);}
+function plAdjustStore(pi){
+  if(pi===null){
+    if(!window.plAdjustAll){try{window.plAdjustAll=JSON.parse(localStorage.getItem('re_pl_adjust')||'{}');}catch{window.plAdjustAll={};}}
+    return window.plAdjustAll;
+  }
+  if(!properties[pi].plAdjust)properties[pi].plAdjust={};
+  return properties[pi].plAdjust;
+}
+function getPlAdjust(pi,yrKey,acc){const s=plAdjustStore(pi)[yrKey];return (s&&s[acc])||0;}
+function setPlAdjust(pi,yrKey,acc,val){
+  const store=plAdjustStore(pi);
+  if(!store[yrKey])store[yrKey]={};
+  store[yrKey][acc]=val;
+  if(pi===null)localStorage.setItem('re_pl_adjust',JSON.stringify(window.plAdjustAll));
+  saveProps();
+}
+function plTxList(pi,ym){
+  const list=[];
+  const addProp=(p)=>{
+    (p.transactions||[]).forEach(t=>{if(t.ym===ym)list.push(t);});
+    (p.recurringRules||[]).forEach(r=>{
+      if(r.startYM<=ym&&(!r.endYM||r.endYM>=ym))
+        list.push({ym,type:'expense',amount:r.amount,desc:r.desc,cat:r.cat,account:r.account});
+    });
+  };
+  if(pi===null){
+    properties.forEach(p=>addProp(p));
+    (commonTransactions||[]).forEach(t=>{if(t.ym===ym)list.push(t);});
+    (window.commonRecurringRules||[]).forEach(r=>{
+      if(r.startYM<=ym&&(!r.endYM||r.endYM>=ym))
+        list.push({ym,type:'expense',amount:r.amount,desc:r.desc,cat:r.cat,account:r.account});
+    });
+  } else if(properties[pi]) addProp(properties[pi]);
+  return list;
+}
+function plAggregate(pi,yms){
+  const map={};
+  yms.forEach((ym,i)=>{
+    plTxList(pi,ym).forEach(t=>{
+      if(t.type==='repayment'&&t.cat==='元金')return;
+      const acc=getTxAccount(t);
+      if(!acc)return;
+      const a=accountByName(acc);
+      if(a&&a.asset)return;
+      if(!map[acc])map[acc]=new Array(yms.length).fill(0);
+      map[acc][i]+=(t.amount||0);
+    });
+  });
+  return map;
+}
+function renderPL(){
+  const isAll=currentProp==='all';
+  const pi=isAll?null:parseInt(currentProp);
+  const baseYr=parseInt(document.getElementById('yearSel')?.value||new Date().getFullYear());
+  const yrKey=String(baseYr);
+  const indices=getFiscalIndices();
+  const labels=getFiscalLabels();
+  const yms=indices.map(i=>{const mo=MONTH_BASE[i];const yr=(yearMode==='fiscal'&&mo<=fiscalMonth)?baseYr+1:baseYr;return`${yr}-${String(mo).padStart(2,'0')}`;});
+  if(window._plUpto===undefined||window._plUpto===null){
+    const now=nowYM();
+    let idx=yms.findIndex(y=>y===now);
+    if(idx<0) idx=yms.filter(y=>y<=now).length-1;
+    window._plUpto=Math.max(0,idx);
+  }
+  const upto=Math.min(11,Math.max(0,window._plUpto));
+  const n=upto+1;
+  const shownYms=yms.slice(0,n);
+  const map=plAggregate(pi,shownYms);
+  const accts=getAccounts();
+  const rev=accts.filter(a=>a.grp==='revenue');
+  const sga=accts.filter(a=>a.grp==='sga');
+  const nonop=accts.filter(a=>a.grp==='nonop');
+  const vals=a=>map[a.name]||new Array(n).fill(0);
+  const adj=a=>getPlAdjust(pi,yrKey,a.name);
+  const rowTotal=a=>vals(a).reduce((s,v)=>s+v,0)+adj(a);
+  const sumArr=(list)=>{
+    const out=new Array(n).fill(0);
+    list.forEach(a=>{const v=vals(a);for(let i=0;i<n;i++)out[i]+=v[i];});
+    return out;
+  };
+  const sumAdj=list=>list.reduce((s,a)=>s+adj(a),0);
+  const revM=sumArr(rev), revAdj=sumAdj(rev), revTot=revM.reduce((s,v)=>s+v,0)+revAdj;
+  const sgaM=sumArr(sga), sgaAdj=sumAdj(sga), sgaTot=sgaM.reduce((s,v)=>s+v,0)+sgaAdj;
+  const nonM=sumArr(nonop), nonAdj=sumAdj(nonop), nonTot=nonM.reduce((s,v)=>s+v,0)+nonAdj;
+  const taxAdj=getPlAdjust(pi,yrKey,'法人税等');
+  const opM=revM.map((v,i)=>v-sgaM[i]);
+  const ordM=opM.map((v,i)=>v-nonM[i]);
+  const opTot=revTot-sgaTot, ordTot=opTot-nonTot, netTot=ordTot-taxAdj;
+  const th=`<th style="padding:5px 6px;text-align:right;font-size:10px;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8;min-width:80px">`;
+  const headCols=labels.slice(0,n).map(l=>`${th}${l}</th>`).join('');
+  const cell=(v,bold)=>`<td style="padding:5px 6px;text-align:right;font-size:11px${bold?';font-weight:700':''}">${plFmt(v)}</td>`;
+  const adjCell=(accName)=>`<td style="padding:3px 6px;text-align:right;border-left:1px solid #d0d0c8"><input type="number" value="${getPlAdjust(pi,yrKey,accName)||''}" placeholder="0" style="width:84px;text-align:right;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:2px 4px" onchange="setPlAdjust(${pi},'${yrKey}','${accName}',parseInt(this.value)||0);renderPL()"></td>`;
+  const fixedCell=(v)=>`<td style="padding:5px 6px;text-align:right;font-size:11px;color:#888;border-left:1px solid #d0d0c8">${plFmt(v)}</td>`;
+  const totCell=(v,bold)=>`<td style="padding:5px 6px;text-align:right;font-size:11px;border-left:1px solid #d0d0c8${bold?';font-weight:700':''}">${plFmt(v)}</td>`;
+  const grpRow=(label)=>`<tr style="background:#fafaf8"><td style="padding:5px 8px;font-size:11px;font-weight:700;position:sticky;left:0;background:#fafaf8;z-index:2">${label}</td><td colspan="${n+2}"></td></tr>`;
+  const acctRow=(a)=>`<tr style="border-bottom:0.5px solid #f0f0e8">
+    <td style="padding:5px 8px;font-size:11px;color:#555;padding-left:18px;position:sticky;left:0;background:#fff;z-index:2">${a.name}</td>
+    ${vals(a).map(v=>cell(v)).join('')}
+    ${adjCell(a.name)}
+    ${totCell(rowTotal(a))}
+  </tr>`;
+  const sumRow=(label,arr,adjVal,tot,strong)=>`<tr style="border-top:1px solid #d0d0c8;${strong?'background:#fafaf8;':''}">
+    <td style="padding:6px 8px;font-size:11px;font-weight:700;position:sticky;left:0;background:${strong?'#fafaf8':'#fff'};z-index:2">${label}</td>
+    ${arr.map(v=>cell(v,true)).join('')}
+    ${fixedCell(adjVal)}
+    ${totCell(tot,true)}
+  </tr>`;
+  document.getElementById('pages').innerHTML=`
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:10px 14px;border-bottom:0.5px solid #e0e0d8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <span class="ct">損益計算書（月次推移）</span>
+        <div style="font-size:11px;color:#888;margin-top:2px">${isAll?'全物件':properties[pi]?.name||''}　${yearMode==='fiscal'?`${baseYr}年度（${fiscalMonth}月決算）`:`${baseYr}年`}　単位：円</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:11px;color:#888">表示</span>
+        <select onchange="window._plUpto=parseInt(this.value);renderPL()" style="font-size:11px">
+          ${labels.map((l,i)=>`<option value="${i}" ${i===upto?'selected':''}>${l}まで</option>`).join('')}
+        </select>
+        <button class="btn-sm" style="font-size:10px" onclick="editAccountsModal()">科目編集</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;padding-bottom:8px">
+      <table style="border-collapse:collapse;width:100%;min-width:720px">
+        <thead><tr style="background:#fafaf8">
+          <th style="padding:5px 8px;text-align:left;font-size:10px;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8;position:sticky;left:0;background:#fafaf8;z-index:3;min-width:150px">勘定科目</th>
+          ${headCols}
+          <th style="padding:5px 6px;text-align:right;font-size:10px;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8;border-left:1px solid #d0d0c8;min-width:90px">決算整理</th>
+          <th style="padding:5px 6px;text-align:right;font-size:10px;color:#888;font-weight:400;border-bottom:0.5px solid #e0e0d8;border-left:1px solid #d0d0c8;min-width:90px">合計</th>
+        </tr></thead>
+        <tbody>
+          ${grpRow('売上高')}
+          ${rev.map(acctRow).join('')}
+          ${sumRow('売上高合計',revM,revAdj,revTot)}
+          ${sumRow('売上総利益',revM,revAdj,revTot,true)}
+          ${grpRow('販売費及び一般管理費')}
+          ${sga.map(acctRow).join('')}
+          ${sumRow('販売費及び一般管理費合計',sgaM,sgaAdj,sgaTot)}
+          ${sumRow('営業利益',opM,revAdj-sgaAdj,opTot,true)}
+          ${grpRow('営業外費用')}
+          ${nonop.map(acctRow).join('')}
+          ${sumRow('営業外費用合計',nonM,nonAdj,nonTot)}
+          ${sumRow('経常利益',ordM,revAdj-sgaAdj-nonAdj,ordTot,true)}
+          <tr style="border-bottom:0.5px solid #f0f0e8">
+            <td style="padding:5px 8px;font-size:11px;color:#555;position:sticky;left:0;background:#fff;z-index:2">法人税等</td>
+            ${new Array(n).fill(0).map(v=>cell(0)).join('')}
+            ${adjCell('法人税等')}
+            ${totCell(taxAdj)}
+          </tr>
+          ${sumRow('当期純利益',ordM,revAdj-sgaAdj-nonAdj-taxAdj,netTot,true)}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function editAccountsModal(){
+  const list=getAccounts();
+  const GRP={revenue:'売上',sga:'販管費',nonop:'営業外費用',asset:'資産'};
+  document.getElementById('classifyContent').innerHTML=`
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px">勘定科目の編集</div>
+    <div style="max-height:320px;overflow-y:auto;border:0.5px solid #e0e0d8;border-radius:8px">
+      ${list.map((a,i)=>`<div style="padding:6px 10px;border-bottom:0.5px solid #f0f0e8;display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <input type="text" value="${a.name}" style="flex:1;font-size:11px;border:0.5px solid #d0d0c8;border-radius:4px;padding:3px 5px" onchange="updateAccount(${i},'name',this.value)">
+        <select style="font-size:11px" onchange="updateAccount(${i},'grp',this.value)">
+          ${Object.entries(GRP).map(([k,v])=>`<option value="${k}" ${a.grp===k?'selected':''}>${v}</option>`).join('')}
+        </select>
+        <button class="btn-sm" style="font-size:10px;color:#dc2626" onclick="deleteAccount(${i})">削除</button>
+      </div>`).join('')}
+    </div>
+    <div style="margin-top:10px;display:flex;gap:6px;align-items:center">
+      <input type="text" id="newAcctName" placeholder="新しい科目名" style="flex:1;font-size:12px">
+      <select id="newAcctGrp" style="font-size:12px">
+        ${Object.entries(GRP).map(([k,v])=>`<option value="${k}" ${k==='sga'?'selected':''}>${v}</option>`).join('')}
+      </select>
+      <button class="btn-sm" onclick="addAccount()">追加</button>
+    </div>
+    <div style="font-size:10px;color:#888;margin-top:8px">「資産」にした科目は損益計算書に出ません（取得費として資産計上されます）。</div>`;
+  const modal=document.getElementById('classifyModal');
+  modal.querySelector('.modal-title').textContent='勘定科目';
+  modal.querySelector('.modal-actions').innerHTML=`<button class="btn btn-primary" onclick="closeModal('classifyModal');renderPL()">閉じる</button>`;
+  modal.classList.add('open');modal.style.display='flex';
+}
+function updateAccount(i,field,val){
+  const list=getAccounts().map(a=>({...a}));
+  if(!list[i])return;
+  list[i][field]=val;
+  if(field==='grp')list[i].asset=(val==='asset');
+  saveAccounts(list);
+}
+function deleteAccount(i){
+  const list=getAccounts().map(a=>({...a}));
+  if(!confirm(`「${list[i]?.name}」を削除しますか？`))return;
+  list.splice(i,1);
+  saveAccounts(list);
+  editAccountsModal();
+}
+function addAccount(){
+  const name=document.getElementById('newAcctName')?.value.trim();
+  const grp=document.getElementById('newAcctGrp')?.value||'sga';
+  if(!name){showToast('科目名を入力してください','error');return;}
+  const list=getAccounts().map(a=>({...a}));
+  if(list.find(a=>a.name===name)){showToast('同じ名前の科目があります','error');return;}
+  list.push({name,grp,asset:grp==='asset'});
+  saveAccounts(list);
+  editAccountsModal();
+}
+
 /* ── 出口戦略 ── */
 function renderExit(){
   if(currentProp==='all')return;
