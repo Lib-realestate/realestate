@@ -349,6 +349,82 @@ function saveDriveFolderUrl(url){
 }
 const SCOPES='https://www.googleapis.com/auth/drive';
 const SUB_FOLDERS=['01_契約書','02_収入','03_支出','04_税金','05_返済','05_その他'];
+// ── 勘定科目マスタ ──
+const DEFAULT_ACCOUNTS=[
+  {name:'売上高',grp:'revenue',asset:false},
+  {name:'旅費交通費',grp:'sga',asset:false},
+  {name:'保険料',grp:'sga',asset:false},
+  {name:'水道光熱費',grp:'sga',asset:false},
+  {name:'備品・消耗品費',grp:'sga',asset:false},
+  {name:'支払手数料',grp:'sga',asset:false},
+  {name:'管理費',grp:'sga',asset:false},
+  {name:'修繕費',grp:'sga',asset:false},
+  {name:'工事費',grp:'sga',asset:false},
+  {name:'広告宣伝費',grp:'sga',asset:false},
+  {name:'税理士報酬',grp:'sga',asset:false},
+  {name:'管理諸費',grp:'sga',asset:false},
+  {name:'通信費',grp:'sga',asset:false},
+  {name:'租税公課',grp:'sga',asset:false},
+  {name:'減価償却費',grp:'sga',asset:false},
+  {name:'雑費',grp:'sga',asset:false},
+  {name:'支払利息',grp:'nonop',asset:false},
+  {name:'土地',grp:'asset',asset:true},
+  {name:'建物',grp:'asset',asset:true},
+  {name:'仲介手数料（取得）',grp:'asset',asset:true},
+  {name:'登記費用',grp:'asset',asset:true},
+  {name:'不動産取得税',grp:'asset',asset:true},
+  {name:'融資手数料',grp:'asset',asset:true},
+  {name:'固都税精算金（取得）',grp:'asset',asset:true}
+];
+function getAccounts(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('re_accounts')||'null');
+    if(saved&&saved.length)return saved;
+  }catch{}
+  return DEFAULT_ACCOUNTS;
+}
+function saveAccounts(list){
+  localStorage.setItem('re_accounts',JSON.stringify(list));
+  window.accountsCache=list;
+}
+function accountByName(n){
+  return getAccounts().find(a=>a.name===n)||null;
+}
+// ── 勘定科目の自動推測 ──
+function guessAccount(t){
+  if(!t)return '';
+  if(t.type==='income')return '売上高';
+  if(t.type==='repayment')return t.cat==='利息'?'支払利息':'';
+  const s=((t.desc||'')+' '+(t.issuer||'')+' '+(t.cat||'')).toLowerCase();
+  const hit=(...ws)=>ws.some(w=>s.includes(w));
+  if(hit('仲介手数料','媒介'))return t.isMiscCost?'仲介手数料（取得）':'支払手数料';
+  if(hit('登記','司法書士','土地家屋調査士'))return '登記費用';
+  if(hit('不動産取得税'))return '不動産取得税';
+  if(hit('融資手数料','事務手数料','保証料'))return '融資手数料';
+  if(hit('固都税精算','固定資産税精算'))return t.isMiscCost?'固都税精算金（取得）':'租税公課';
+  if(hit('電気','電力','ガス','水道','上下水'))return '水道光熱費';
+  if(hit('税理士','会計事務所'))return '税理士報酬';
+  if(hit('修繕','補修','原状回復','クリーニング','ハウスクリーニング'))return '修繕費';
+  if(hit('工事','リフォーム','施工','工務店','設備'))return '工事費';
+  if(hit('広告','宣伝','ad','募集','客付'))return '広告宣伝費';
+  if(hit('管理費','管理料','bm','pm'))return '管理費';
+  if(hit('共益','管理諸費','町会','自治会'))return '管理諸費';
+  if(hit('通信','インターネット','wi-fi','wifi','携帯','回線'))return '通信費';
+  if(hit('保険'))return '保険料';
+  if(hit('交通','電車','高速','ガソリン','駐車','旅費','宿泊'))return '旅費交通費';
+  if(hit('消耗','備品','amazon','ホームセンター','購入'))return '備品・消耗品費';
+  if(hit('手数料','振込','振り込み'))return '支払手数料';
+  if(hit('税','印紙','収入印紙'))return '租税公課';
+  if(t.cat==='税金等')return '租税公課';
+  return '雑費';
+}
+function getTxAccount(t){
+  return t.account||guessAccount(t);
+}
+function isAssetTx(t){
+  const a=accountByName(getTxAccount(t));
+  return a?a.asset:false;
+}
 const TOKEN_KEY='re_gtoken',TOKEN_EXP_KEY='re_gtoken_exp';
 
 let tokenClient,gapiInited=false,gisInited=false,accessToken=null;
